@@ -459,5 +459,10 @@ export const api = {
     return await fetchApi<{ success: boolean; count: number }>('/seed-demo/', {
       method: 'POST'
     });
+  },
+
+  async getHealth() {
+    return await fetchApi<{ status: string; database: string }>('/health/');
   }
 };
+

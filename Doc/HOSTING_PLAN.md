@@ -1,57 +1,135 @@
-# Deployment Walkthrough: MrBikeBD
+# UNBUmi Detector — Master Production Hosting & 24/7 Keep-Alive Guide
 
-This document details the exact step-by-step plan you need to take to host your Next.js frontend on Vercel and your Django backend on Render, connected via your global GitHub repository.
+**Product:** UNBUmi Detector (UNLEFT LandGuard)  
+**Hackathon Track:** P3 — Catch Fraud & Double-Selling  
+**Repository:** [https://github.com/Eashanoppo/unbhumi](https://github.com/Eashanoppo/unbhumi)  
 
-## Phase 1: Deploying the Django Backend to Render
-
-By providing a `render.yaml` file, we've automated the hard parts. Render calls this a "Blueprint" deployment, which reads properties directly from the repository.
-
-1. **Push your code to GitHub.** Ensure `render.yaml` and `backend/build.sh` are pushed to your `main` branch.
-2. Sign into [Render.com](https://render.com/).
-3. On the dashboard, click the **"New +"** button, and select **"Blueprint"** (instead of Web Service).
-4. Connect the Vercel/GitHub integration and select your `mrbike-production` repository.
-5. Render will instantly read the `render.yaml` file and prepare the web service `mrbike-backend`.
-6. Click **Apply**. Render will begin installing the web service framework.
-7. **CRITICAL STEP - Provide Secrets**: Once the web service is created in the Render dashboard, go to its **Environment** tab, because we intentionally left `DATABASE_URL` and `REDIS_URL` blank (marked `sync: false`):
-   * Add your Supabase Postgres string to `DATABASE_URL`.
-   * Add a Redis string (e.g. from Upstash or a free internal Render Redis) to `REDIS_URL`.
-   * Fill out other keys your Django project needs (e.g. `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`, `BREVO_SMTP_USER`, `BREVO_API_KEY`, etc.)
-8. Once variables are added, trigger a "Manual Deploy". 
-9. After deployment succeeds, copy your active Render Web URL (e.g., `https://mrbike-backend.onrender.com`).
-
-> [!TIP]
-> The build instructions for Render (`pip install`, `collectstatic`, `migrate`) are strictly defined in `backend/build.sh`. You can safely edit these later without breaking infrastructure!
+This walkthrough details the exact step-by-step procedure to deploy the Django backend on **Render**, host the Next.js frontend on **Vercel**, configure **Supabase PostgreSQL**, and keep the free-tier backend continuously alive 24/7 without cold-start delays.
 
 ---
 
-## Phase 2: Deploying the Next.js Frontend to Vercel
+## Architecture Overview
 
-Vercel natively understands Next.js workspaces and monorepos perfectly. 
+```mermaid
+flowchart LR
+    A[End Users & Reviewers] -->|HTTPS| B[Vercel: Next.js Frontend]
+    B -->|REST API /api/v1/| C[Render: Django REST Backend]
+    C -->|PostgreSQL pooler| D[(Supabase Database)]
+    E[GitHub Actions Cron / Keep-Alive] -.->|Ping every 10 min| C
+```
 
-1. Sign into [Vercel.com](https://vercel.com/) with your GitHub account.
+---
+
+## Phase 1: Deploy Django Backend to Render
+
+We have provided a turnkey `render.yaml` Blueprint file and `backend/build.sh` script in the repository.
+
+### Option A: Render Blueprint Deployment (Automated & Recommended)
+1. Sign in to [Render.com](https://render.com/).
+2. On your Render dashboard, click **"New +"** and choose **"Blueprint"**.
+3. Connect your GitHub account and select the **`Eashanoppo/unbhumi`** repository.
+4. Render will automatically detect `render.yaml` and configure:
+   - **Service Name:** `unbhumi-backend`
+   - **Runtime:** Python 3.11.9
+   - **Root Directory:** `backend`
+   - **Build Command:** `./build.sh` (installs dependencies, runs `collectstatic` with WhiteNoise, executes migrations, and seeds the 8 demo cases)
+   - **Start Command:** `gunicorn config.wsgi:application --bind 0.0.0.0:$PORT`
+   - **Health Check Path:** `/api/v1/health/`
+5. Click **Apply**.
+6. **Provide Secrets (Environment Tab):**
+   - In the Render dashboard, go to `unbhumi-backend` -> **Environment** tab.
+   - If using **Supabase PostgreSQL**, paste your connection string into `DATABASE_URL`:
+     ```text
+     postgresql://postgres:[YOUR-PASSWORD]@[YOUR-SUPABASE-HOST]:6543/postgres?pgbouncer=true
+     ```
+     *(If left blank, the backend automatically uses SQLite for instant demo deployment!)*
+   - Ensure `CORS_ALLOW_ALL_ORIGINS` is set to `True` (or set `CORS_ALLOWED_ORIGINS` to your Vercel URL once Phase 2 is completed).
+7. Trigger a manual deploy if needed. Once finished, copy your public backend URL (e.g. `https://unbhumi-backend.onrender.com`).
+8. Verify in your browser by opening `https://unbhumi-backend.onrender.com/api/v1/health/`. You should see:
+   ```json
+   {
+     "status": "healthy",
+     "database": "connected",
+     "service": "UNBUmi Detector API",
+     "track": "P3 — Catch Fraud & Double-Selling",
+     "demo_mode": true
+   }
+   ```
+
+---
+
+## Phase 2: Deploy Next.js Frontend to Vercel
+
+Vercel provides zero-configuration hosting for Next.js 16.
+
+1. Sign in to [Vercel.com](https://vercel.com/) with your GitHub account.
 2. Click **"Add New Project"**.
-3. Import the `mrbike-production` repository.
-4. **CONFIGURE ROOT DIRECTORY:** In the project config card before deploying, you will see a setting called **Root Directory**. Click "Edit" and choose `frontend`. 
-   > *This is critical as it instructs Vercel to only build from the frontend folder.*
-5. The Framework Preset will automatically switch to **Next.js**.
-6. **Set Environment Variables:** Dropdown the "Environment Variables" section and paste in all required `.env` values found relative to your `frontend/.env` file:
-   * `NEXT_PUBLIC_API_URL` = `https://mrbike-backend.onrender.com/api/v1` *(The URL you got from Phase 1, make sure to add `/api/v1` or `/api` as per your project routing).*
-   * `NEXT_PUBLIC_APP_URL` = `https://mrbikebd.vercel.app` *(Your future Vercel domain)*
-   * `NEXTAUTH_URL` = `https://mrbikebd.vercel.app`
-   * `NEXTAUTH_SECRET` = *(Generate a secure string)*
-   * `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` = *(Your Cloud Name)*
-   * `NEXT_PUBLIC_GOOGLE_CLIENT_ID` = *(Google OAuth Client ID)*
-7. Click **Deploy**. Vercel will bundle your frontend.
+3. Import the **`Eashanoppo/unbhumi`** repository.
+4. **CRITICAL SETTING — Configure Root Directory:**
+   - In the project setup card, look for **Root Directory**.
+   - Click **Edit** and select **`frontend`**.
+   - The Framework Preset will automatically identify **Next.js**.
+5. **Configure Environment Variables:**
+   - Click the **Environment Variables** accordion and add:
+     - **Name:** `NEXT_PUBLIC_API_URL`
+     - **Value:** `https://unbhumi-backend.onrender.com/api/v1` *(replace with your actual Render URL from Phase 1)*
+6. Click **Deploy**.
+7. Vercel will build the frontend using Turbopack and deploy to a URL like `https://unbhumi.vercel.app`.
 
 ---
 
-## Phase 3: Synchronizing CORS & Webhooks
+## Phase 3: Synchronize CORS & Verify End-to-End
 
-When both deployments finish, we need to ensure the backend officially allows requests coming from the newly generated Vercel frontend domain.
+1. Once Vercel assigns your live domain (e.g. `https://unbhumi.vercel.app`):
+2. In your Render Dashboard -> **Environment**, optionally add your Vercel domain to `CORS_ALLOWED_ORIGINS` and `CSRF_TRUSTED_ORIGINS`:
+   ```text
+   CORS_ALLOWED_ORIGINS=https://unbhumi.vercel.app,http://localhost:3000
+   CSRF_TRUSTED_ORIGINS=https://unbhumi.vercel.app,https://*.onrender.com
+   ```
+3. Open your Vercel URL in your browser:
+   - Verify that all 8 seeded cases appear on `/dashboard`.
+   - Test changing demo roles in `/settings`.
+   - Inspect Case `UB-2026-1002` to see the live NetworkX ownership graph.
+   - Test generating and printing reports on `/reports`.
 
-1. **Find Frontend Domain:** Note what domain Vercel assigned you (e.g., `https://mrbikebd.vercel.app` or if using a custom domain, `https://mrbikebd.com`).
-2. **Setup Server CORS Origins:** Go back to your Render Dashboard -> "Environment" tab for your web service.
-3. Update `CORS_ALLOWED_ORIGINS` to include your exact frontend URL (e.g., `value: "https://mrbikebd.vercel.app"`).
-4. Update `ALLOWED_HOSTS` or `FRONTEND_URL` environment variables if your backend email templates/callbacks rely on them.
-5. Render will prompt you to redeploy or save. 
-6. Navigate to your Vercel URL and attempt to log in using Google OAuth (or credentials) to verify end-to-end communication!
+---
+
+## Phase 4: Keeping the Server Live 24/7 (Preventing Sleep / Cold Starts)
+
+Render free-tier web services automatically spin down after 15 minutes of inactivity, causing a 40–50 second delay on the next visit. We have set up **three complementary mechanisms** to guarantee zero downtime:
+
+### Strategy 1: Automated GitHub Actions Keep-Alive Cron (Built-in & Free)
+We have added [`.github/workflows/keep_alive.yml`](file:///.github/workflows/keep_alive.yml) to the repository. It runs an automated HTTP health ping every 10 minutes from GitHub cloud runners:
+
+1. Open your GitHub repository: `https://github.com/Eashanoppo/unbhumi`.
+2. Go to **Settings** -> **Secrets and variables** -> **Actions**.
+3. Click **"New repository secret"**:
+   - **Name:** `BACKEND_API_URL`
+   - **Value:** `https://unbhumi-backend.onrender.com` *(your Render URL)*
+4. Click **Add secret**.
+5. Go to the **Actions** tab on GitHub, click **"Keep UNBUmi Backend Alive"**, and click **"Run workflow"** to verify immediately.
+6. The workflow will now ping `/api/v1/health/` every 10 minutes forever, keeping your Render container warm 24 hours a day!
+
+### Strategy 2: Client-Side Heartbeat in Frontend (Built-in)
+- `frontend/components/Navbar.tsx` now contains an automatic background heartbeat (`api.getHealth()`) that pings the backend every 8 minutes whenever any user has the web application open in their browser.
+
+### Strategy 3: External Free Uptime Monitor (Optional Backup)
+You can also register a free ping on any public uptime monitor:
+1. Visit [cron-job.org](https://cron-job.org/) or [UptimeRobot.com](https://uptimerobot.com/).
+2. Create a free HTTP monitor:
+   - **URL:** `https://unbhumi-backend.onrender.com/api/v1/health/`
+   - **Interval:** Every 10 minutes
+   - **Method:** `GET`
+
+---
+
+## Quick Reference Summary
+
+| Service | Host | Configuration Key | Destination Value |
+|---|---|---|---|
+| **Frontend** | Vercel | Root Directory | `frontend` |
+| **Frontend** | Vercel | `NEXT_PUBLIC_API_URL` | `https://unbhumi-backend.onrender.com/api/v1` |
+| **Backend** | Render | Blueprint Path | `./render.yaml` (Root) |
+| **Backend** | Render | Health Check | `/api/v1/health/` |
+| **Backend** | Render | `DATABASE_URL` (Optional) | Supabase PostgreSQL URI |
+| **24/7 Keep-Alive** | GitHub Actions | Secret `BACKEND_API_URL` | `https://unbhumi-backend.onrender.com` |

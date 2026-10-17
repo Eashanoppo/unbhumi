@@ -1,0 +1,31 @@
+name: Keep UNBUmi Backend Alive
+
+on:
+  schedule:
+    # Run every 10 minutes to prevent Render free tier from sleeping (15 min inactivity timeout)
+    - cron: '*/10 * * * *'
+  workflow_dispatch: # Allows manual trigger from GitHub Actions tab
+
+jobs:
+  ping-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Health Endpoint
+        run: |
+          RENDER_URL="${{ secrets.BACKEND_API_URL }}"
+          if [ -z "$RENDER_URL" ]; then
+            echo "BACKEND_API_URL secret not yet set. Defaulting to fallback or skipping."
+            echo "Add your Render URL (e.g. https://unbhumi-backend.onrender.com) to GitHub Repo Secrets as BACKEND_API_URL."
+            exit 0
+          fi
+          
+          HEALTH_URL="${RENDER_URL%/}/api/v1/health/"
+          echo "Pinging: $HEALTH_URL"
+          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" "$HEALTH_URL" || true)
+          echo "HTTP Response Status: $RESPONSE"
+          
+          if [ "$RESPONSE" -eq 200 ]; then
+            echo "SUCCESS: Server is live and healthy."
+          else
+            echo "WARNING: Server returned status $RESPONSE"
+          fi

@@ -22,6 +22,20 @@ export const Navbar: React.FC = () => {
     setCurrentUser(api.getCurrentUser());
   }, [pathname]);
 
+  // Keep Render server live (pings /api/v1/health/ every 8 minutes to prevent spin-down)
+  useEffect(() => {
+    const pingServer = async () => {
+      try {
+        await api.getHealth();
+      } catch {
+        // Silent catch for background heartbeat
+      }
+    };
+    pingServer();
+    const interval = setInterval(pingServer, 8 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   const toggleLanguage = () => {
     setLanguage(language === 'bn' ? 'en' : 'bn');
   };
