@@ -194,6 +194,34 @@ class CaseGraphView(APIView):
         return Response(graph_data)
 
 
+class CaseGraphQueryView(APIView):
+    """
+    GraphRAG Endpoint: Executes graph traversal and documentary evidence synthesis
+    over the case's NetworkX knowledge graph.
+    """
+    def post(self, request, pk_or_number):
+        if pk_or_number.isdigit():
+            case = get_object_or_404(Case, pk=pk_or_number)
+        else:
+            case = get_object_or_404(Case, case_number=pk_or_number)
+
+        query = request.data.get('query', '')
+        service = GraphService(case)
+        result = service.query_graph(query)
+        return Response(result)
+
+    def get(self, request, pk_or_number):
+        if pk_or_number.isdigit():
+            case = get_object_or_404(Case, pk=pk_or_number)
+        else:
+            case = get_object_or_404(Case, case_number=pk_or_number)
+
+        query = request.query_params.get('query', '')
+        service = GraphService(case)
+        result = service.query_graph(query)
+        return Response(result)
+
+
 class CaseReportView(APIView):
     def get(self, request, pk_or_number):
         if pk_or_number.isdigit():

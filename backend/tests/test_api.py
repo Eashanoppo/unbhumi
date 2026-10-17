@@ -113,3 +113,13 @@ class UNBUmiAPITests(TestCase):
         self.assertEqual(response.data['report_id'], f'REP-{case.case_number}')
         self.assertIn('disclaimer', response.data)
         self.assertIn('anomalies', response.data)
+
+    def test_case_graph_rag_query(self):
+        case = Case.objects.get(case_number='UB-2026-1002')
+        response = self.client.post(f'/api/v1/cases/{case.case_number}/graph-rag/', {'query': 'কামাল হোসেন'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('retrieved_nodes', response.data)
+        self.assertIn('retrieved_edges', response.data)
+        self.assertIn('grounded_evidence', response.data)
+        self.assertIn('graph_synthesis_bn', response.data)
+        self.assertGreaterEqual(len(response.data['retrieved_nodes']), 1)

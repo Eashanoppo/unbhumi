@@ -84,7 +84,7 @@ export default function StandaloneOwnershipGraphPage() {
           <p className="text-xs text-[var(--text-secondary)]">গ্রাফ সংযোগ হিসাব করা হচ্ছে...</p>
         </div>
       ) : graphData ? (
-        <OwnershipGraphVisualizer data={graphData} />
+        <OwnershipGraphVisualizer data={graphData} caseId={selectedCaseId} />
       ) : (
         <div className="p-12 text-center text-xs text-[var(--text-secondary)]">
           কোনো গ্রাফ ডাটা পাওয়া যায়নি।

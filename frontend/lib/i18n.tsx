@@ -545,7 +545,21 @@ export const DICTIONARY: Translations = {
   fm_status_in_ws: { bn: 'যুক্ত রয়েছে', en: 'In Workspace' },
   fm_status_ready: { bn: 'প্রস্তুত', en: 'Ready' },
   fm_fs_mode: { bn: 'ফাইলসিস্টেম: সক্রিয় নমুনা ভল্ট', en: 'Filesystem: Active Sample Vault' },
-  fm_empty_folder: { bn: 'এই ফোল্ডারে কোনো নথি পাওয়া যায়নি।', en: 'No documents found in this folder.' }
+  fm_empty_folder: { bn: 'এই ফোল্ডারে কোনো নথি পাওয়া যায়নি।', en: 'No documents found in this folder.' },
+  // Pipeline Observability & GraphRAG Keys
+  pipeline_subops_title: { bn: 'উপ-অপারেশন এক্সিকিউশন ও ট্রেসিং', en: 'Sub-Operations Flow & Execution Tracing' },
+  pipeline_artifacts_title: { bn: 'অন্তর্বর্তী আর্কিফ্যাক্ট ও আউটপুট ইন্সপেক্টর', en: 'Intermediate Artifacts & Output Inspector' },
+  pipeline_tab_metadata: { bn: 'নথিপত্র মেটাডাটা', en: 'Document Metadata' },
+  pipeline_tab_hashes: { bn: 'ক্রিপ্টোগ্রাফিক হ্যাশ ও বাইট অখণ্ডতা', en: 'Cryptographic Hashes & Byte Integrity' },
+  pipeline_tab_ocr: { bn: 'ওসিআর ফিল্ড ও ভিশন নিষ্কাশন', en: 'OCR Fields & Vision Extraction' },
+  pipeline_tab_norm: { bn: 'উপাত্ত স্বাভাবিকীকরণ ও রেজোলিউশন', en: 'Data Normalization & Resolution' },
+  pipeline_tab_rules: { bn: '১২টি রুল মূল্যায়ন ম্যাট্রিক্স', en: '12-Rule Evaluation Matrix' },
+  pipeline_tab_graph: { bn: 'নলেজ গ্রাফ সাব-টপোলজি', en: 'Knowledge Graph Subgraph' },
+  pipeline_tab_risk: { bn: 'ঝুঁকি স্কোর বিশ্লেষণ ও উপাদান', en: 'Risk Score Breakdown' },
+  pipeline_tab_events: { bn: 'এক্সিকিউশন ইভেন্ট লগ (JSON)', en: 'Execution Events Log (JSON)' },
+  legal_hash_disclaimer: { bn: 'ক্রিপ্টোগ্রাফিক হ্যাশ (SHA-256) ফাইলের বাইট-অখণ্ডতা প্রমাণ করে, কিন্তু সরকারি দপ্তরের আইনি স্বত্বাধিকার নিশ্চিত করে না।', en: 'Cryptographic hash (SHA-256) establishes digital byte integrity, not statutory ownership validity.' },
+  demo_fixture_notice: { bn: 'সিন্থেটিক ফিক্সচার (Precomputed Model Output) — বাস্তব উৎপাদন পরিবেশে Tesseract v5 / ভিশন ইঞ্জিন প্রযোজ্য।', en: 'Synthetic Fixture (Precomputed Model Output) — Production environment uses live Tesseract v5 / Vision pipeline.' },
+  no_silent_merge_notice: { bn: 'রেজোলিউশন নীতি: কেবল নাম বা বানানের সাদৃশ্যের ভিত্তিতে ব্যক্তি বা দাগের সত্তা কখনোই স্বয়ংক্রিয়ভাবে মার্জ/একত্রিত করা হয় না (Zero Silent Merging)।', en: 'Resolution Policy: Never merge people or parcels based only on similar text (Zero Silent Merging).' }
 };
 
 // Helper function to format numbers (converts English digits to Bengali digits in 'bn' mode)

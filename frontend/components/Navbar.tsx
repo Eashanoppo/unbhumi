@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useLanguage } from '@/lib/i18n';
+import { useLanguage, DICTIONARY } from '@/lib/i18n';
 import { useTheme } from '@/lib/theme';
 import { api, User } from '@/lib/api';
 import {
@@ -28,6 +28,14 @@ export const Navbar: React.FC = () => {
     setOpenDropdown(null);
     setMobileMenuOpen(false);
   }, [pathname]);
+
+  // Safe translation helper ensuring SSR and initial hydration always match Bangla defaults
+  const safeT = (key: string) => {
+    if (!mounted) {
+      return DICTIONARY[key]?.bn || key;
+    }
+    return t(key);
+  };
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -62,22 +70,22 @@ export const Navbar: React.FC = () => {
   const investigationSubmenu = [
     {
       href: '/cases',
-      title: t('nav_cases'),
-      desc: t('nav_cases_desc'),
+      title: safeT('nav_cases'),
+      desc: safeT('nav_cases_desc'),
       icon: ShieldCheck,
       badge: 'Database'
     },
     {
       href: '/review-queue',
-      title: t('nav_alerts'),
-      desc: t('nav_alerts_desc'),
+      title: safeT('nav_alerts'),
+      desc: safeT('nav_alerts_desc'),
       icon: AlertTriangle,
       badge: 'Action'
     },
     {
       href: '/ownership-graph',
-      title: t('nav_graph'),
-      desc: t('nav_graph_desc'),
+      title: safeT('nav_graph'),
+      desc: safeT('nav_graph_desc'),
       icon: GitFork,
       badge: 'Network'
     }
@@ -86,20 +94,20 @@ export const Navbar: React.FC = () => {
   const resourcesSubmenu = [
     {
       href: '/reports',
-      title: t('nav_reports'),
-      desc: t('nav_reports_desc'),
+      title: safeT('nav_reports'),
+      desc: safeT('nav_reports_desc'),
       icon: FileText
     },
     {
       href: '/methodology',
-      title: t('nav_methodology'),
-      desc: t('nav_methodology_desc'),
+      title: safeT('nav_methodology'),
+      desc: safeT('nav_methodology_desc'),
       icon: BookOpen
     },
     {
       href: '/about',
-      title: t('nav_about'),
-      desc: t('nav_about_desc'),
+      title: safeT('nav_about'),
+      desc: safeT('nav_about_desc'),
       icon: Info
     }
   ];
@@ -136,7 +144,8 @@ export const Navbar: React.FC = () => {
           </Link>
 
           {/* 2. Desktop Navigation with Clean Submenus */}
-          <nav className="hidden lg:flex items-center gap-1.5">
+          {/* 2. Desktop Navigation with Clean Submenus */}
+          <nav className="hidden lg:flex items-center gap-1.5" suppressHydrationWarning>
             {/* Direct Link: Dashboard */}
             <Link
               href="/dashboard"
@@ -147,7 +156,7 @@ export const Navbar: React.FC = () => {
               }`}
             >
               <Layers className={`w-3.5 h-3.5 ${pathname === '/dashboard' ? 'text-[var(--brand-accent)]' : 'opacity-70'}`} />
-              <span>{t('nav_overview')}</span>
+              <span suppressHydrationWarning>{safeT('nav_overview')}</span>
             </Link>
 
             {/* Direct Link: Interactive Demo */}
@@ -160,7 +169,7 @@ export const Navbar: React.FC = () => {
               }`}
             >
               <Sparkles className="w-3.5 h-3.5 text-[var(--brand-accent)]" />
-              <span>{t('nav_demo')}</span>
+              <span suppressHydrationWarning>{safeT('nav_demo')}</span>
               <span className="ml-1 text-[9px] font-mono px-1.5 py-0.2 rounded-full bg-[var(--brand-accent)] text-[var(--cta-text)] font-extrabold">
                 P3
               </span>
@@ -178,7 +187,7 @@ export const Navbar: React.FC = () => {
                 }`}
               >
                 <ShieldCheck className={`w-3.5 h-3.5 ${isInvestigationActive ? 'text-[var(--brand-accent)]' : 'opacity-70'}`} />
-                <span>{t('nav_investigations')}</span>
+                <span suppressHydrationWarning>{safeT('nav_investigations')}</span>
                 <ChevronDown className={`w-3 h-3 transition-transform ${openDropdown === 'investigations' ? 'rotate-180 text-[var(--brand-accent)]' : 'opacity-60'}`} />
               </button>
 
@@ -241,7 +250,7 @@ export const Navbar: React.FC = () => {
                 }`}
               >
                 <BookOpen className={`w-3.5 h-3.5 ${isResourcesActive ? 'text-[var(--brand-accent)]' : 'opacity-70'}`} />
-                <span>{t('nav_resources')}</span>
+                <span suppressHydrationWarning>{safeT('nav_resources')}</span>
                 <ChevronDown className={`w-3 h-3 transition-transform ${openDropdown === 'reports' ? 'rotate-180 text-[var(--brand-accent)]' : 'opacity-60'}`} />
               </button>
 
@@ -294,7 +303,7 @@ export const Navbar: React.FC = () => {
               className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-[var(--cta-text)] transition-all shadow-sm hover:shadow active:scale-95"
             >
               <PlusCircle className="w-3.5 h-3.5 stroke-[2.5]" />
-              <span>{t('cta_verify')}</span>
+              <span suppressHydrationWarning>{safeT('cta_verify')}</span>
             </Link>
 
             {/* Language Switcher */}
@@ -341,7 +350,7 @@ export const Navbar: React.FC = () => {
                 </Link>
                 <button
                   onClick={() => { api.logout(); setCurrentUser(null); }}
-                  title={t('nav_logout')}
+                  title={safeT('nav_logout')}
                   className="p-1.5 text-[var(--text-secondary)] hover:text-red-600 rounded-lg transition-colors cursor-pointer"
                 >
                   <LogOut className="w-4 h-4" />
@@ -353,7 +362,7 @@ export const Navbar: React.FC = () => {
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border border-[var(--border-color)] text-[var(--text-primary)] hover:bg-[var(--bg-surface-soft)] transition-colors"
               >
                 <LogIn className="w-3.5 h-3.5 text-[var(--text-secondary)]" />
-                <span>{t('nav_login')}</span>
+                <span suppressHydrationWarning>{safeT('nav_login')}</span>
               </Link>
             )}
           </div>
@@ -401,7 +410,7 @@ export const Navbar: React.FC = () => {
             className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl font-bold bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-[var(--cta-text)] shadow-sm"
           >
             <PlusCircle className="w-4 h-4 stroke-[2.5]" />
-            <span>{t('cta_verify')}</span>
+            <span suppressHydrationWarning>{safeT('cta_verify')}</span>
           </Link>
 
           {/* Top Links */}
@@ -416,7 +425,7 @@ export const Navbar: React.FC = () => {
               }`}
             >
               <Layers className="w-3.5 h-3.5 text-[var(--brand-accent)]" />
-              <span>{t('nav_overview')}</span>
+              <span suppressHydrationWarning>{safeT('nav_overview')}</span>
             </Link>
 
             <Link
@@ -429,14 +438,14 @@ export const Navbar: React.FC = () => {
               }`}
             >
               <Sparkles className="w-3.5 h-3.5 text-[var(--brand-accent)]" />
-              <span>{t('nav_demo')}</span>
+              <span suppressHydrationWarning>{safeT('nav_demo')}</span>
             </Link>
           </div>
 
           {/* Group 1: Investigations */}
           <div className="pt-2">
-            <span className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-wider block px-1 mb-1.5">
-              {t('nav_investigations')}
+            <span suppressHydrationWarning className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-wider block px-1 mb-1.5">
+              {safeT('nav_investigations')}
             </span>
             <div className="space-y-1">
               {investigationSubmenu.map((item) => {
@@ -455,7 +464,7 @@ export const Navbar: React.FC = () => {
                   >
                     <div className="flex items-center gap-2.5">
                       <Icon className="w-4 h-4 text-[var(--brand-accent)]" />
-                      <span>{item.title}</span>
+                      <span suppressHydrationWarning>{item.title}</span>
                     </div>
                     <ChevronRight className="w-3.5 h-3.5 opacity-40" />
                   </Link>
@@ -466,8 +475,8 @@ export const Navbar: React.FC = () => {
 
           {/* Group 2: Reports & Knowledge */}
           <div className="pt-2 border-t border-[var(--border-color)]">
-            <span className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-wider block px-1 mb-1.5">
-              {t('nav_resources')}
+            <span suppressHydrationWarning className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-wider block px-1 mb-1.5">
+              {safeT('nav_resources')}
             </span>
             <div className="space-y-1">
               {resourcesSubmenu.map((item) => {
@@ -486,7 +495,7 @@ export const Navbar: React.FC = () => {
                   >
                     <div className="flex items-center gap-2.5">
                       <Icon className="w-4 h-4 text-[var(--brand-accent)]" />
-                      <span>{item.title}</span>
+                      <span suppressHydrationWarning>{item.title}</span>
                     </div>
                     <ChevronRight className="w-3.5 h-3.5 opacity-40" />
                   </Link>
@@ -504,7 +513,7 @@ export const Navbar: React.FC = () => {
             >
               <div className="flex items-center gap-2.5">
                 <Settings className="w-4 h-4 opacity-70" />
-                <span>{t('nav_settings')}</span>
+                <span suppressHydrationWarning>{safeT('nav_settings')}</span>
               </div>
               <ChevronRight className="w-3.5 h-3.5 opacity-40" />
             </Link>
