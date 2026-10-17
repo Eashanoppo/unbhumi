@@ -13,14 +13,17 @@ interface Translations {
 
 export const DICTIONARY: Translations = {
   // Brand & Nav
-  brand_title: { bn: 'আনভূমি ডিটেক্টর', en: 'UNBUmi Detector' },
-  brand_subtitle: { bn: 'আনলেফট ল্যান্ডগার্ড', en: 'UNLEFT LandGuard' },
+  brand_title: { bn: 'আনভূমি ল্যান্ডগার্ড', en: 'UNLEFT LandGuard' },
+  brand_subtitle: { bn: 'আনভূমি ডিটেক্টর', en: 'UNBUmi Detector' },
   nav_home: { bn: 'হোম', en: 'Home' },
-  nav_dashboard: { bn: 'ড্যাশবোর্ড', en: 'Dashboard' },
-  nav_new_case: { bn: 'নতুন যাচাই', en: 'New Analysis' },
-  nav_cases: { bn: 'কেসসমূহ', en: 'Cases' },
+  nav_overview: { bn: 'ওভারভিউ', en: 'Overview' },
+  nav_dashboard: { bn: 'ওভারভিউ', en: 'Overview' },
+  nav_new_investigation: { bn: 'নতুন তদন্ত', en: 'New Investigation' },
+  nav_new_case: { bn: 'নতুন তদন্ত', en: 'New Investigation' },
+  nav_cases: { bn: 'মামলাসমূহ', en: 'Cases' },
   nav_documents: { bn: 'নথিপত্র লাইব্রেরি', en: 'Documents' },
-  nav_queue: { bn: 'পর্যালোচনা কিউ', en: 'Review Queue' },
+  nav_alerts: { bn: 'সতর্ক সংকেত', en: 'Alerts' },
+  nav_queue: { bn: 'সতর্ক সংকেত', en: 'Alerts' },
   nav_graph: { bn: 'মালিকানা গ্রাফ', en: 'Ownership Graph' },
   nav_reports: { bn: 'প্রতিবেদন', en: 'Reports' },
   nav_methodology: { bn: 'পদ্ধতি ও সীমাবদ্ধতা', en: 'Methodology' },
@@ -29,21 +32,32 @@ export const DICTIONARY: Translations = {
   nav_logout: { bn: 'লগআউট', en: 'Sign Out' },
 
   // Hero & CTA
-  hero_badge: { bn: 'বাংলাদেশ ভূমি সেবা ও দলিল জালিয়াতি নিরোধ প্ল্যাটফর্ম', en: 'Bangladesh LandTech & Fraud Prevention Platform' },
-  hero_title: { bn: 'এআই-সহায়তাকৃত ভূমি দলিল ও স্বত্ব যাচাইকরণ', en: 'AI-Assisted Land Document & Title Verification' },
-  hero_description: {
-    bn: 'দলিলের অসঙ্গতি, দ্বৈত বিক্রির ঝুঁকি, মালিকানা চেইনের ফাঁক এবং খতিয়ান-নামজারির গরমিল দ্রুত শনাক্ত করুন নির্ভরযোগ্য প্রমাণের ভিত্তিতে।',
-    en: 'Identify deed inconsistencies, double-selling risks, broken ownership chains, and khatian mismatches with traceable evidence.'
+  hero_badge: { bn: 'বাংলাদেশ ভূমি সেবা ও দ্বৈত বিক্রি শনাক্তকরণ প্ল্যাটফর্ম (P3 / P2)', en: 'Bangladesh Multimodal Land-Fraud & Double-Selling Detection (P3 / P2)' },
+  hero_headline: { bn: 'একটি দাগ। একাধিক দলিল। একটি প্রমাণ পথ।', en: 'One plot. Multiple deeds. One evidence trail.' },
+  hero_title: { bn: 'একটি দাগ। একাধিক দলিল। একটি প্রমাণ পথ।', en: 'One plot. Multiple deeds. One evidence trail.' },
+  hero_supporting: {
+    bn: 'দলিল, খতিয়ান রেকর্ড, নামজারি তথ্য এবং দাগের পারস্পরিক সম্পর্ক ক্রস-চেক করে দ্বৈত বিক্রি ও স্বত্ব বিরোধ শনাক্ত করুন এবং তদন্তের জন্য সুনির্দিষ্ট প্রমাণ নিশ্চিত করুন।',
+    en: 'Cross-check deeds, khatian records, mutation information, and parcel relationships to identify suspicious conflicts and give reviewers traceable evidence for investigation.'
   },
-  cta_verify: { bn: 'ডকুমেন্ট যাচাই করুন', en: 'Verify a Document' },
-  cta_how_it_works: { bn: 'কীভাবে কাজ করে', en: 'How It Works' },
-  cta_demo_explore: { bn: '৮টি সিন্থেটিক কেস দেখুন', en: 'Explore 8 Synthetic Cases' },
+  hero_description: {
+    bn: 'দলিল, খতিয়ান রেকর্ড, নামজারি তথ্য এবং দাগের পারস্পরিক সম্পর্ক ক্রস-চেক করে দ্বৈত বিক্রি ও স্বত্ব বিরোধ শনাক্ত করুন এবং তদন্তের জন্য সুনির্দিষ্ট প্রমাণ নিশ্চিত করুন।',
+    en: 'Cross-check deeds, khatian records, mutation information, and parcel relationships to identify suspicious conflicts and give reviewers traceable evidence for investigation.'
+  },
+  cta_verify: { bn: 'নতুন তদন্ত শুরু করুন', en: 'Start New Investigation' },
+  cta_how_it_works: { bn: 'তদন্ত কার্যপদ্ধতি', en: 'Investigation Workflow' },
+  cta_demo_explore: { bn: 'প্রস্তুতকৃত টেস্ট কেস দেখুন', en: 'Inspect Prepared Demo Case' },
+
+  // Operational Questions (Overview)
+  q_investigating: { bn: 'কতটি মামলা তদন্তাধীন?', en: 'How many cases are being investigated?' },
+  q_unresolved: { bn: 'কতটি মামলায় অমীমাংসিত দ্বন্দ্ব রয়েছে?', en: 'How many cases have unresolved conflicts?' },
+  q_human_review: { bn: 'কোন মামলাগুলোতে মানবীয় পর্যালোচনা আবশ্যক?', en: 'Which cases require human review?' },
+  q_next_action: { bn: 'পর্যালোচকের পরবর্তী অগ্রাধিকারমূলক করণীয় কী?', en: 'What should the reviewer do next?' },
 
   // Dashboard Metrics
-  metric_total_cases: { bn: 'মোট যাচাই কেস', en: 'Total Cases' },
-  metric_critical_risks: { bn: 'উচ্চ/গুরুতর ঝুঁকি', en: 'Critical / High Risk' },
-  metric_needs_review: { bn: 'পর্যালোচনাধীন', en: 'Needs Review' },
-  metric_clean_cases: { bn: 'যাচাইকৃত অসঙ্গতিহীন', en: 'Verified Clean' },
+  metric_total_cases: { bn: 'তদন্তাধীন মোট মামলা', en: 'Cases Under Investigation' },
+  metric_critical_risks: { bn: 'অমীমাংসিত দ্বন্দ্ব ও বিরোধ', en: 'Unresolved Conflicts' },
+  metric_needs_review: { bn: 'মানবীয় পর্যালোচনা আবশ্যক', en: 'Human Review Required' },
+  metric_clean_cases: { bn: 'যাচাইকৃত অসঙ্গতিহীন', en: 'Verified Consistent' },
   metric_total_docs: { bn: 'মোট নথি বিশ্লেষণ', en: 'Documents Analyzed' },
 
   // Risk Levels
@@ -68,8 +82,8 @@ export const DICTIONARY: Translations = {
 
   // Disclaimer
   disclaimer_short: {
-    bn: 'আনভূমি ডিটেক্টর একটি এআই-সহায়তাকৃত পর্যালোচনামূলক টুল; এটি কোনো সরকারি সংস্থা বা আদালতের চূড়ান্ত স্বত্ব নির্ধারণী সিদ্ধান্ত নয়।',
-    en: 'UNBUmi Detector is an AI-assisted decision-support tool; it does not replace authorized land officials, courts, or title legal clearance.'
+    bn: 'আনলেফট ল্যান্ডগার্ড একটি এআই-সহায়তাকৃত পর্যালোচনামূলক টুল; এটি কোনো সরকারি সংস্থা বা আদালতের চূড়ান্ত স্বত্ব নির্ধারণী সিদ্ধান্ত নয়।',
+    en: 'UNLEFT LandGuard is an AI-assisted decision-support platform; it does not replace authorized land officials, courts, or title legal clearance.'
   }
 };
 

@@ -101,58 +101,60 @@ export default function LandingPage() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
           <div className="lg:col-span-7 space-y-6 text-left">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-[var(--bg-surface-soft)] text-[var(--accent-deep)] dark:text-[#7ED957] border border-[var(--border-color)]">
-              <span className="w-2 h-2 rounded-full bg-[#7ED957] animate-pulse"></span>
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-[var(--bg-surface-soft)] text-[var(--accent-deep)] dark:text-[#A3B4A6] border border-[var(--border-color)]">
+              <span className="w-2 h-2 rounded-full bg-[var(--accent-deep)]"></span>
               <span>{t('hero_badge')}</span>
             </div>
 
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-[var(--text-primary)] leading-[1.18]">
               {language === 'bn' ? (
                 <>
-                  এআই-সহায়তাকৃত ভূমি দলিল ও <br className="hidden sm:inline" />
-                  <span className="text-[var(--accent-deep)] dark:text-[#7ED957]">দ্বৈত বিক্রি প্রতিরোধ</span> প্ল্যাটফর্ম
+                  একটি দাগ। একাধিক দলিল। <br className="hidden sm:inline" />
+                  <span className="text-[var(--accent-deep)]">একটি প্রমাণ পথ।</span>
                 </>
               ) : (
                 <>
-                  AI-Assisted Land Fraud & <br className="hidden sm:inline" />
-                  <span className="text-[var(--accent-deep)] dark:text-[#7ED957]">Double-Selling Detection</span> Platform
+                  One plot. Multiple deeds. <br className="hidden sm:inline" />
+                  <span className="text-[var(--accent-deep)]">One evidence trail.</span>
                 </>
               )}
             </h1>
 
             <p className="text-base sm:text-lg text-[var(--text-secondary)] max-w-2xl leading-relaxed">
-              {t('hero_description')}
+              {language === 'bn'
+                ? 'দলিল, খতিয়ান রেকর্ড, নামজারি তথ্য এবং দাগের পারস্পরিক সম্পর্ক ক্রস-চেক করে দ্বৈত বিক্রি ও স্বত্ব বিরোধ শনাক্ত করুন এবং তদন্তের জন্য সুনির্দিষ্ট প্রমাণ নিশ্চিত করুন।'
+                : 'Cross-check deeds, khatian records, mutation information, and parcel relationships to identify suspicious conflicts and give reviewers traceable evidence for investigation.'}
             </p>
 
             <div className="flex flex-wrap items-center gap-3 pt-2">
               <Link
                 href="/documents/new"
-                className="flex items-center gap-2 px-6 py-3 rounded-xl text-base font-bold bg-[var(--accent-deep)] text-[#FFF8E7] hover:bg-[var(--accent-deep)]/90 transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5"
+                className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold bg-[var(--accent-deep)] text-[#FAF9F6] hover:opacity-90 transition-all shadow-sm"
               >
                 <span>{t('cta_verify')}</span>
-                <ArrowRight className="w-4 h-4 text-[#7ED957]" />
+                <ArrowRight className="w-4 h-4 text-[#FAF9F6]" />
               </Link>
               <Link
-                href="#how-it-works"
-                className="flex items-center gap-2 px-5 py-3 rounded-xl text-base font-semibold border border-[var(--border-color)] bg-[var(--bg-surface)] text-[var(--text-primary)] hover:bg-[var(--bg-surface-soft)] transition-colors"
+                href="/cases/UB-2026-1002"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold border border-[var(--border-color)] bg-[var(--bg-surface)] text-[var(--text-primary)] hover:bg-[var(--bg-surface-soft)] transition-colors"
               >
-                <span>{t('cta_how_it_works')}</span>
+                <span>{language === 'bn' ? 'দ্বৈত বিক্রি ডেমো দেখুন (UB-2026-1002)' : 'Demo Case: Double-Selling (UB-2026-1002)'}</span>
               </Link>
             </div>
 
             {/* Trust points */}
             <div className="pt-4 grid grid-cols-3 gap-3 border-t border-[var(--border-color)]">
               <div>
-                <p className="text-xs text-[var(--text-secondary)] font-medium">শনাক্তকরণ ট্র্যাক</p>
-                <p className="text-sm font-bold text-[var(--accent-deep)] dark:text-[#7ED957]">P3 দ্বৈত বিক্রি রোধ</p>
+                <p className="text-xs text-[var(--text-secondary)] font-medium">প্রাথমিক ট্র্যাক</p>
+                <p className="text-sm font-bold text-[var(--accent-deep)]">P3 দ্বৈত বিক্রি রোধ</p>
               </div>
               <div>
-                <p className="text-xs text-[var(--text-secondary)] font-medium">প্রমাণ ব্যবস্থা</p>
-                <p className="text-sm font-bold text-[var(--accent-deep)] dark:text-[#7ED957]">ট্রেসযোগ্য রেফারেন্স</p>
+                <p className="text-xs text-[var(--text-secondary)] font-medium">সহায়ক যাচাই</p>
+                <p className="text-sm font-bold text-[var(--accent-deep)]">P2 দলিল ও বায়া চেইন</p>
               </div>
               <div>
-                <p className="text-xs text-[var(--text-secondary)] font-medium">আইনি অবস্থান</p>
-                <p className="text-sm font-bold text-[var(--accent-deep)] dark:text-[#7ED957]">মানবীয় তত্ত্বাবধান</p>
+                <p className="text-xs text-[var(--text-secondary)] font-medium">আইনি নিশ্চয়তা</p>
+                <p className="text-sm font-bold text-[var(--accent-deep)]">পর্যালোচক সিদ্ধান্ত</p>
               </div>
             </div>
           </div>

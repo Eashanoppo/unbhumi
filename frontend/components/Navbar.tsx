@@ -41,11 +41,12 @@ export const Navbar: React.FC = () => {
   };
 
   const navLinks = [
-    { href: '/dashboard', label: t('nav_dashboard'), icon: Layers },
+    { href: '/dashboard', label: t('nav_overview'), icon: Layers },
+    { href: '/documents/new', label: t('nav_new_investigation'), icon: PlusCircle },
     { href: '/cases', label: t('nav_cases'), icon: ShieldCheck },
-    { href: '/documents', label: t('nav_documents'), icon: FileText },
-    { href: '/review-queue', label: t('nav_queue'), icon: AlertTriangle },
+    { href: '/review-queue', label: t('nav_alerts'), icon: AlertTriangle },
     { href: '/ownership-graph', label: t('nav_graph'), icon: GitFork },
+    { href: '/reports', label: t('nav_reports'), icon: FileText },
     { href: '/methodology', label: t('nav_methodology'), icon: BookOpen },
   ];
 
@@ -55,15 +56,15 @@ export const Navbar: React.FC = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo & Brand */}
           <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-xl bg-[var(--accent-deep)] flex items-center justify-center p-1.5 shadow-sm group-hover:scale-105 transition-transform">
-              <ShieldCheck className="w-6 h-6 text-[#7ED957]" />
+            <div className="w-9 h-9 rounded-lg bg-[var(--accent-deep)] flex items-center justify-center p-1.5 shadow-sm">
+              <ShieldCheck className="w-5 h-5 text-[#FAF9F6]" />
             </div>
             <div>
-              <span suppressHydrationWarning className="font-bold text-lg tracking-tight text-[var(--accent-deep)] dark:text-[#7ED957] block leading-none">
-                {language === 'bn' ? 'আনভূমি ডিটেক্টর' : 'UNBUmi Detector'}
+              <span suppressHydrationWarning className="font-bold text-base tracking-tight text-[var(--text-primary)] block leading-none">
+                {language === 'bn' ? 'আনলেফট ল্যান্ডগার্ড' : 'UNLEFT LandGuard'}
               </span>
-              <span className="text-[10px] font-semibold text-[var(--text-secondary)] tracking-wider uppercase">
-                UNLEFT LandGuard
+              <span className="text-[10px] font-medium text-[var(--text-secondary)] tracking-wider uppercase">
+                UNBUmi Detector • P3/P2
               </span>
             </div>
           </Link>
@@ -73,18 +74,18 @@ export const Navbar: React.FC = () => {
           <nav className="hidden lg:flex items-center gap-1">
             {navLinks.map((link) => {
               const Icon = link.icon;
-              const isActive = pathname === link.href || (link.href !== '/' && pathname.startsWith(link.href));
+              const isActive = pathname === link.href || (link.href !== '/' && link.href !== '/documents/new' && pathname.startsWith(link.href));
               return (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                     isActive
-                      ? 'bg-[var(--bg-surface-soft)] text-[var(--accent-deep)] dark:text-[#7ED957] font-semibold'
-                      : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-soft)]/60'
+                      ? 'bg-[var(--accent-light)] text-[var(--accent-deep)] dark:bg-[var(--accent-light)] dark:text-[#FAF9F6] font-semibold border border-[var(--border-color)]'
+                      : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-soft)]'
                   }`}
                 >
-                  <Icon className="w-4 h-4 opacity-75" />
+                  <Icon className="w-3.5 h-3.5 opacity-80" />
                   <span>{link.label}</span>
                 </Link>
               );
@@ -93,12 +94,12 @@ export const Navbar: React.FC = () => {
 
           {/* Actions & Utilities */}
           <div className="hidden sm:flex items-center gap-2">
-            {/* New Analysis Primary CTA */}
+            {/* New Investigation Primary Action */}
             <Link
               href="/documents/new"
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-sm font-semibold bg-[var(--accent-deep)] text-[#FFF8E7] hover:bg-[var(--accent-deep)]/90 transition-all shadow-sm"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--accent-deep)] text-[#FAF9F6] hover:opacity-90 transition-all shadow-sm"
             >
-              <PlusCircle className="w-4 h-4 text-[#7ED957]" />
+              <PlusCircle className="w-3.5 h-3.5" />
               <span>{t('cta_verify')}</span>
             </Link>
 
@@ -194,9 +195,9 @@ export const Navbar: React.FC = () => {
           <Link
             href="/documents/new"
             onClick={() => setMobileMenuOpen(false)}
-            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg font-semibold bg-[var(--accent-deep)] text-[#FFF8E7] mb-3"
+            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg font-semibold bg-[var(--accent-deep)] text-[#FAF9F6] mb-3"
           >
-            <PlusCircle className="w-4 h-4 text-[#7ED957]" />
+            <PlusCircle className="w-4 h-4 text-[#FAF9F6]" />
             <span>{t('cta_verify')}</span>
           </Link>
 

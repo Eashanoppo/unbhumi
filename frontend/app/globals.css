@@ -1,34 +1,54 @@
 @import "tailwindcss";
 
 :root {
-  --bg-primary: #FFF8E7;
-  --bg-surface: #FFFFFF;
-  --bg-surface-soft: #F5EEDC;
-  --border-color: #E5E0D2;
-  --text-primary: #263126;
-  --text-secondary: #697265;
-  --accent-parrot: #7ED957;
-  --accent-deep: #286B35;
-  --warning: #E8A23A;
-  --error: #C84C4C;
-  --success: #2E7D46;
+  /* Editorial Legal-Tech Palette */
+  --bg-primary: #FAF9F6;       /* Warm neutral white page canvas */
+  --bg-surface: #FFFFFF;       /* Pure white card and table canvas */
+  --bg-surface-soft: #F4F3EF;  /* Subtle stone surface for panels and secondary controls */
+  --border-color: #E2E0D8;     /* Thin deliberate structural borders */
+  --border-focus: #245838;     /* Accessible active focus ring */
+
+  --text-primary: #1F2421;     /* Dark charcoal primary typography */
+  --text-secondary: #5A6560;   /* Disciplined muted slate secondary text */
+  --text-muted: #838E89;       /* Tertiary metadata text */
+
+  --accent-deep: #245838;      /* Deep forest/olive green primary accent */
+  --accent-light: #EBF3EE;     /* Subtle forest tint for selected states */
+  --accent-parrot: #3B7D4E;    /* Balanced natural green */
+
+  /* Semantic Alerts */
+  --warning: #D97706;          /* Muted amber for review warnings */
+  --warning-bg: #FEF3C7;       /* Soft amber background */
+  --error: #DC2626;            /* Muted red for critical double-selling conflicts */
+  --error-bg: #FEE2E2;         /* Soft red background */
+  --success: #16A34A;          /* Muted green for verified consistency */
+  --success-bg: #DCFCE7;       /* Soft green background */
 
   --background: var(--bg-primary);
   --foreground: var(--text-primary);
 }
 
 .dark {
-  --bg-primary: #151F16;
-  --bg-surface: #1C2B1E;
-  --bg-surface-soft: #243626;
-  --border-color: #2F4532;
-  --text-primary: #F3F8F2;
-  --text-secondary: #9EB29C;
-  --accent-parrot: #7ED957;
-  --accent-deep: #479E57;
-  --warning: #F5B041;
-  --error: #E55353;
-  --success: #43A05D;
+  --bg-primary: #121814;
+  --bg-surface: #18221B;
+  --bg-surface-soft: #202D24;
+  --border-color: #2D3E32;
+  --border-focus: #4EA367;
+
+  --text-primary: #F4F7F4;
+  --text-secondary: #A3B4A6;
+  --text-muted: #738476;
+
+  --accent-deep: #3A8352;
+  --accent-light: #1D3525;
+  --accent-parrot: #4EA367;
+
+  --warning: #F59E0B;
+  --warning-bg: #451A03;
+  --error: #EF4444;
+  --error-bg: #450A0A;
+  --success: #22C55E;
+  --success-bg: #052E16;
 
   --background: var(--bg-primary);
   --foreground: var(--text-primary);
@@ -40,6 +60,8 @@ body {
   min-height: 100vh;
   transition: background-color 0.2s ease, color 0.2s ease;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hind Siliguri", "Noto Sans Bengali", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Custom scrollbars for document panels */

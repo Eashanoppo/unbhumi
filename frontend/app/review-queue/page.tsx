@@ -111,12 +111,13 @@ export default function ReviewQueuePage() {
               <tbody className="divide-y divide-[var(--border-color)]">
                 {alerts.map((alert) => (
                   <tr key={alert.id} className="hover:bg-[var(--bg-surface-soft)]/40 transition-colors">
-                    <td className="py-3 px-4 font-mono font-bold text-[var(--accent-deep)] dark:text-[#7ED957]">
+                    <td className="py-3 px-4 font-mono font-bold text-[var(--accent-deep)]">
                       {alert.rule_code_snapshot}
                     </td>
                     <td className="py-3 px-4 font-semibold text-[var(--text-primary)]">
-                      <Link href={`/cases/${alert.case_number || alert.case_id}`} className="hover:underline">
-                        {alert.case_number || `কেস #${alert.case_id}`}
+                      <Link href={`/cases/${alert.case_number || alert.case_id}`} className="hover:underline text-[var(--accent-deep)] flex items-center gap-1 font-mono">
+                        <span>{alert.case_number || `কেস #${alert.case_id}`}</span>
+                        <ArrowRight className="w-3 h-3" />
                       </Link>
                     </td>
                     <td className="py-3 px-4 max-w-sm">
@@ -127,17 +128,26 @@ export default function ReviewQueuePage() {
                       <RiskBadge level={alert.severity} showScore={false} />
                     </td>
                     <td className="py-3 px-4">
-                      <span className="text-[11px] font-medium px-2 py-0.5 rounded bg-[var(--bg-surface-soft)] text-[var(--text-secondary)]">
+                      <span className="text-[11px] font-medium px-2 py-0.5 rounded bg-[var(--bg-surface-soft)] text-[var(--text-secondary)] border border-[var(--border-color)]">
                         {alert.status_display}
                       </span>
                     </td>
                     <td className="py-3 px-4 text-right">
-                      <button
-                        onClick={() => handleOpenDisposition(alert)}
-                        className="px-3 py-1 rounded bg-[var(--accent-deep)] text-[#FFF8E7] hover:bg-[var(--accent-deep)]/90 text-xs font-semibold"
-                      >
-                        সিদ্ধান্ত দিন
-                      </button>
+                      <div className="flex items-center justify-end gap-1.5">
+                        <Link
+                          href={`/cases/${alert.case_number || alert.case_id}`}
+                          className="px-2.5 py-1 rounded text-xs font-medium border border-[var(--border-color)] bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-soft)] text-[var(--text-secondary)]"
+                          title="কেস ও উৎস প্রমাণ দেখুন"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                        </Link>
+                        <button
+                          onClick={() => handleOpenDisposition(alert)}
+                          className="px-3 py-1 rounded bg-[var(--accent-deep)] text-[#FAF9F6] hover:opacity-90 text-xs font-semibold"
+                        >
+                          সিদ্ধান্ত দিন
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

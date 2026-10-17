@@ -51,6 +51,25 @@ export default function CaseDetailPage({ params }: CaseDetailPageProps) {
     loadCaseData();
   }, [caseId]);
 
+  const [savingStatus, setSavingStatus] = useState(false);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+
+  const handleUpdateStatus = async () => {
+    if (!selectedStatus) return;
+    setSavingStatus(true);
+    setStatusMessage(null);
+    try {
+      await api.updateCaseStatus(caseId, selectedStatus);
+      await loadCaseData();
+      setStatusMessage('পর্যালোচকের সিদ্ধান্ত সফলভাবে ডাটাবেসে সংরক্ষিত হয়েছে।');
+      setTimeout(() => setStatusMessage(null), 4000);
+    } catch (err) {
+      console.error('Failed to update status:', err);
+    } finally {
+      setSavingStatus(false);
+    }
+  };
+
   const handleRunChecks = async () => {
     setRunningChecks(true);
     try {
@@ -179,13 +198,77 @@ export default function CaseDetailPage({ params }: CaseDetailPageProps) {
         </div>
       </div>
 
+      {/* Human Reviewer Decision & Disposition Panel (Phase 5 Step 7) */}
+      <div className="p-4 sm:p-5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)] space-y-3 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[var(--border-color)] pb-3">
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="w-5 h-5 text-[var(--accent-deep)]" />
+            <div>
+              <h3 className="text-sm font-bold text-[var(--text-primary)]">
+                মানবীয় পর্যালোচনা ও কেস নিষ্পত্তি (Human Review & Case Disposition)
+              </h3>
+              <p className="text-xs text-[var(--text-secondary)]">
+                পর্যালোচকের সিদ্ধান্ত সরাসরি ডাটাবেসে সংরক্ষিত হয় এবং অডিট ট্রেইলে লিপিবদ্ধ থাকে
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-[var(--text-secondary)]">বর্তমান স্থিতি:</span>
+            <span className="text-xs px-2.5 py-1 rounded-md font-semibold bg-[var(--accent-light)] text-[var(--accent-deep)] border border-[var(--border-color)]">
+              {caseItem.status_display}
+            </span>
+          </div>
+        </div>
+
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-1">
+          <div className="flex-1">
+            <label htmlFor="review-status" className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">
+              নতুন স্থিতি নির্বাচন করুন:
+            </label>
+            <select
+              id="review-status"
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value)}
+              className="w-full text-xs font-medium p-2 rounded-lg border border-[var(--border-color)] bg-[var(--bg-surface-soft)] text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-deep)]"
+            >
+              <option value="flagged_review">পর্যালোচনা প্রয়োজন (Needs Review)</option>
+              <option value="verified_clean">যাচাই সম্পন্ন - অসঙ্গতিহীন (Verified Clean)</option>
+              <option value="resolved">পর্যালোচনা সম্পন্ন / নিষ্পত্তিকৃত (Review Resolved)</option>
+              <option value="processing">বিশ্লেষণ চলমান (Processing)</option>
+            </select>
+          </div>
+
+          <div className="sm:self-end">
+            <button
+              onClick={handleUpdateStatus}
+              disabled={savingStatus || selectedStatus === caseItem.status}
+              className={`w-full sm:w-auto px-4 py-2 rounded-lg text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1.5 ${
+                selectedStatus === caseItem.status
+                  ? 'bg-[var(--bg-surface-soft)] text-[var(--text-secondary)] border border-[var(--border-color)] cursor-not-allowed'
+                  : 'bg-[var(--accent-deep)] text-[#FAF9F6] hover:opacity-90'
+              }`}
+            >
+              {savingStatus && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
+              <span>{savingStatus ? 'সংরক্ষণ হচ্ছে...' : 'সিদ্ধান্ত সংরক্ষণ করুন'}</span>
+            </button>
+          </div>
+        </div>
+
+        {statusMessage && (
+          <div className="p-2.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-xs text-emerald-900 dark:text-emerald-200 flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span>{statusMessage}</span>
+          </div>
+        )}
+      </div>
+
       {/* Navigation Tabs */}
       <div className="flex border-b border-[var(--border-color)] gap-2 text-xs font-semibold">
         <button
           onClick={() => setActiveTab('findings')}
           className={`pb-3 px-3 flex items-center gap-1.5 border-b-2 transition-colors ${
             activeTab === 'findings'
-              ? 'border-[var(--accent-deep)] text-[var(--accent-deep)] dark:text-[#7ED957]'
+              ? 'border-[var(--accent-deep)] text-[var(--accent-deep)]'
               : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
           }`}
         >
@@ -197,19 +280,19 @@ export default function CaseDetailPage({ params }: CaseDetailPageProps) {
           onClick={() => setActiveTab('graph')}
           className={`pb-3 px-3 flex items-center gap-1.5 border-b-2 transition-colors ${
             activeTab === 'graph'
-              ? 'border-[var(--accent-deep)] text-[var(--accent-deep)] dark:text-[#7ED957]'
+              ? 'border-[var(--accent-deep)] text-[var(--accent-deep)]'
               : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
           }`}
         >
           <GitFork className="w-4 h-4" />
-          <span>মালিকানা সংযোগ গ্রাফ</span>
+          <span>মালিকানা ও লেনদেন গ্রাফ</span>
         </button>
 
         <button
           onClick={() => setActiveTab('documents')}
           className={`pb-3 px-3 flex items-center gap-1.5 border-b-2 transition-colors ${
             activeTab === 'documents'
-              ? 'border-[var(--accent-deep)] text-[var(--accent-deep)] dark:text-[#7ED957]'
+              ? 'border-[var(--accent-deep)] text-[var(--accent-deep)]'
               : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
           }`}
         >
@@ -221,7 +304,7 @@ export default function CaseDetailPage({ params }: CaseDetailPageProps) {
           onClick={() => setActiveTab('audit')}
           className={`pb-3 px-3 flex items-center gap-1.5 border-b-2 transition-colors ${
             activeTab === 'audit'
-              ? 'border-[var(--accent-deep)] text-[var(--accent-deep)] dark:text-[#7ED957]'
+              ? 'border-[var(--accent-deep)] text-[var(--accent-deep)]'
               : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
           }`}
         >
@@ -242,8 +325,8 @@ export default function CaseDetailPage({ params }: CaseDetailPageProps) {
                 {/* Finding Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[var(--border-color)] pb-3">
                   <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-[var(--bg-surface-soft)] text-[var(--accent-deep)] dark:text-[#7ED957]">
-                      {f.rule_code_snapshot}
+                    <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-[var(--bg-surface-soft)] text-[var(--accent-deep)] border border-[var(--border-color)]">
+                      রুল: {f.rule_code_snapshot}
                     </span>
                     <h3 className="text-sm font-bold text-[var(--text-primary)]">
                       {f.title_bn}
@@ -260,16 +343,25 @@ export default function CaseDetailPage({ params }: CaseDetailPageProps) {
 
                 {/* Conflicting Records Table */}
                 {f.conflicting_records && f.conflicting_records.length > 0 && (
-                  <div className="p-3 rounded-lg bg-[var(--bg-surface-soft)] border border-[var(--border-color)] space-y-2">
-                    <span className="text-[11px] font-bold text-[var(--text-primary)] block">
-                      পরস্পরবিরোধী রেকর্ডসমূহ (Discrepancy Breakdown):
-                    </span>
+                  <div className="p-3.5 rounded-lg bg-[var(--bg-surface-soft)] border border-[var(--border-color)] space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold text-[var(--text-primary)]">
+                        পরস্পরবিরোধী রেকর্ডসমূহ (Discrepancy Breakdown):
+                      </span>
+                      <button
+                        onClick={() => setActiveTab('documents')}
+                        className="text-[11px] font-bold text-[var(--accent-deep)] hover:underline flex items-center gap-1"
+                      >
+                        <FileText className="w-3 h-3" />
+                        <span>নথি প্রমাণে যান</span>
+                      </button>
+                    </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                       {f.conflicting_records.map((rec: any, idx: number) => (
-                        <div key={idx} className="p-2 rounded bg-[var(--bg-surface)] border border-[var(--border-color)] font-mono text-[11px]">
+                        <div key={idx} className="p-2.5 rounded bg-[var(--bg-surface)] border border-[var(--border-color)] font-mono text-[11px] space-y-1">
                           {Object.entries(rec).map(([k, v]) => (
-                            <div key={k} className="flex justify-between">
-                              <span className="text-[var(--text-secondary)]">{k}:</span>
+                            <div key={k} className="flex justify-between border-b border-[var(--border-color)]/30 pb-0.5">
+                              <span className="text-[var(--text-secondary)] font-sans">{k}:</span>
                               <span className="font-semibold text-[var(--text-primary)]">{String(v)}</span>
                             </div>
                           ))}
@@ -281,10 +373,10 @@ export default function CaseDetailPage({ params }: CaseDetailPageProps) {
 
                 {/* Human Reviewer Recommended Action */}
                 {f.human_action_recommended_bn && (
-                  <div className="p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-xs text-emerald-900 dark:text-emerald-200 flex items-start gap-2">
-                    <Info className="w-4 h-4 text-emerald-700 dark:text-emerald-400 shrink-0 mt-0.5" />
+                  <div className="p-3 rounded-lg bg-[var(--accent-light)] border border-[var(--border-color)] text-xs text-[var(--text-primary)] flex items-start gap-2">
+                    <Info className="w-4 h-4 text-[var(--accent-deep)] shrink-0 mt-0.5" />
                     <div>
-                      <span className="font-bold">পর্যালোচকের করণীয়: </span>
+                      <span className="font-bold text-[var(--accent-deep)]">পর্যালোচকের করণীয়: </span>
                       <span>{f.human_action_recommended_bn}</span>
                     </div>
                   </div>

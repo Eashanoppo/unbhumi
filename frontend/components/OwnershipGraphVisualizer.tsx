@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { GraphData, GraphNode, GraphEdge } from '@/lib/api';
-import { GitFork, AlertCircle, Info, ZoomIn, ZoomOut, RotateCcw, List, Network } from 'lucide-react';
+import { GitFork, AlertCircle, Info, ZoomIn, ZoomOut, RotateCcw, List, Network, Clock, Calendar, ArrowRight, ShieldCheck } from 'lucide-react';
 
 interface OwnershipGraphVisualizerProps {
   data: GraphData;
@@ -12,7 +12,7 @@ interface OwnershipGraphVisualizerProps {
 export const OwnershipGraphVisualizer: React.FC<OwnershipGraphVisualizerProps> = ({ data, className = '' }) => {
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
   const [selectedEdge, setSelectedEdge] = useState<GraphEdge | null>(null);
-  const [viewMode, setViewMode] = useState<'graph' | 'table'>('graph');
+  const [viewMode, setViewMode] = useState<'graph' | 'timeline' | 'table'>('graph');
   const [zoom, setZoom] = useState(1);
 
   const nodes = data.nodes || [];
@@ -44,28 +44,54 @@ export const OwnershipGraphVisualizer: React.FC<OwnershipGraphVisualizerProps> =
   const getNodeColor = (type: string) => {
     switch (type) {
       case 'parcel':
-        return { bg: '#286B35', border: '#7ED957', text: '#FFF8E7' };
+        return { bg: '#245838', border: '#1E4D30', text: '#FAF9F6' };
       case 'deed':
-        return { bg: '#FFF8E7', border: '#286B35', text: '#263126' };
+        return { bg: '#FFFFFF', border: '#245838', text: '#1F2421' };
       case 'person':
-        return { bg: '#F5EEDC', border: '#697265', text: '#263126' };
+        return { bg: '#F4F3EF', border: '#5A6560', text: '#1F2421' };
       case 'khatian':
       case 'mutation':
-        return { bg: '#EBF5EE', border: '#2E7D46', text: '#1E4D27' };
+        return { bg: '#EBF3EE', border: '#245838', text: '#1F2421' };
       default:
-        return { bg: '#FFFFFF', border: '#E5E0D2', text: '#263126' };
+        return { bg: '#FFFFFF', border: '#E2E0D8', text: '#1F2421' };
     }
   };
+
+  // Derive timeline events from deeds and edges
+  const deedNodes = nodes.filter(n => n.type === 'deed');
+  const parcelNode = nodes.find(n => n.type === 'parcel');
+  const personNodes = nodes.filter(n => n.type === 'person');
+
+  const timelineEvents = deedNodes.map((deed, idx) => {
+    // Find edges connected to this deed
+    const deedEdges = edges.filter(e => e.source === deed.id || e.target === deed.id);
+    const conflictEdge = deedEdges.find(e => e.is_conflict);
+    
+    // Attempt to extract year from deed label
+    const yearMatch = deed.label.match(/\b(19\d\d|20\d\d)\b/);
+    const year = yearMatch ? yearMatch[1] : (2020 + idx).toString();
+
+    return {
+      id: deed.id,
+      title: deed.label,
+      subtitle: deed.subtext,
+      year: year,
+      parcel: parcelNode?.label || 'দাগ রেকর্ড',
+      isConflict: Boolean(conflictEdge),
+      conflictReason: conflictEdge?.conflict_reason || '',
+      edges: deedEdges
+    };
+  }).sort((a, b) => parseInt(a.year) - parseInt(b.year));
 
   return (
     <div className={`rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)] overflow-hidden ${className}`}>
       {/* Header & Controls */}
       <div className="p-4 border-b border-[var(--border-color)] flex flex-wrap items-center justify-between gap-3 bg-[var(--bg-surface-soft)]/50">
         <div className="flex items-center gap-2">
-          <GitFork className="w-5 h-5 text-[var(--accent-deep)] dark:text-[#7ED957]" />
+          <GitFork className="w-5 h-5 text-[var(--accent-deep)]" />
           <div>
             <h3 className="text-sm font-bold text-[var(--text-primary)]">
-              মালিকানা ও লেনদেন সংযোগ গ্রাফ (Ownership Graph)
+              মালিকানা ও লেনদেন সংযোগ গ্রাফ (Ownership & Transaction Graph)
             </h3>
             <p className="text-xs text-[var(--text-secondary)]">
               {nodes.length}টি নোড • {edges.length}টি সংযোগ • {data.metrics?.conflict_edges || 0}টি দ্বন্দ্ব শনাক্ত
@@ -78,17 +104,26 @@ export const OwnershipGraphVisualizer: React.FC<OwnershipGraphVisualizerProps> =
           <div className="flex rounded-lg border border-[var(--border-color)] overflow-hidden bg-[var(--bg-surface)] p-0.5">
             <button
               onClick={() => setViewMode('graph')}
-              className={`px-2.5 py-1 text-xs font-semibold flex items-center gap-1 rounded ${
-                viewMode === 'graph' ? 'bg-[var(--accent-deep)] text-white' : 'text-[var(--text-secondary)]'
+              className={`px-2.5 py-1 text-xs font-semibold flex items-center gap-1 rounded transition-colors ${
+                viewMode === 'graph' ? 'bg-[var(--accent-deep)] text-white' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
               }`}
             >
               <Network className="w-3.5 h-3.5" />
               <span>গ্রাফ</span>
             </button>
             <button
+              onClick={() => setViewMode('timeline')}
+              className={`px-2.5 py-1 text-xs font-semibold flex items-center gap-1 rounded transition-colors ${
+                viewMode === 'timeline' ? 'bg-[var(--accent-deep)] text-white' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+              }`}
+            >
+              <Clock className="w-3.5 h-3.5" />
+              <span>টাইমলাইন</span>
+            </button>
+            <button
               onClick={() => setViewMode('table')}
-              className={`px-2.5 py-1 text-xs font-semibold flex items-center gap-1 rounded ${
-                viewMode === 'table' ? 'bg-[var(--accent-deep)] text-white' : 'text-[var(--text-secondary)]'
+              className={`px-2.5 py-1 text-xs font-semibold flex items-center gap-1 rounded transition-colors ${
+                viewMode === 'table' ? 'bg-[var(--accent-deep)] text-white' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
               }`}
             >
               <List className="w-3.5 h-3.5" />
@@ -301,16 +336,103 @@ export const OwnershipGraphVisualizer: React.FC<OwnershipGraphVisualizerProps> =
             </div>
           )}
         </div>
+      ) : viewMode === 'timeline' ? (
+        /* Chronological Transaction Timeline View */
+        <div className="p-6 space-y-6">
+          <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-3">
+            <div>
+              <h4 className="text-sm font-bold text-[var(--text-primary)]">
+                কালানুক্রমিক জমি হস্তান্তর ও বিরোধ টাইমলাইন (Chronological Timeline)
+              </h4>
+              <p className="text-xs text-[var(--text-secondary)]">
+                নথির সম্পাদন তারিখ ও হস্তান্তরের পর্যায়ক্রম অনুসারে সাজানো হয়েছে
+              </p>
+            </div>
+            <span className="text-xs font-semibold px-2 py-0.5 rounded bg-[var(--bg-surface-soft)] text-[var(--text-secondary)] border border-[var(--border-color)]">
+              {timelineEvents.length}টি প্রধান ইভেন্ট
+            </span>
+          </div>
+
+          <div className="relative pl-6 space-y-6 before:content-[''] before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-[var(--border-color)]">
+            {timelineEvents.map((evt, idx) => (
+              <div key={evt.id} className="relative group">
+                {/* Timeline node dot */}
+                <div className={`absolute -left-6 top-1 w-4 h-4 rounded-full border-2 bg-[var(--bg-surface)] flex items-center justify-center ${
+                  evt.isConflict ? 'border-red-600 bg-red-100 dark:bg-red-950' : 'border-[var(--accent-deep)]'
+                }`}>
+                  <div className={`w-1.5 h-1.5 rounded-full ${evt.isConflict ? 'bg-red-600' : 'bg-[var(--accent-deep)]'}`} />
+                </div>
+
+                {/* Event Card */}
+                <div className={`p-4 rounded-xl border space-y-2.5 transition-all ${
+                  evt.isConflict
+                    ? 'border-red-300 dark:border-red-900 bg-red-50/40 dark:bg-red-950/20'
+                    : 'border-[var(--border-color)] bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-soft)]/40'
+                }`}>
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-[var(--bg-surface-soft)] border border-[var(--border-color)] text-[var(--text-primary)]">
+                        সন: {evt.year}
+                      </span>
+                      <h5 className="text-sm font-bold text-[var(--text-primary)]">
+                        {evt.title}
+                      </h5>
+                    </div>
+
+                    {evt.isConflict ? (
+                      <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300 border border-red-300 dark:border-red-800 flex items-center gap-1">
+                        <AlertCircle className="w-3.5 h-3.5 text-red-600" />
+                        <span>সম্ভাব্য দ্বৈত বিক্রির দ্বন্দ্ব (P001)</span>
+                      </span>
+                    ) : (
+                      <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 flex items-center gap-1">
+                        <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>বৈধ হস্তান্তর শৃঙ্খল</span>
+                      </span>
+                    )}
+                  </div>
+
+                  <p className="text-xs text-[var(--text-secondary)]">
+                    {evt.subtitle || `লক্ষ্য প্লট: ${evt.parcel}`}
+                  </p>
+
+                  {/* Conflict alert callout */}
+                  {evt.isConflict && evt.conflictReason && (
+                    <div className="p-3 rounded-lg bg-red-100/70 dark:bg-red-950/80 border border-red-300 dark:border-red-800 text-xs text-red-900 dark:text-red-200 space-y-1">
+                      <p className="font-bold flex items-center gap-1.5">
+                        <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+                        <span>দ্বন্দ্বের কারণ ও ট্রেসেবিলিটি:</span>
+                      </p>
+                      <p className="text-[11px] leading-relaxed">
+                        {evt.conflictReason}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Linked Parties */}
+                  <div className="flex flex-wrap items-center gap-2 pt-1 text-[11px] text-[var(--text-secondary)]">
+                    <span className="font-medium">সংযুক্ত নোডসমূহ:</span>
+                    {evt.edges.map(e => (
+                      <span key={e.id} className="px-2 py-0.5 rounded bg-[var(--bg-surface-soft)] border border-[var(--border-color)]">
+                        {e.label}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       ) : (
         /* Accessible Tabular Alternative */
         <div className="p-4 overflow-x-auto">
           <table className="w-full text-xs text-left border-collapse">
             <thead>
               <tr className="border-b border-[var(--border-color)] text-[var(--text-secondary)] bg-[var(--bg-surface-soft)]/50">
-                <th className="py-2 px-3">উৎস নোড (Source)</th>
-                <th className="py-2 px-3">সম্পর্ক (Relation)</th>
-                <th className="py-2 px-3">লক্ষ্য নোড (Target)</th>
-                <th className="py-2 px-3">স্থিতি (Status)</th>
+                <th className="py-2.5 px-3">উৎস নোড (Source)</th>
+                <th className="py-2.5 px-3">সম্পর্ক (Relation)</th>
+                <th className="py-2.5 px-3">লক্ষ্য নোড (Target)</th>
+                <th className="py-2.5 px-3">স্থিতি ও ঝুঁকি (Status)</th>
               </tr>
             </thead>
             <tbody>
@@ -319,14 +441,20 @@ export const OwnershipGraphVisualizer: React.FC<OwnershipGraphVisualizerProps> =
                 const tgt = nodes.find((n) => n.id === edge.target);
                 return (
                   <tr key={edge.id} className="border-b border-[var(--border-color)]/60 hover:bg-[var(--bg-surface-soft)]/30">
-                    <td className="py-2 px-3 font-medium">{src?.label || edge.source}</td>
-                    <td className="py-2 px-3">{edge.label}</td>
-                    <td className="py-2 px-3 font-medium">{tgt?.label || edge.target}</td>
-                    <td className="py-2 px-3">
+                    <td className="py-2.5 px-3 font-medium text-[var(--text-primary)]">{src?.label || edge.source}</td>
+                    <td className="py-2.5 px-3 text-[var(--text-secondary)]">{edge.label}</td>
+                    <td className="py-2.5 px-3 font-medium text-[var(--text-primary)]">{tgt?.label || edge.target}</td>
+                    <td className="py-2.5 px-3">
                       {edge.is_conflict ? (
-                        <span className="text-red-600 font-bold">⚠️ দ্বৈত বিক্রির বিরোধ</span>
+                        <span className="inline-flex items-center gap-1 text-red-700 dark:text-red-400 font-semibold">
+                          <AlertCircle className="w-3.5 h-3.5" />
+                          <span>দ্বৈত বিক্রির বিরোধ</span>
+                        </span>
                       ) : (
-                        <span className="text-emerald-700">স্বাভাবিক</span>
+                        <span className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-400">
+                          <ShieldCheck className="w-3.5 h-3.5" />
+                          <span>সামঞ্জস্যপূর্ণ</span>
+                        </span>
                       )}
                     </td>
                   </tr>

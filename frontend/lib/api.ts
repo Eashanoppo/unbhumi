@@ -374,6 +374,13 @@ export const api = {
     });
   },
 
+  async updateCaseStatus(caseId: string, status: string): Promise<CaseItem> {
+    return await fetchApi<CaseItem>(`/cases/${caseId}/`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status })
+    });
+  },
+
   async getCaseGraph(caseId: string): Promise<GraphData> {
     try {
       return await fetchApi<GraphData>(`/cases/${caseId}/graph/`);

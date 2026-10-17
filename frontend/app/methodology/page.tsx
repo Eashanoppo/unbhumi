@@ -26,7 +26,7 @@ export default function MethodologyPage() {
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 space-y-12">
       {/* Header */}
       <div className="space-y-3 text-center sm:text-left border-b border-[var(--border-color)] pb-8">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[var(--bg-surface-soft)] text-[var(--accent-deep)] dark:text-[#7ED957] border border-[var(--border-color)]">
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[var(--bg-surface-soft)] text-[var(--accent-deep)] border border-[var(--border-color)]">
           <BookOpen className="w-3.5 h-3.5" />
           <span>প্রযুক্তিগত কার্যপ্রণালী ও রুল ইঞ্জিন</span>
         </div>
@@ -34,8 +34,36 @@ export default function MethodologyPage() {
           {language === 'bn' ? 'যাচাই পদ্ধতি ও সীমাবদ্ধতা' : 'Methodology & Limitations'}
         </h1>
         <p className="text-sm sm:text-base text-[var(--text-secondary)] leading-relaxed">
-          আনভূমি ডিটেক্টরের ওসিআর, ফিল্ড নরমালাইজেশন, ডিটারমিনিস্টিক রুল ইঞ্জিন ও গ্রাফ বিশ্লেষণের বৈজ্ঞানিক ব্যাখ্যা।
+          আনলেফট ল্যান্ডগার্ডের ওসিআর, ফিল্ড নরমালাইজেশন, ডিটারমিনিস্টিক রুল ইঞ্জিন ও গ্রাফ বিশ্লেষণের বৈজ্ঞানিক ব্যাখ্যা।
         </p>
+      </div>
+
+      {/* Technical Distinction Matrix */}
+      <div className="p-5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)] space-y-3 shadow-sm">
+        <h2 className="text-sm font-bold text-[var(--text-primary)] flex items-center gap-2">
+          <ShieldCheck className="w-4 h-4 text-[var(--accent-deep)]" />
+          <span>প্রযুক্তিগত দাবির সুনির্দিষ্ট পার্থক্য (Critical Distinctions)</span>
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+          <div className="p-3 rounded-lg bg-[var(--bg-surface-soft)] border border-[var(--border-color)] space-y-1">
+            <span className="font-bold text-[var(--accent-deep)] block">ক্রিপ্টোগ্রাফিক হ্যাশ (SHA-256)</span>
+            <p className="text-[11px] text-[var(--text-secondary)]">
+              ডিজিটাল ফাইলটি হুবহু একই বাইটের কিনা তা প্রমাণ করে। এটি দলিলের অন্তর্নিহিত আইনি বৈধতা বা স্বত্ব প্রমাণ করে না।
+            </p>
+          </div>
+          <div className="p-3 rounded-lg bg-[var(--bg-surface-soft)] border border-[var(--border-color)] space-y-1">
+            <span className="font-bold text-[var(--accent-deep)] block">ডিটারমিনিস্টিক রুলস</span>
+            <p className="text-[11px] text-[var(--text-secondary)]">
+              ১২টি স্পষ্ট নিয়ম দিয়ে রেকর্ডসমূহের মধ্যকার গাণিতিক ও তথ্যের অমিল শনাক্ত করে। ফলাফল ১০০% টেস্টেবল ও পুনরাবৃত্তিযোগ্য।
+            </p>
+          </div>
+          <div className="p-3 rounded-lg bg-[var(--bg-surface-soft)] border border-[var(--border-color)] space-y-1">
+            <span className="font-bold text-[var(--accent-deep)] block">মানবীয় পর্যালোচনা</span>
+            <p className="text-[11px] text-[var(--text-secondary)]">
+              সিস্টেম কেবল প্রমাণ নির্দেশক ও সংকেত প্রদানকারী। কোনো অবস্থাতেই সিস্টেম স্বয়ংক্রিয়ভাবে "জালিয়াত" ঘোষণা করে না।
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Pipeline Stages */}
@@ -96,7 +124,7 @@ export default function MethodologyPage() {
             <tbody className="divide-y divide-[var(--border-color)]">
               {rules.map((r) => (
                 <tr key={r.code} className="hover:bg-[var(--bg-surface-soft)]/30">
-                  <td className="py-2 px-3 font-mono font-bold text-[var(--accent-deep)] dark:text-[#7ED957]">{r.code}</td>
+                  <td className="py-2 px-3 font-mono font-bold text-[var(--accent-deep)]">{r.code}</td>
                   <td className="py-2 px-3 font-medium text-[var(--text-primary)]">{r.name_bn}</td>
                   <td className="py-2 px-3 text-[var(--text-secondary)]">{r.family}</td>
                   <td className="py-2 px-3 font-semibold">{r.sev}</td>
