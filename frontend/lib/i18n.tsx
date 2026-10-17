@@ -87,8 +87,10 @@ const LanguageContext = createContext<LanguageContextType>({
 
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [language, setLanguageState] = useState<Language>('bn');
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     const saved = localStorage.getItem('unbhumi_lang') as Language;
     if (saved && (saved === 'bn' || saved === 'en')) {
       setLanguageState(saved);
@@ -100,18 +102,21 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     localStorage.setItem('unbhumi_lang', lang);
   };
 
+  const activeLanguage: Language = mounted ? language : 'bn';
+
   const t = (key: string): string => {
     if (DICTIONARY[key]) {
-      return DICTIONARY[key][language] || DICTIONARY[key].bn || key;
+      return DICTIONARY[key][activeLanguage] || DICTIONARY[key].bn || key;
     }
     return key;
   };
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+    <LanguageContext.Provider value={{ language: activeLanguage, setLanguage, t }}>
       {children}
     </LanguageContext.Provider>
   );
 };
+
 
 export const useLanguage = () => useContext(LanguageContext);

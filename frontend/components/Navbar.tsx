@@ -50,7 +50,7 @@ export const Navbar: React.FC = () => {
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-[var(--border-color)] bg-[var(--bg-surface)]/95 backdrop-blur-md">
+    <header suppressHydrationWarning className="sticky top-0 z-50 w-full border-b border-[var(--border-color)] bg-[var(--bg-surface)]/95 backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo & Brand */}
@@ -59,7 +59,7 @@ export const Navbar: React.FC = () => {
               <ShieldCheck className="w-6 h-6 text-[#7ED957]" />
             </div>
             <div>
-              <span className="font-bold text-lg tracking-tight text-[var(--accent-deep)] dark:text-[#7ED957] block leading-none">
+              <span suppressHydrationWarning className="font-bold text-lg tracking-tight text-[var(--accent-deep)] dark:text-[#7ED957] block leading-none">
                 {language === 'bn' ? 'আনভূমি ডিটেক্টর' : 'UNBUmi Detector'}
               </span>
               <span className="text-[10px] font-semibold text-[var(--text-secondary)] tracking-wider uppercase">
@@ -67,6 +67,7 @@ export const Navbar: React.FC = () => {
               </span>
             </div>
           </Link>
+
 
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center gap-1">
@@ -108,7 +109,7 @@ export const Navbar: React.FC = () => {
               className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold border border-[var(--border-color)] bg-[var(--bg-surface-soft)] text-[var(--text-primary)] hover:bg-[var(--border-color)] transition-colors"
             >
               <Globe className="w-3.5 h-3.5 text-[var(--accent-deep)]" />
-              <span>{language === 'bn' ? 'English' : 'বাংলা'}</span>
+              <span suppressHydrationWarning>{language === 'bn' ? 'English' : 'বাংলা'}</span>
             </button>
 
             {/* Theme Toggle */}
@@ -163,11 +164,13 @@ export const Navbar: React.FC = () => {
           {/* Mobile menu button */}
           <div className="flex sm:hidden items-center gap-1">
             <button
+              suppressHydrationWarning
               onClick={toggleLanguage}
               className="px-2 py-1 text-xs font-bold border border-[var(--border-color)] rounded"
             >
               {language === 'bn' ? 'EN' : 'বাং'}
             </button>
+
             <button
               onClick={toggleTheme}
               className="p-1.5 border border-[var(--border-color)] rounded"
