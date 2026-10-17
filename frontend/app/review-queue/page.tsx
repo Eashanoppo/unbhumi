@@ -7,11 +7,12 @@ import { api, AnomalyFinding } from '@/lib/api';
 import { RiskBadge } from '@/components/RiskBadge';
 import {
   AlertTriangle, CheckCircle, HelpCircle, XCircle, Filter,
-  RefreshCw, Eye, MessageSquare, ArrowRight, ShieldAlert
+  RefreshCw, Eye, MessageSquare, ArrowRight, ShieldAlert,
+  ArrowLeft, Check, ShieldCheck
 } from 'lucide-react';
 
 export default function ReviewQueuePage() {
-  const { language, t, getStatusLabel } = useLanguage();
+  const { language, t, getStatusLabel, formatNumber } = useLanguage();
   const [alerts, setAlerts] = useState<AnomalyFinding[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedAlert, setSelectedAlert] = useState<AnomalyFinding | null>(null);
@@ -19,6 +20,7 @@ export default function ReviewQueuePage() {
   const [reasonBn, setReasonBn] = useState<string>('');
   const [submitting, setSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [modalStep, setModalStep] = useState<1 | 2 | 3>(1);
 
   const loadAlerts = async () => {
     setLoading(true);
@@ -171,13 +173,14 @@ export default function ReviewQueuePage() {
         )}
       </div>
 
-      {/* Human Disposition Decision Modal */}
+      {/* Human Disposition Decision Modal with Step-by-Step Progress Bar */}
       {selectedAlert && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-in fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in">
           <div className="max-w-lg w-full bg-[var(--bg-surface)] rounded-2xl border border-[var(--border-color)] p-6 space-y-5 shadow-2xl">
+            {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-3">
               <div>
-                <span className="font-mono text-xs font-bold text-[var(--accent-deep)]">
+                <span className="font-mono text-xs font-bold text-[var(--accent-deep)] dark:text-[#7ED957]">
                   [{selectedAlert.rule_code_snapshot}] {selectedAlert.case_number}
                 </span>
                 <h3 className="text-base font-bold text-[var(--text-primary)]">
@@ -186,103 +189,242 @@ export default function ReviewQueuePage() {
               </div>
               <button
                 onClick={() => setSelectedAlert(null)}
-                className="text-[var(--text-secondary)] hover:text-black"
+                className="text-[var(--text-secondary)] hover:text-black dark:hover:text-white p-1 rounded-lg"
               >
                 ✕
               </button>
             </div>
 
+            {/* Step-by-Step Progress Bar */}
+            <div className="space-y-2 bg-[var(--bg-surface-soft)]/50 p-3 rounded-xl border border-[var(--border-color)]">
+              <div className="flex items-center justify-between text-[11px] font-semibold text-[var(--text-secondary)]">
+                <span>
+                  {modalStep === 1 && t('disp_step1')}
+                  {modalStep === 2 && t('disp_step2')}
+                  {modalStep === 3 && t('disp_step3')}
+                </span>
+                <span className="font-mono font-bold text-[var(--accent-deep)] dark:text-[#7ED957]">
+                  {formatNumber(modalStep === 1 ? 33 : modalStep === 2 ? 66 : 100)}%
+                </span>
+              </div>
+
+              {/* Progress Track */}
+              <div className="w-full h-1.5 bg-[var(--border-color)] rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-[var(--accent-deep)] to-[#7ED957] transition-all duration-300 rounded-full"
+                  style={{ width: `${modalStep === 1 ? 33 : modalStep === 2 ? 66 : 100}%` }}
+                />
+              </div>
+
+              {/* Step indicator badges */}
+              <div className="flex items-center justify-between pt-1 text-[10px]">
+                <button
+                  type="button"
+                  onClick={() => setModalStep(1)}
+                  className={`flex items-center gap-1 font-semibold ${modalStep === 1 ? 'text-[var(--accent-deep)] dark:text-[#7ED957]' : 'text-[var(--text-secondary)]'}`}
+                >
+                  <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] ${modalStep > 1 ? 'bg-emerald-600 text-white' : modalStep === 1 ? 'bg-[var(--accent-deep)] text-white' : 'bg-gray-200 text-gray-700'}`}>
+                    {modalStep > 1 ? '✓' : formatNumber(1)}
+                  </span>
+                  <span>{t('disp_step1')}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setModalStep(2)}
+                  className={`flex items-center gap-1 font-semibold ${modalStep === 2 ? 'text-[var(--accent-deep)] dark:text-[#7ED957]' : 'text-[var(--text-secondary)]'}`}
+                >
+                  <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] ${modalStep > 2 ? 'bg-emerald-600 text-white' : modalStep === 2 ? 'bg-[var(--accent-deep)] text-white' : 'bg-gray-200 text-gray-700'}`}>
+                    {modalStep > 2 ? '✓' : formatNumber(2)}
+                  </span>
+                  <span>{t('disp_step2')}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (reasonBn.trim()) setModalStep(3);
+                  }}
+                  className={`flex items-center gap-1 font-semibold ${modalStep === 3 ? 'text-[var(--accent-deep)] dark:text-[#7ED957]' : 'text-[var(--text-secondary)]'}`}
+                >
+                  <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] ${modalStep === 3 ? 'bg-[var(--accent-deep)] text-white' : 'bg-gray-200 text-gray-700'}`}>
+                    {formatNumber(3)}
+                  </span>
+                  <span>{t('disp_step3')}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Alert Context Banner */}
             <div className="p-3 rounded-lg bg-[var(--bg-surface-soft)] text-xs text-[var(--text-secondary)] space-y-1">
               <p className="font-bold text-[var(--text-primary)]">
                 {language === 'bn' ? selectedAlert.title_bn : selectedAlert.title_en}
               </p>
-              <p>
+              <p className="text-[11px] line-clamp-2">
                 {language === 'bn' ? selectedAlert.description_bn : selectedAlert.description_en}
               </p>
             </div>
 
             <form onSubmit={handleSubmitDisposition} className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-[var(--text-primary)] block">
-                  {t('select_disp_type')}
-                </label>
-                <div className="space-y-2">
-                  <label className="flex items-center gap-2 p-2.5 rounded-lg border border-[var(--border-color)] cursor-pointer text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-surface-soft)]">
-                    <input
-                      type="radio"
-                      name="decision"
-                      value="confirmed_inconsistency"
-                      checked={decision === 'confirmed_inconsistency'}
-                      onChange={(e) => setDecision(e.target.value)}
-                    />
-                    <span>{t('disp_opt_confirmed')}</span>
+              {/* STEP 1: SELECT DISPOSITION DETERMINATION */}
+              {modalStep === 1 && (
+                <div className="space-y-3">
+                  <label className="text-xs font-bold text-[var(--text-primary)] block">
+                    {t('select_disp_type')}
                   </label>
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-2.5 p-2.5 rounded-xl border border-[var(--border-color)] cursor-pointer text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-surface-soft)] transition-colors">
+                      <input
+                        type="radio"
+                        name="decision"
+                        value="confirmed_inconsistency"
+                        checked={decision === 'confirmed_inconsistency'}
+                        onChange={(e) => setDecision(e.target.value)}
+                      />
+                      <span>{t('disp_opt_confirmed')}</span>
+                    </label>
 
-                  <label className="flex items-center gap-2 p-2.5 rounded-lg border border-[var(--border-color)] cursor-pointer text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-surface-soft)]">
-                    <input
-                      type="radio"
-                      name="decision"
-                      value="resolved_legitimate"
-                      checked={decision === 'resolved_legitimate'}
-                      onChange={(e) => setDecision(e.target.value)}
-                    />
-                    <span>{t('disp_opt_resolved')}</span>
-                  </label>
+                    <label className="flex items-center gap-2.5 p-2.5 rounded-xl border border-[var(--border-color)] cursor-pointer text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-surface-soft)] transition-colors">
+                      <input
+                        type="radio"
+                        name="decision"
+                        value="resolved_legitimate"
+                        checked={decision === 'resolved_legitimate'}
+                        onChange={(e) => setDecision(e.target.value)}
+                      />
+                      <span>{t('disp_opt_resolved')}</span>
+                    </label>
 
-                  <label className="flex items-center gap-2 p-2.5 rounded-lg border border-[var(--border-color)] cursor-pointer text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-surface-soft)]">
-                    <input
-                      type="radio"
-                      name="decision"
-                      value="inconclusive"
-                      checked={decision === 'inconclusive'}
-                      onChange={(e) => setDecision(e.target.value)}
-                    />
-                    <span>{t('disp_opt_inconclusive')}</span>
-                  </label>
+                    <label className="flex items-center gap-2.5 p-2.5 rounded-xl border border-[var(--border-color)] cursor-pointer text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-surface-soft)] transition-colors">
+                      <input
+                        type="radio"
+                        name="decision"
+                        value="inconclusive"
+                        checked={decision === 'inconclusive'}
+                        onChange={(e) => setDecision(e.target.value)}
+                      />
+                      <span>{t('disp_opt_inconclusive')}</span>
+                    </label>
 
-                  <label className="flex items-center gap-2 p-2.5 rounded-lg border border-[var(--border-color)] cursor-pointer text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-surface-soft)]">
-                    <input
-                      type="radio"
-                      name="decision"
-                      value="false_positive"
-                      checked={decision === 'false_positive'}
-                      onChange={(e) => setDecision(e.target.value)}
-                    />
-                    <span>{t('disp_opt_false_positive')}</span>
-                  </label>
+                    <label className="flex items-center gap-2.5 p-2.5 rounded-xl border border-[var(--border-color)] cursor-pointer text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-surface-soft)] transition-colors">
+                      <input
+                        type="radio"
+                        name="decision"
+                        value="false_positive"
+                        checked={decision === 'false_positive'}
+                        onChange={(e) => setDecision(e.target.value)}
+                      />
+                      <span>{t('disp_opt_false_positive')}</span>
+                    </label>
+                  </div>
+
+                  <div className="flex justify-between items-center pt-2 border-t border-[var(--border-color)]">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedAlert(null)}
+                      className="px-4 py-2 text-xs font-semibold border border-[var(--border-color)] rounded-xl hover:bg-[var(--bg-surface-soft)]"
+                    >
+                      {t('cancel')}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setModalStep(2)}
+                      className="px-5 py-2 text-xs font-bold rounded-xl bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-[var(--cta-text)] flex items-center gap-1.5 shadow-sm active:scale-95 cursor-pointer"
+                    >
+                      <span>{language === 'bn' ? 'পরবর্তী: অফিসিয়াল নোট' : 'Next: Official Notes'}</span>
+                      <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
 
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-[var(--text-primary)] block">
-                  {t('disp_notes_label')}
-                </label>
-                <textarea
-                  required
-                  rows={3}
-                  value={reasonBn}
-                  onChange={(e) => setReasonBn(e.target.value)}
-                  className="w-full p-2.5 text-xs rounded-lg border border-[var(--border-color)] bg-[var(--bg-surface)] focus:ring-1 focus:ring-[var(--accent-deep)]"
-                  placeholder={t('disp_notes_placeholder')}
-                />
-              </div>
+              {/* STEP 2: REVIEWER NOTES */}
+              {modalStep === 2 && (
+                <div className="space-y-3">
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-[var(--text-primary)] block">
+                      {t('disp_notes_label')}
+                    </label>
+                    <textarea
+                      required
+                      rows={4}
+                      value={reasonBn}
+                      onChange={(e) => setReasonBn(e.target.value)}
+                      className="w-full p-3 text-xs rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)] focus:ring-1 focus:ring-[var(--brand-accent)]"
+                      placeholder={t('disp_notes_placeholder')}
+                    />
+                  </div>
 
-              <div className="flex justify-end gap-2 pt-2 border-t border-[var(--border-color)]">
-                <button
-                  type="button"
-                  onClick={() => setSelectedAlert(null)}
-                  className="px-4 py-2 text-xs font-semibold border border-[var(--border-color)] rounded-lg hover:bg-[var(--bg-surface-soft)]"
-                >
-                  {t('cancel')}
-                </button>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="px-5 py-2 text-xs font-bold rounded-lg bg-[var(--accent-deep)] text-[#FFF8E7] hover:bg-[var(--accent-deep)]/90"
-                >
-                  {submitting ? t('submitting_disposition') : t('disp_submit_btn')}
-                </button>
-              </div>
+                  <div className="flex justify-between items-center pt-2 border-t border-[var(--border-color)]">
+                    <button
+                      type="button"
+                      onClick={() => setModalStep(1)}
+                      className="px-4 py-2 text-xs font-semibold border border-[var(--border-color)] rounded-xl hover:bg-[var(--bg-surface-soft)] flex items-center gap-1"
+                    >
+                      <ArrowLeft className="w-3.5 h-3.5" />
+                      <span>{t('btn_prev_step')}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (reasonBn.trim()) setModalStep(3);
+                      }}
+                      disabled={!reasonBn.trim()}
+                      className="px-5 py-2 text-xs font-bold rounded-xl bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-[var(--cta-text)] flex items-center gap-1.5 disabled:opacity-50 shadow-sm active:scale-95 cursor-pointer"
+                    >
+                      <span>{language === 'bn' ? 'পরবর্তী: নিশ্চিতকরণ' : 'Next: Confirmation'}</span>
+                      <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* STEP 3: FINAL CONFIRMATION & SUBMIT */}
+              {modalStep === 3 && (
+                <div className="space-y-3.5">
+                  <div className="p-3.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface-soft)]/40 space-y-2 text-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[var(--text-secondary)]">{t('select_disp_type')}:</span>
+                      <span className="font-bold text-[var(--text-primary)]">
+                        {decision === 'confirmed_inconsistency' && t('disp_opt_confirmed')}
+                        {decision === 'resolved_legitimate' && t('disp_opt_resolved')}
+                        {decision === 'inconclusive' && t('disp_opt_inconclusive')}
+                        {decision === 'false_positive' && t('disp_opt_false_positive')}
+                      </span>
+                    </div>
+
+                    <div className="border-t border-[var(--border-color)] pt-1.5 space-y-1">
+                      <span className="text-[var(--text-secondary)] block">{t('disp_notes_label')}:</span>
+                      <p className="font-medium text-[var(--text-primary)] italic bg-[var(--bg-surface)] p-2 rounded-lg border border-[var(--border-color)]">
+                        &quot;{reasonBn}&quot;
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-amber-50/70 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 text-[11px] text-amber-900 dark:text-amber-200 flex items-start gap-2">
+                    <ShieldCheck className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                    <p>{t('disp_confirm_desc')}</p>
+                  </div>
+
+                  <div className="flex justify-between items-center pt-2 border-t border-[var(--border-color)]">
+                    <button
+                      type="button"
+                      onClick={() => setModalStep(2)}
+                      className="px-4 py-2 text-xs font-semibold border border-[var(--border-color)] rounded-xl hover:bg-[var(--bg-surface-soft)] flex items-center gap-1"
+                    >
+                      <ArrowLeft className="w-3.5 h-3.5" />
+                      <span>{t('btn_prev_step')}</span>
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={submitting}
+                      className="px-6 py-2.5 text-xs font-bold rounded-xl bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-[var(--cta-text)] shadow-md hover:shadow-lg active:scale-95 cursor-pointer"
+                    >
+                      {submitting ? t('submitting_disposition') : t('disp_submit_btn')}
+                    </button>
+                  </div>
+                </div>
+              )}
             </form>
           </div>
         </div>

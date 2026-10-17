@@ -106,12 +106,12 @@ export default function LandingPage() {
               {language === 'bn' ? (
                 <>
                   একটি দাগ। একাধিক দলিল। <br className="hidden sm:inline" />
-                  <span className="text-[var(--accent-deep)]">একটি প্রমাণ পথ।</span>
+                  <span className="text-emerald-700 dark:text-[var(--brand-accent)]">একটি প্রমাণ পথ।</span>
                 </>
               ) : (
                 <>
                   One plot. Multiple deeds. <br className="hidden sm:inline" />
-                  <span className="text-[var(--accent-deep)]">One evidence trail.</span>
+                  <span className="text-emerald-700 dark:text-[var(--brand-accent)]">One evidence trail.</span>
                 </>
               )}
             </h1>
@@ -123,14 +123,14 @@ export default function LandingPage() {
             <div className="flex flex-wrap items-center gap-3 pt-2">
               <Link
                 href="/documents/new"
-                className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold bg-[var(--accent-deep)] text-[#FAF9F6] hover:opacity-90 transition-all shadow-sm"
+                className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-[var(--cta-text)] transition-all shadow-sm hover:shadow"
               >
                 <span>{t('cta_verify')}</span>
-                <ArrowRight className="w-4 h-4 text-[#FAF9F6]" />
+                <ArrowRight className="w-4 h-4 stroke-[2.5]" />
               </Link>
               <Link
                 href="/cases/UB-2026-1002"
-                className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold border border-[var(--border-color)] bg-[var(--bg-surface)] text-[var(--text-primary)] hover:bg-[var(--bg-surface-soft)] transition-colors"
+                className="flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold border border-[var(--border-color)] bg-[var(--bg-surface)] text-[var(--text-primary)] hover:bg-[var(--bg-surface-soft)] transition-colors"
               >
                 <span>{t('cta_demo_explore')}</span>
               </Link>

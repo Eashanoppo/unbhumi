@@ -1,12 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLanguage } from '@/lib/i18n';
 import { api } from '@/lib/api';
 import {
   UploadCloud, FileText, CheckCircle2, AlertCircle, ArrowRight,
-  ShieldCheck, Trash2, Plus, Info, FileUp
+  ArrowLeft, ShieldCheck, Trash2, Plus, Info, FileUp, Sparkles,
+  Layers, Check, Loader2, Edit3
 } from 'lucide-react';
 
 interface UploadItem {
@@ -20,6 +21,9 @@ interface UploadItem {
 export default function NewAnalysisPage() {
   const router = useRouter();
   const { language, t, formatNumber } = useLanguage();
+
+  // Wizard Step State (1: Parcel, 2: Documents, 3: Review & Submit)
+  const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
 
   // Step 1: Case & Parcel metadata
   const [title, setTitle] = useState('');
@@ -49,6 +53,8 @@ export default function NewAnalysisPage() {
 
   const [newDocType, setNewDocType] = useState('baya_deed');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submissionProgress, setSubmissionProgress] = useState(0);
+  const [submissionStage, setSubmissionStage] = useState(1);
   const [errorMsg, setErrorMsg] = useState('');
 
   const docTypeKeys = ['deed', 'baya_deed', 'khatian', 'mutation', 'mouza_map', 'tax_receipt'];
@@ -64,27 +70,59 @@ export default function NewAnalysisPage() {
       hash: `${randomHex}${randomHex}${randomHex}${randomHex}`.slice(0, 64)
     };
     setDocuments([...documents, newItem]);
+    setErrorMsg('');
   };
 
   const handleRemoveDoc = (id: string) => {
     setDocuments(documents.filter((d) => d.id !== id));
   };
 
+  const handleNextFromStep1 = () => {
+    if (!title.trim()) {
+      setErrorMsg(t('title_required_error'));
+      return;
+    }
+    setErrorMsg('');
+    setCurrentStep(2);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleNextFromStep2 = () => {
+    if (documents.length === 0) {
+      setErrorMsg(t('docs_required_error'));
+      return;
+    }
+    setErrorMsg('');
+    setCurrentStep(3);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title) {
+    if (!title.trim()) {
       setErrorMsg(t('title_required_error'));
+      setCurrentStep(1);
       return;
     }
     if (documents.length === 0) {
       setErrorMsg(t('docs_required_error'));
+      setCurrentStep(2);
       return;
     }
 
     setIsSubmitting(true);
     setErrorMsg('');
+    setSubmissionProgress(15);
+    setSubmissionStage(1);
 
     try {
+      // Step A: Stage 1 progress
+      const p1 = setTimeout(() => {
+        setSubmissionProgress(40);
+        setSubmissionStage(2);
+      }, 700);
+
+      // Step B: Create Case
       const createdCase = await api.createCase({
         title,
         description,
@@ -94,14 +132,27 @@ export default function NewAnalysisPage() {
         area: parseFloat(area) || 20.0
       });
 
-      // Run initial check
+      // Step C: Stage 3 progress
+      setSubmissionProgress(75);
+      setSubmissionStage(3);
+
+      // Step D: Stage 4 - Run Detection Checks
       await api.runChecks(createdCase.case_number);
-      router.push(`/cases/${createdCase.case_number}`);
+      setSubmissionProgress(100);
+      setSubmissionStage(4);
+
+      setTimeout(() => {
+        router.push(`/cases/${createdCase.case_number}`);
+      }, 600);
     } catch (err: any) {
       setErrorMsg(err.message || (language === 'bn' ? 'কেস তৈরিতে সমস্যা হয়েছে। পুনরায় চেষ্টা করুন।' : 'Failed to create case. Please try again.'));
       setIsSubmitting(false);
+      setSubmissionProgress(0);
     }
   };
+
+  // Progress metrics
+  const progressPercent = currentStep === 1 ? 33 : currentStep === 2 ? 66 : 100;
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 sm:py-12 space-y-8">
@@ -119,209 +170,603 @@ export default function NewAnalysisPage() {
         </p>
       </div>
 
+      {/* STEP-BY-STEP PROGRESS BAR */}
+      <div className="bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-2xl p-4 sm:p-6 shadow-sm space-y-4">
+        {/* Progress bar metadata */}
+        <div className="flex items-center justify-between text-xs">
+          <span className="font-bold text-[var(--accent-deep)] dark:text-[#7ED957] uppercase tracking-wider">
+            {currentStep === 3
+              ? t('step_progress_ready', { current: formatNumber(currentStep), total: formatNumber(3) })
+              : t('step_progress_label', { current: formatNumber(currentStep), total: formatNumber(3), pct: formatNumber(progressPercent) })}
+          </span>
+          <span className="font-mono text-xs font-semibold text-[var(--text-secondary)]">
+            {formatNumber(progressPercent)}%
+          </span>
+        </div>
+
+        {/* Dynamic Progress Bar Fill Track */}
+        <div className="w-full h-2.5 bg-[var(--bg-surface-soft)] rounded-full overflow-hidden border border-[var(--border-color)] relative">
+          <div
+            className="h-full bg-gradient-to-r from-[var(--brand-accent)] to-[#10B981] transition-all duration-500 ease-out rounded-full"
+            style={{ width: `${progressPercent}%` }}
+          />
+        </div>
+
+        {/* Step Nodes Indicators */}
+        <div className="grid grid-cols-3 gap-2 sm:gap-4 pt-1">
+          {/* Step 1 Node */}
+          <button
+            type="button"
+            onClick={() => setCurrentStep(1)}
+            className={`flex items-start gap-2.5 p-2 rounded-xl text-left transition-all cursor-pointer ${
+              currentStep === 1
+                ? 'bg-[var(--bg-surface-soft)] ring-1 ring-[var(--brand-accent)]'
+                : 'hover:bg-[var(--bg-surface-soft)]/50 opacity-80'
+            }`}
+          >
+            <div
+              className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 transition-colors ${
+                currentStep > 1
+                  ? 'bg-[#10B981] text-white'
+                  : currentStep === 1
+                  ? 'bg-[var(--brand-accent)] text-[var(--cta-text)] ring-4 ring-[var(--brand-accent)]/25'
+                  : 'bg-[var(--bg-surface-soft)] text-[var(--text-secondary)] border border-[var(--border-color)]'
+              }`}
+            >
+              {currentStep > 1 ? <Check className="w-4 h-4 stroke-[3]" /> : formatNumber(1)}
+            </div>
+            <div className="min-w-0 hidden sm:block">
+              <p className="text-xs font-bold text-[var(--text-primary)] truncate">
+                {t('step_parcel_short')}
+              </p>
+              <p className="text-[10px] text-[var(--text-secondary)] truncate">
+                {t('step_parcel_desc')}
+              </p>
+            </div>
+          </button>
+
+          {/* Step 2 Node */}
+          <button
+            type="button"
+            onClick={() => {
+              if (title.trim()) setCurrentStep(2);
+              else setErrorMsg(t('title_required_error'));
+            }}
+            className={`flex items-start gap-2.5 p-2 rounded-xl text-left transition-all cursor-pointer ${
+              currentStep === 2
+                ? 'bg-[var(--bg-surface-soft)] ring-1 ring-[var(--brand-accent)]'
+                : 'hover:bg-[var(--bg-surface-soft)]/50 opacity-80'
+            }`}
+          >
+            <div
+              className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 transition-colors ${
+                currentStep > 2
+                  ? 'bg-[#10B981] text-white'
+                  : currentStep === 2
+                  ? 'bg-[var(--brand-accent)] text-[var(--cta-text)] ring-4 ring-[var(--brand-accent)]/25'
+                  : 'bg-[var(--bg-surface-soft)] text-[var(--text-secondary)] border border-[var(--border-color)]'
+              }`}
+            >
+              {currentStep > 2 ? <Check className="w-4 h-4 stroke-[3]" /> : formatNumber(2)}
+            </div>
+            <div className="min-w-0 hidden sm:block">
+              <p className="text-xs font-bold text-[var(--text-primary)] truncate">
+                {t('step_docs_short')}
+              </p>
+              <p className="text-[10px] text-[var(--text-secondary)] truncate">
+                {t('step_docs_desc')}
+              </p>
+            </div>
+          </button>
+
+          {/* Step 3 Node */}
+          <button
+            type="button"
+            onClick={() => {
+              if (!title.trim()) {
+                setErrorMsg(t('title_required_error'));
+                return;
+              }
+              if (documents.length === 0) {
+                setErrorMsg(t('docs_required_error'));
+                return;
+              }
+              setCurrentStep(3);
+            }}
+            className={`flex items-start gap-2.5 p-2 rounded-xl text-left transition-all cursor-pointer ${
+              currentStep === 3
+                ? 'bg-[var(--bg-surface-soft)] ring-1 ring-[var(--brand-accent)]'
+                : 'hover:bg-[var(--bg-surface-soft)]/50 opacity-80'
+            }`}
+          >
+            <div
+              className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 transition-colors ${
+                currentStep === 3
+                  ? 'bg-[var(--brand-accent)] text-[var(--cta-text)] ring-4 ring-[var(--brand-accent)]/25'
+                  : 'bg-[var(--bg-surface-soft)] text-[var(--text-secondary)] border border-[var(--border-color)]'
+              }`}
+            >
+              {formatNumber(3)}
+            </div>
+            <div className="min-w-0 hidden sm:block">
+              <p className="text-xs font-bold text-[var(--text-primary)] truncate">
+                {t('step_review_short')}
+              </p>
+              <p className="text-[10px] text-[var(--text-secondary)] truncate">
+                {t('step_review_desc')}
+              </p>
+            </div>
+          </button>
+        </div>
+      </div>
+
       {errorMsg && (
-        <div className="p-3 rounded-lg bg-red-50 text-red-700 text-xs font-medium border border-red-200">
-          {errorMsg}
+        <div className="p-3.5 rounded-xl bg-red-50 text-red-700 text-xs font-semibold border border-red-200 flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+          <span>{errorMsg}</span>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-8">
-        {/* Step 1: Case & Parcel Details */}
-        <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)] p-5 sm:p-6 space-y-4 shadow-sm">
-          <h2 className="text-sm font-bold uppercase tracking-wider text-[var(--accent-deep)] dark:text-[#7ED957]">
-            {t('step1_title')}
-          </h2>
+      {/* STEP CONTENT CONTAINER */}
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* ======================================================== */}
+        {/* STEP 1: CASE & PARCEL DETAILS */}
+        {/* ======================================================== */}
+        {currentStep === 1 && (
+          <div className="space-y-6">
+            <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-surface)] p-5 sm:p-7 space-y-5 shadow-sm">
+              <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-3">
+                <h2 className="text-sm font-bold uppercase tracking-wider text-[var(--text-primary)] flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-full bg-[var(--brand-accent)] text-[var(--cta-text)] font-bold flex items-center justify-center text-xs">
+                    {formatNumber(1)}
+                  </span>
+                  <span>{t('step1_title')}</span>
+                </h2>
+                <span className="text-xs text-[var(--text-secondary)] font-medium">
+                  {t('step_parcel_desc')}
+                </span>
+              </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="sm:col-span-2 space-y-1">
-              <label className="text-xs font-semibold text-[var(--text-primary)]">
-                {t('field_case_title')}
-              </label>
-              <input
-                type="text"
-                required
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder={t('placeholder_case_title')}
-                className="w-full px-3 py-2 text-xs rounded-lg border border-[var(--border-color)] bg-[var(--bg-surface)] focus:ring-1 focus:ring-[var(--accent-deep)] focus:outline-none"
-              />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="sm:col-span-2 space-y-1.5">
+                  <label className="text-xs font-semibold text-[var(--text-primary)] flex items-center gap-1">
+                    <span>{t('field_case_title')}</span>
+                    <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder={t('placeholder_case_title')}
+                    className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)] focus:ring-2 focus:ring-[var(--accent-deep)]/20 focus:border-[var(--accent-deep)] focus:outline-none"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-[var(--text-primary)]">
+                    {t('field_mouza')}
+                  </label>
+                  <input
+                    type="text"
+                    value={mouza}
+                    onChange={(e) => setMouza(e.target.value)}
+                    className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)]"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-[var(--text-primary)]">
+                    {t('field_dag')}
+                  </label>
+                  <input
+                    type="text"
+                    value={dagNumber}
+                    onChange={(e) => setDagNumber(e.target.value)}
+                    className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)] font-mono"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-[var(--text-primary)]">
+                    {t('field_survey')}
+                  </label>
+                  <select
+                    value={surveyType}
+                    onChange={(e) => setSurveyType(e.target.value)}
+                    className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)] font-medium"
+                  >
+                    <option value="RS">{t('survey_rs')}</option>
+                    <option value="BS">{t('survey_bs')}</option>
+                    <option value="SA">{t('survey_sa')}</option>
+                    <option value="CS">{t('survey_cs')}</option>
+                    <option value="city">{t('survey_city')}</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-[var(--text-primary)]">
+                    {t('field_area')}
+                  </label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={area}
+                    onChange={(e) => setArea(e.target.value)}
+                    className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)]"
+                  />
+                </div>
+
+                <div className="sm:col-span-2 space-y-1.5">
+                  <label className="text-xs font-semibold text-[var(--text-primary)]">
+                    {t('field_desc')}
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder={t('placeholder_desc')}
+                    className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)]"
+                  />
+                </div>
+              </div>
             </div>
 
-            <div className="space-y-1">
-              <label className="text-xs font-semibold text-[var(--text-primary)]">
-                {t('field_mouza')}
-              </label>
-              <input
-                type="text"
-                value={mouza}
-                onChange={(e) => setMouza(e.target.value)}
-                className="w-full px-3 py-2 text-xs rounded-lg border border-[var(--border-color)] bg-[var(--bg-surface)]"
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-xs font-semibold text-[var(--text-primary)]">
-                {t('field_dag')}
-              </label>
-              <input
-                type="text"
-                value={dagNumber}
-                onChange={(e) => setDagNumber(e.target.value)}
-                className="w-full px-3 py-2 text-xs rounded-lg border border-[var(--border-color)] bg-[var(--bg-surface)]"
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-xs font-semibold text-[var(--text-primary)]">
-                {t('field_survey')}
-              </label>
-              <select
-                value={surveyType}
-                onChange={(e) => setSurveyType(e.target.value)}
-                className="w-full px-3 py-2 text-xs rounded-lg border border-[var(--border-color)] bg-[var(--bg-surface)]"
+            {/* Step 1 Actions */}
+            <div className="flex items-center justify-between pt-2">
+              <button
+                type="button"
+                onClick={() => router.back()}
+                className="px-5 py-2.5 text-xs font-semibold border border-[var(--border-color)] rounded-xl hover:bg-[var(--bg-surface-soft)] transition-colors"
               >
-                <option value="RS">{t('survey_rs')}</option>
-                <option value="BS">{t('survey_bs')}</option>
-                <option value="SA">{t('survey_sa')}</option>
-                <option value="CS">{t('survey_cs')}</option>
-                <option value="city">{t('survey_city')}</option>
-              </select>
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-xs font-semibold text-[var(--text-primary)]">
-                {t('field_area')}
-              </label>
-              <input
-                type="number"
-                step="0.1"
-                value={area}
-                onChange={(e) => setArea(e.target.value)}
-                className="w-full px-3 py-2 text-xs rounded-lg border border-[var(--border-color)] bg-[var(--bg-surface)]"
-              />
-            </div>
-
-            <div className="sm:col-span-2 space-y-1">
-              <label className="text-xs font-semibold text-[var(--text-primary)]">
-                {t('field_desc')}
-              </label>
-              <textarea
-                rows={2}
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder={t('placeholder_desc')}
-                className="w-full px-3 py-2 text-xs rounded-lg border border-[var(--border-color)] bg-[var(--bg-surface)]"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Step 2: Document Upload & Fingerprinting */}
-        <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)] p-5 sm:p-6 space-y-4 shadow-sm">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-bold uppercase tracking-wider text-[var(--accent-deep)] dark:text-[#7ED957]">
-              {t('doc_pack_title')}
-            </h2>
-            <span className="text-xs text-[var(--text-secondary)] font-medium">
-              {t('doc_pack_sub')}
-            </span>
-          </div>
-
-          {/* Upload Dropzone */}
-          <div className="p-6 border-2 border-dashed border-[var(--border-color)] rounded-xl bg-[var(--bg-surface-soft)]/40 flex flex-col items-center justify-center text-center space-y-3">
-            <div className="w-12 h-12 rounded-full bg-[var(--bg-surface)] border border-[var(--border-color)] flex items-center justify-center text-[var(--accent-deep)]">
-              <UploadCloud className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="text-xs sm:text-sm font-semibold text-[var(--text-primary)]">
-                {t('drop_title')}
-              </p>
-              <p className="text-[11px] text-[var(--text-secondary)] mt-0.5">
-                {t('drop_desc')}
-              </p>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2 pt-1">
-              <select
-                value={newDocType}
-                onChange={(e) => setNewDocType(e.target.value)}
-                className="px-2.5 py-1.5 text-xs rounded-lg border border-[var(--border-color)] bg-[var(--bg-surface)] font-medium"
-              >
-                {docTypeKeys.map((key) => (
-                  <option key={key} value={key}>{t(`doctype_${key}`)}</option>
-                ))}
-              </select>
+                {t('cancel')}
+              </button>
 
               <button
                 type="button"
-                onClick={handleAddSyntheticFile}
-                className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--accent-deep)] text-[#FFF8E7] hover:bg-[var(--accent-deep)]/90 transition-colors flex items-center gap-1"
+                onClick={handleNextFromStep1}
+                className="px-6 py-2.5 text-xs font-bold rounded-xl bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-[var(--cta-text)] transition-all flex items-center gap-2 shadow-sm cursor-pointer"
               >
-                <Plus className="w-3.5 h-3.5" />
-                <span>{t('add_doc')}</span>
+                <span>{t('btn_next_docs')}</span>
+                <ArrowRight className="w-4 h-4 stroke-[2.5]" />
               </button>
             </div>
           </div>
+        )}
 
-          {/* List of Attached Documents */}
-          <div className="space-y-2 pt-2">
-            <span className="text-xs font-bold text-[var(--text-primary)] block">
-              {t('attached_docs', { count: documents.length })}
-            </span>
+        {/* ======================================================== */}
+        {/* STEP 2: DOCUMENT UPLOAD & FINGERPRINTING */}
+        {/* ======================================================== */}
+        {currentStep === 2 && (
+          <div className="space-y-6">
+            <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-surface)] p-5 sm:p-7 space-y-5 shadow-sm">
+              <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-3">
+                <h2 className="text-sm font-bold uppercase tracking-wider text-[var(--text-primary)] flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-full bg-[var(--brand-accent)] text-[var(--cta-text)] font-bold flex items-center justify-center text-xs">
+                    {formatNumber(2)}
+                  </span>
+                  <span>{t('doc_pack_title')}</span>
+                </h2>
+                <span className="text-xs text-[var(--text-secondary)] font-medium">
+                  {t('doc_pack_sub')}
+                </span>
+              </div>
 
-            <div className="divide-y divide-[var(--border-color)] border border-[var(--border-color)] rounded-lg overflow-hidden bg-[var(--bg-surface)]">
-              {documents.map((doc) => (
-                <div key={doc.id} className="p-3 flex items-center justify-between gap-3 text-xs">
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <FileText className="w-4 h-4 text-[var(--accent-deep)] shrink-0" />
-                    <div className="min-w-0">
-                      <p className="font-semibold text-[var(--text-primary)] truncate">{doc.name}</p>
-                      <p className="text-[10px] text-[var(--text-secondary)] font-mono truncate">
-                        SHA-256: {doc.hash.slice(0, 20)}... • {(doc.size / 1024).toFixed(0)} KB • {t(`doctype_${doc.type}`)}
-                      </p>
-                    </div>
-                  </div>
+              {/* Upload Dropzone */}
+              <div className="p-8 border-2 border-dashed border-[var(--border-color)] rounded-2xl bg-[var(--bg-surface-soft)]/40 flex flex-col items-center justify-center text-center space-y-3">
+                <div className="w-14 h-14 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-color)] flex items-center justify-center text-[var(--accent-deep)] shadow-sm">
+                  <UploadCloud className="w-7 h-7" />
+                </div>
+                <div className="max-w-md">
+                  <p className="text-xs sm:text-sm font-bold text-[var(--text-primary)]">
+                    {t('drop_title')}
+                  </p>
+                  <p className="text-[11px] text-[var(--text-secondary)] mt-1">
+                    {t('drop_desc')}
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
+                  <select
+                    value={newDocType}
+                    onChange={(e) => setNewDocType(e.target.value)}
+                    className="px-3 py-2 text-xs rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)] font-medium"
+                  >
+                    {docTypeKeys.map((key) => (
+                      <option key={key} value={key}>{t(`doctype_${key}`)}</option>
+                    ))}
+                  </select>
 
                   <button
                     type="button"
-                    onClick={() => handleRemoveDoc(doc.id)}
-                    className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded"
-                    title={t('cancel')}
+                    onClick={handleAddSyntheticFile}
+                    className="px-4 py-2 rounded-xl text-xs font-bold bg-[var(--accent-deep)] text-[#FFF8E7] hover:bg-[var(--accent-deep)]/90 transition-colors flex items-center gap-1.5 shadow-sm"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Plus className="w-4 h-4 text-[#7ED957]" />
+                    <span>{t('add_doc')}</span>
                   </button>
                 </div>
-              ))}
+              </div>
+
+              {/* Attached Documents List */}
+              <div className="space-y-2.5 pt-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-[var(--text-primary)] flex items-center gap-1.5">
+                    <FileText className="w-4 h-4 text-[var(--accent-deep)]" />
+                    <span>{t('attached_docs', { count: formatNumber(documents.length) })}</span>
+                  </span>
+                  <span className="text-[11px] text-[var(--text-secondary)]">
+                    {language === 'bn' ? 'ব্রাউজারেই SHA-256 প্রস্তুত' : 'Client-side SHA-256 generated'}
+                  </span>
+                </div>
+
+                <div className="divide-y divide-[var(--border-color)] border border-[var(--border-color)] rounded-xl overflow-hidden bg-[var(--bg-surface)]">
+                  {documents.map((doc) => (
+                    <div key={doc.id} className="p-3.5 flex items-center justify-between gap-3 text-xs hover:bg-[var(--bg-surface-soft)]/40 transition-colors">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-8 h-8 rounded-lg bg-[var(--bg-surface-soft)] border border-[var(--border-color)] flex items-center justify-center text-[var(--accent-deep)] shrink-0">
+                          <FileText className="w-4 h-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-semibold text-[var(--text-primary)] truncate">{doc.name}</p>
+                          <p className="text-[10px] text-[var(--text-secondary)] font-mono truncate">
+                            SHA-256: {doc.hash.slice(0, 24)}... • {formatNumber((doc.size / 1024).toFixed(0))} KB •{' '}
+                            <span className="font-sans font-medium text-[var(--accent-deep)]">
+                              {t(`doctype_${doc.type}`)}
+                            </span>
+                          </p>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveDoc(doc.id)}
+                        className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition-colors"
+                        title={t('cancel')}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Step 2 Actions */}
+            <div className="flex items-center justify-between pt-2">
+              <button
+                type="button"
+                onClick={() => setCurrentStep(1)}
+                className="px-5 py-2.5 text-xs font-semibold border border-[var(--border-color)] rounded-xl hover:bg-[var(--bg-surface-soft)] transition-colors flex items-center gap-1.5"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>{t('btn_prev_step')}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleNextFromStep2}
+                className="px-6 py-2.5 text-xs font-bold rounded-xl bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-[var(--cta-text)] transition-all flex items-center gap-2 shadow-sm cursor-pointer"
+              >
+                <span>{t('btn_next_review')}</span>
+                <ArrowRight className="w-4 h-4 stroke-[2.5]" />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ======================================================== */}
+        {/* STEP 3: REVIEW, PRIVACY GUARDRAIL & VERIFICATION */}
+        {/* ======================================================== */}
+        {currentStep === 3 && (
+          <div className="space-y-6">
+            <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-surface)] p-5 sm:p-7 space-y-6 shadow-sm">
+              <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-3">
+                <h2 className="text-sm font-bold uppercase tracking-wider text-[var(--text-primary)] flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-full bg-[var(--brand-accent)] text-[var(--cta-text)] font-bold flex items-center justify-center text-xs">
+                    {formatNumber(3)}
+                  </span>
+                  <span>{t('step3_summary_title')}</span>
+                </h2>
+                <span className="text-xs text-emerald-700 dark:text-[var(--brand-accent)] font-semibold flex items-center gap-1">
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>{language === 'bn' ? 'যাচাইয়ের জন্য প্রস্তুত' : 'Ready for Verification'}</span>
+                </span>
+              </div>
+
+              {/* Summary Overview Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Case Info Summary */}
+                <div className="p-4 rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface-soft)]/40 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-[var(--text-primary)] flex items-center gap-1.5">
+                      <Layers className="w-4 h-4 text-[var(--accent-deep)]" />
+                      <span>{t('summary_case_details')}</span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setCurrentStep(1)}
+                      className="text-[11px] font-semibold text-[var(--accent-deep)] hover:underline flex items-center gap-1"
+                    >
+                      <Edit3 className="w-3 h-3" />
+                      <span>{language === 'bn' ? 'সম্পাদনা' : 'Edit'}</span>
+                    </button>
+                  </div>
+
+                  <div className="space-y-1 text-xs">
+                    <p className="font-bold text-[var(--text-primary)]">{title}</p>
+                    <div className="grid grid-cols-2 gap-2 text-[11px] text-[var(--text-secondary)] pt-1">
+                      <div>
+                        <span>{t('field_mouza')}: </span>
+                        <strong className="text-[var(--text-primary)]">{mouza}</strong>
+                      </div>
+                      <div>
+                        <span>{t('field_dag')}: </span>
+                        <strong className="text-[var(--text-primary)] font-mono">{formatNumber(dagNumber)}</strong>
+                      </div>
+                      <div>
+                        <span>{t('field_survey')}: </span>
+                        <strong className="text-[var(--text-primary)]">{surveyType}</strong>
+                      </div>
+                      <div>
+                        <span>{t('field_area')}: </span>
+                        <strong className="text-[var(--text-primary)]">{formatNumber(area)} {language === 'bn' ? 'শতাংশ' : 'decimals'}</strong>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Documents Package Summary */}
+                <div className="p-4 rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface-soft)]/40 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-[var(--text-primary)] flex items-center gap-1.5">
+                      <FileText className="w-4 h-4 text-[var(--accent-deep)]" />
+                      <span>{t('summary_doc_package')}</span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setCurrentStep(2)}
+                      className="text-[11px] font-semibold text-[var(--accent-deep)] hover:underline flex items-center gap-1"
+                    >
+                      <Edit3 className="w-3 h-3" />
+                      <span>{language === 'bn' ? 'সম্পাদনা' : 'Edit'}</span>
+                    </button>
+                  </div>
+
+                  <div className="space-y-1.5 text-xs">
+                    <p className="font-semibold text-[var(--text-primary)]">
+                      {formatNumber(documents.length)} {language === 'bn' ? 'টি নথি সংযুক্ত' : 'documents attached'}
+                    </p>
+                    <div className="flex flex-wrap gap-1.5 pt-1">
+                      {documents.map((d) => (
+                        <span
+                          key={d.id}
+                          className="px-2 py-0.5 rounded-md bg-[var(--bg-surface)] text-[10px] font-medium border border-[var(--border-color)] text-[var(--text-secondary)]"
+                        >
+                          {t(`doctype_${d.type}`)}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Digital Integrity Notice */}
+              <div className="p-4 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 flex items-start gap-3 text-xs text-emerald-900 dark:text-emerald-200">
+                <ShieldCheck className="w-5 h-5 text-emerald-600 dark:text-[#7ED957] shrink-0 mt-0.5" />
+                <div className="space-y-0.5">
+                  <p className="font-bold">{t('summary_integrity')}</p>
+                  <p className="text-[11px] opacity-90">{t('summary_integrity_desc')}</p>
+                </div>
+              </div>
+
+              {/* Privacy Guardrails */}
+              <div className="p-4 rounded-xl bg-[var(--bg-surface-soft)] border border-[var(--border-color)] flex items-start gap-3 text-xs text-[var(--text-secondary)]">
+                <Info className="w-4 h-4 text-[var(--accent-deep)] shrink-0 mt-0.5" />
+                <p>
+                  <strong>{t('privacy_title')}: </strong> {t('privacy_desc')}
+                </p>
+              </div>
+            </div>
+
+            {/* Step 3 Actions */}
+            <div className="flex items-center justify-between pt-2">
+              <button
+                type="button"
+                onClick={() => setCurrentStep(2)}
+                className="px-5 py-2.5 text-xs font-semibold border border-[var(--border-color)] rounded-xl hover:bg-[var(--bg-surface-soft)] transition-colors flex items-center gap-1.5"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>{t('btn_prev_step')}</span>
+              </button>
+
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="px-7 py-3 text-xs sm:text-sm font-bold rounded-xl bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-[var(--cta-text)] transition-all flex items-center gap-2 shadow-md hover:shadow-lg cursor-pointer active:scale-95"
+              >
+                <Sparkles className="w-4 h-4 stroke-[2.5]" />
+                <span>{isSubmitting ? t('submitting_investigation') : t('create_and_verify_btn')}</span>
+                <ArrowRight className="w-4 h-4 stroke-[2.5]" />
+              </button>
+            </div>
+          </div>
+        )}
+      </form>
+
+      {/* ======================================================== */}
+      {/* LIVE SUBMISSION MULTI-STAGE PROGRESS MODAL */}
+      {/* ======================================================== */}
+      {isSubmitting && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-2xl max-w-lg w-full p-6 sm:p-8 space-y-6 shadow-2xl">
+            <div className="flex items-center gap-3 border-b border-[var(--border-color)] pb-4">
+              <div className="w-10 h-10 rounded-xl bg-[var(--accent-deep)] text-[#FFF8E7] flex items-center justify-center">
+                <Loader2 className="w-5 h-5 animate-spin text-[#7ED957]" />
+              </div>
+              <div>
+                <h3 className="text-sm sm:text-base font-bold text-[var(--text-primary)]">
+                  {t('stage_progress_title')}
+                </h3>
+                <p className="text-xs text-[var(--text-secondary)]">
+                  {formatNumber(submissionProgress)}% {language === 'bn' ? 'সম্পন্ন' : 'completed'}
+                </p>
+              </div>
+            </div>
+
+            {/* Modal Progress Bar */}
+            <div className="w-full h-3 bg-[var(--bg-surface-soft)] rounded-full overflow-hidden border border-[var(--border-color)]">
+              <div
+                className="h-full bg-gradient-to-r from-[var(--accent-deep)] via-emerald-600 to-[#7ED957] transition-all duration-300 rounded-full"
+                style={{ width: `${submissionProgress}%` }}
+              />
+            </div>
+
+            {/* Stages Checklist */}
+            <div className="space-y-3 text-xs">
+              {/* Stage 1 */}
+              <div className={`flex items-start gap-3 p-2.5 rounded-lg transition-colors ${submissionStage >= 1 ? 'bg-[var(--bg-surface-soft)]' : 'opacity-40'}`}>
+                <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5 ${submissionStage > 1 ? 'bg-emerald-600 text-white' : submissionStage === 1 ? 'bg-[var(--accent-deep)] text-white animate-pulse' : 'bg-gray-200 text-gray-600'}`}>
+                  {submissionStage > 1 ? <Check className="w-3 h-3" /> : '1'}
+                </div>
+                <div className="min-w-0">
+                  <p className="font-semibold text-[var(--text-primary)]">{t('verifying_stage_1')}</p>
+                </div>
+              </div>
+
+              {/* Stage 2 */}
+              <div className={`flex items-start gap-3 p-2.5 rounded-lg transition-colors ${submissionStage >= 2 ? 'bg-[var(--bg-surface-soft)]' : 'opacity-40'}`}>
+                <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5 ${submissionStage > 2 ? 'bg-emerald-600 text-white' : submissionStage === 2 ? 'bg-[var(--accent-deep)] text-white animate-pulse' : 'bg-gray-200 text-gray-600'}`}>
+                  {submissionStage > 2 ? <Check className="w-3 h-3" /> : '2'}
+                </div>
+                <div className="min-w-0">
+                  <p className="font-semibold text-[var(--text-primary)]">{t('verifying_stage_2')}</p>
+                </div>
+              </div>
+
+              {/* Stage 3 */}
+              <div className={`flex items-start gap-3 p-2.5 rounded-lg transition-colors ${submissionStage >= 3 ? 'bg-[var(--bg-surface-soft)]' : 'opacity-40'}`}>
+                <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5 ${submissionStage > 3 ? 'bg-emerald-600 text-white' : submissionStage === 3 ? 'bg-[var(--accent-deep)] text-white animate-pulse' : 'bg-gray-200 text-gray-600'}`}>
+                  {submissionStage > 3 ? <Check className="w-3 h-3" /> : '3'}
+                </div>
+                <div className="min-w-0">
+                  <p className="font-semibold text-[var(--text-primary)]">{t('verifying_stage_3')}</p>
+                </div>
+              </div>
+
+              {/* Stage 4 */}
+              <div className={`flex items-start gap-3 p-2.5 rounded-lg transition-colors ${submissionStage >= 4 ? 'bg-[var(--bg-surface-soft)]' : 'opacity-40'}`}>
+                <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5 ${submissionStage === 4 ? 'bg-emerald-600 text-white' : 'bg-gray-200 text-gray-600'}`}>
+                  {submissionStage === 4 ? <Check className="w-3 h-3" /> : '4'}
+                </div>
+                <div className="min-w-0">
+                  <p className="font-semibold text-[var(--text-primary)]">{t('verifying_stage_4')}</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-
-        {/* Step 3: Privacy Guardrail & Submit */}
-        <div className="p-4 rounded-xl bg-[var(--bg-surface-soft)] border border-[var(--border-color)] flex items-start gap-3 text-xs text-[var(--text-secondary)]">
-          <Info className="w-4 h-4 text-[var(--accent-deep)] shrink-0 mt-0.5" />
-          <p>
-            <strong>{t('privacy_title')}</strong> {t('privacy_desc')}
-          </p>
-        </div>
-
-        <div className="flex justify-end gap-3 pt-2">
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="px-5 py-2.5 text-xs font-semibold border border-[var(--border-color)] rounded-xl hover:bg-[var(--bg-surface-soft)]"
-          >
-            {t('cancel')}
-          </button>
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="px-6 py-2.5 text-xs font-bold rounded-xl bg-[var(--accent-deep)] text-[#FFF8E7] hover:bg-[var(--accent-deep)]/90 transition-all flex items-center gap-2 shadow-sm"
-          >
-            <span>{isSubmitting ? t('submitting_investigation') : t('create_and_verify_btn')}</span>
-            <ArrowRight className="w-4 h-4 text-[#7ED957]" />
-          </button>
-        </div>
-      </form>
+      )}
     </div>
   );
 }

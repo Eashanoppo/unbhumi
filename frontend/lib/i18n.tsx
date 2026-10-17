@@ -446,6 +446,33 @@ export const DICTIONARY: Translations = {
   field_khatian_number: { bn: 'খতিয়ান নম্বর', en: 'Khatian No.' },
   field_recorded_area: { bn: 'জমির পরিমাণ (শতাংশ)', en: 'Recorded Area (Decimals)' },
 
+  // Multi-step Wizard & Progress Keys
+  step_progress_label: { bn: 'ধাপ {current} এর {total} ({pct}% সম্পন্ন)', en: 'Step {current} of {total} ({pct}% Completed)' },
+  step_progress_ready: { bn: 'ধাপ {current} এর {total} (১০০% প্রস্তুত)', en: 'Step {current} of {total} (100% Ready)' },
+  step_parcel_short: { bn: '১. জমির তথ্য', en: '1. Parcel Info' },
+  step_parcel_desc: { bn: 'মৌজা, দাগ ও বিবরণ', en: 'Mouza, plot & survey' },
+  step_docs_short: { bn: '২. নথি ও ফিঙ্গারপ্রিন্ট', en: '2. Documents & Hash' },
+  step_docs_desc: { bn: 'দলিল ও খতিয়ান সংযোজন', en: 'Deeds & khatians' },
+  step_review_short: { bn: '৩. নিশ্চিতকরণ ও বিশ্লেষণ', en: '3. Review & Verify' },
+  step_review_desc: { bn: 'সারসংক্ষেপ ও ফ্রড যাচাই', en: 'Summary & analysis' },
+  btn_next_docs: { bn: 'পরবর্তী: নথি সংযুক্ত করুন', en: 'Next: Attach Documents' },
+  btn_next_review: { bn: 'পরবর্তী: চূড়ান্ত পর্যালোচনা', en: 'Next: Review & Verify' },
+  btn_prev_step: { bn: 'পূর্ববর্তী ধাপ', en: 'Previous Step' },
+  step3_summary_title: { bn: 'ধাপ ৩: অনুসন্ধান সারসংক্ষেপ ও চূড়ান্ত অনুমোদন', en: 'Step 3: Investigation Summary & Final Approval' },
+  summary_case_details: { bn: 'মামলা ও জমির বিবরণ', en: 'Case & Parcel Summary' },
+  summary_doc_package: { bn: 'সংযুক্ত নথিপত্র', en: 'Attached Documents' },
+  summary_integrity: { bn: 'ডিজিটাল অখণ্ডতা ও নিরাপত্তা', en: 'Digital Integrity & Safety' },
+  summary_integrity_desc: { bn: 'সকল নথির জন্য ব্রাউজারে SHA-256 ক্রিপ্টোগ্রাফিক হ্যাশ তৈরি করা হয়েছে। মূল নথির অখণ্ডতা শতভাগ সুরক্ষিত থাকবে।', en: 'SHA-256 cryptographic hashes computed client-side. Original document evidentiary integrity is preserved.' },
+  verifying_stage_1: { bn: 'নথিপত্র আপলোড ও ক্রিপ্টোগ্রাফিক ফিঙ্গারপ্রিন্ট সংরক্ষণ হচ্ছে...', en: 'Uploading documents & storing cryptographic fingerprints...' },
+  verifying_stage_2: { bn: 'অপটিক্যাল ক্যারেক্টার রিকগনিশন (OCR) দ্বারা ফিল্ড শনাক্তকরণ চলছে...', en: 'Extracting key legal fields via Multimodal OCR...' },
+  verifying_stage_3: { bn: 'স্বত্ব হস্তান্তর ধারাবাহিকতা ও মালিকানা সম্পর্কচিত্র গঠন করা হচ্ছে...', en: 'Constructing chain-of-title ownership relationship graph...' },
+  verifying_stage_4: { bn: '১২টি স্বয়ংক্রিয় ডিটেকশন নিয়মে দ্বৈত বিক্রি ক্রস-চেক মূল্যায়ন হচ্ছে...', en: 'Executing 12 deterministic rules for double-selling and overlaps...' },
+  stage_progress_title: { bn: 'স্বয়ংক্রিয় ভূমি তদন্ত ও বিশ্লেষণ পাইপলাইন চলছে', en: 'Automated Land Investigation Pipeline Running' },
+  disp_step1: { bn: '১. সিদ্ধান্ত নির্বাচন', en: '1. Select Determination' },
+  disp_step2: { bn: '২. অফিসিয়াল নোট', en: '2. Official Notes' },
+  disp_step3: { bn: '৩. নিশ্চিতকরণ', en: '3. Final Confirmation' },
+  disp_confirm_desc: { bn: 'পর্যালোচনা সিদ্ধান্ত জমা দিলে অ্যালার্টটির স্ট্যাটাস পরিবর্তিত হবে এবং অডিট ট্রেইলে অফিসিয়াল এন্ট্রি তৈরি হবে।', en: 'Submitting this disposition will update alert status and create a permanent official audit trail record.' },
+
   // Disclaimer
   disclaimer_short: {
     bn: 'আনলেফট ল্যান্ডগার্ড একটি এআই-সহায়তাকৃত পর্যালোচনামূলক টুল; এটি কোনো সরকারি সংস্থা বা আদালতের চূড়ান্ত স্বত্ব নির্ধারণী সিদ্ধান্ত নয়।',
@@ -509,7 +536,7 @@ export function getRiskLabel(risk: string, lang: Language = 'bn'): string {
 interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
-  t: (key: string, params?: Record<string, string | number>) => string;
+  t: (key: string, params?: Record<string, string | number | undefined | null>) => string;
   formatNumber: (value: number | string | undefined | null) => string;
   formatDate: (dateStr: string | Date | undefined) => string;
   getStatusLabel: (status: string) => string;
@@ -555,14 +582,16 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const activeLanguage: Language = mounted ? language : 'bn';
 
-  const t = (key: string, params?: Record<string, string | number>): string => {
+  const t = (key: string, params?: Record<string, string | number | undefined | null>): string => {
     let text = key;
     if (DICTIONARY[key]) {
       text = DICTIONARY[key][activeLanguage] || DICTIONARY[key].bn || key;
     }
     if (params) {
       Object.entries(params).forEach(([paramKey, val]) => {
-        const localizedVal = typeof val === 'number' ? formatNumber(val, activeLanguage) : String(val);
+        const localizedVal = typeof val === 'number' 
+          ? formatNumber(val, activeLanguage) 
+          : (val === null || val === undefined ? '' : String(val));
         text = text.replace(new RegExp(`\\{${paramKey}\\}`, 'g'), localizedVal);
       });
     }
