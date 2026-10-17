@@ -243,11 +243,33 @@ export async function fetchApi<T>(endpoint: string, options: RequestInit = {}): 
     const res = await fetch(url, { ...options, headers });
     if (!res.ok) {
       const errText = await res.text();
+      // Auto-heal expired/invalid demo authentication tokens:
+      if ((res.status === 401 || res.status === 403) && typeof window !== 'undefined') {
+        const storedToken = localStorage.getItem('unbhumi_token');
+        if (storedToken) {
+          console.warn('Authentication token invalid or expired. Purging stale token and retrying request...');
+          localStorage.removeItem('unbhumi_token');
+          localStorage.removeItem('unbhumi_user');
+
+          // Retry once without the stale Authorization header
+          const retryHeaders: Record<string, string> = {
+            'Content-Type': 'application/json',
+            ...(options.headers as Record<string, string>),
+          };
+          delete retryHeaders['Authorization'];
+          delete retryHeaders['authorization'];
+
+          const retryRes = await fetch(url, { ...options, headers: retryHeaders });
+          if (retryRes.ok) {
+            return await retryRes.json();
+          }
+        }
+      }
       throw new Error(`API Error ${res.status}: ${errText}`);
     }
     return await res.json();
   } catch (err) {
-    console.warn(`Fetch to ${url} failed, checking fallback handlers...`, err);
+    console.warn(`Fetch to ${url} failed:`, err);
     throw err;
   }
 }
@@ -465,9 +487,16 @@ export const api = {
   },
 
   async reseedData() {
-    return await fetchApi<{ success: boolean; count: number }>('/seed-demo/', {
+    const res = await fetchApi<{ success: boolean; count: number; token?: string; user?: User }>('/seed-demo/', {
       method: 'POST'
     });
+    if (typeof window !== 'undefined' && res.token) {
+      localStorage.setItem('unbhumi_token', res.token);
+      if (res.user) {
+        localStorage.setItem('unbhumi_user', JSON.stringify(res.user));
+      }
+    }
+    return res;
   },
 
   async getHealth() {

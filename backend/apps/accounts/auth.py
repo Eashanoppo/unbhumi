@@ -16,4 +16,5 @@ class DemoTokenAuthentication(authentication.BaseAuthentication):
             token = DemoToken.objects.select_related('user', 'user__profile').get(key=token_key)
             return (token.user, token)
         except DemoToken.DoesNotExist:
-            raise exceptions.AuthenticationFailed('Invalid or expired demo authentication token.')
+            # Stale, expired, or purged demo token: return None so unauthenticated/AllowAny views succeed.
+            return None

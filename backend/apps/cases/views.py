@@ -244,8 +244,21 @@ class CaseReportView(APIView):
 class SeedDemoView(APIView):
     def post(self, request):
         count = seed_demo_data()
+        from django.contrib.auth.models import User
+        from apps.accounts.models import DemoToken
+        from apps.accounts.serializers import UserSerializer
+
+        reviewer = User.objects.filter(profile__role='demo_reviewer').first()
+        token = None
+        if reviewer:
+            token_obj = DemoToken.objects.filter(user=reviewer).first()
+            if token_obj:
+                token = token_obj.key
+
         return Response({
             'success': True,
             'message': f'সফলভাবে {count}টি সিন্থেটিক ভূমি রেকর্ড ও কেস ডাটাবেসে লোড হয়েছে।',
-            'count': count
+            'count': count,
+            'token': token,
+            'user': UserSerializer(reviewer).data if reviewer else None
         })
