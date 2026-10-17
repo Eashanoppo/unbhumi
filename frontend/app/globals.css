@@ -1,0 +1,81 @@
+@import "tailwindcss";
+
+:root {
+  --bg-primary: #FFF8E7;
+  --bg-surface: #FFFFFF;
+  --bg-surface-soft: #F5EEDC;
+  --border-color: #E5E0D2;
+  --text-primary: #263126;
+  --text-secondary: #697265;
+  --accent-parrot: #7ED957;
+  --accent-deep: #286B35;
+  --warning: #E8A23A;
+  --error: #C84C4C;
+  --success: #2E7D46;
+
+  --background: var(--bg-primary);
+  --foreground: var(--text-primary);
+}
+
+.dark {
+  --bg-primary: #151F16;
+  --bg-surface: #1C2B1E;
+  --bg-surface-soft: #243626;
+  --border-color: #2F4532;
+  --text-primary: #F3F8F2;
+  --text-secondary: #9EB29C;
+  --accent-parrot: #7ED957;
+  --accent-deep: #479E57;
+  --warning: #F5B041;
+  --error: #E55353;
+  --success: #43A05D;
+
+  --background: var(--bg-primary);
+  --foreground: var(--text-primary);
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hind Siliguri", "Noto Sans Bengali", Arial, sans-serif;
+}
+
+/* Custom scrollbars for document panels */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-surface-soft);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-deep);
+}
+
+/* Print Stylesheet for Reports */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  header, nav, footer {
+    display: none !important;
+  }
+  .card, .panel {
+    border: 1px solid #ccc !important;
+    box-shadow: none !important;
+    page-break-inside: avoid;
+  }
+}

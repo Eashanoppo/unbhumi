@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" fill="none">
+  <defs>
+    <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#EBF5EE"/>
+      <stop offset="100%" stop-color="#FFF8E7"/>
+    </linearGradient>
+    <linearGradient id="fieldGrad1" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#7ED957"/>
+      <stop offset="100%" stop-color="#286B35"/>
+    </linearGradient>
+    <linearGradient id="fieldGrad2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#5CBD3D"/>
+      <stop offset="100%" stop-color="#1E4D27"/>
+    </linearGradient>
+    <linearGradient id="riverGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#A4D7C2"/>
+      <stop offset="100%" stop-color="#76B5A1"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Sky -->
+  <rect width="1200" height="800" fill="url(#skyGrad)"/>
+
+  <!-- Distant Village Tree Line -->
+  <path d="M0 380 Q 200 360 400 375 T 800 370 T 1200 365 L 1200 450 L 0 450 Z" fill="#20532B" opacity="0.4"/>
+  <path d="M0 410 Q 300 390 600 405 T 1200 400 L 1200 520 L 0 520 Z" fill="#2E7D46" opacity="0.6"/>
+
+  <!-- River Bend -->
+  <path d="M0 500 C 350 480 450 560 800 520 C 1000 500 1150 540 1200 560 L 1200 640 C 1100 620 950 580 750 600 C 400 640 250 560 0 580 Z" fill="url(#riverGrad)"/>
+
+  <!-- Agricultural Land Parcels with Cadastral Grid Lines -->
+  <!-- Parcel 1 -->
+  <polygon points="50,560 380,530 420,680 80,720" fill="url(#fieldGrad1)" stroke="#FFF8E7" stroke-width="4" stroke-opacity="0.8"/>
+  <text x="180" y="640" font-family="sans-serif" font-size="22" font-weight="bold" fill="#FFF8E7" opacity="0.9">দাগ নং ৪১২</text>
+
+  <!-- Parcel 2 -->
+  <polygon points="400,528 780,505 830,650 440,678" fill="url(#fieldGrad2)" stroke="#FFF8E7" stroke-width="4" stroke-opacity="0.8"/>
+  <text x="560" y="605" font-family="sans-serif" font-size="22" font-weight="bold" fill="#FFF8E7" opacity="0.9">দাগ নং ৪১৩</text>
+
+  <!-- Parcel 3 -->
+  <polygon points="800,508 1160,530 1120,690 850,652" fill="url(#fieldGrad1)" stroke="#FFF8E7" stroke-width="4" stroke-opacity="0.8"/>
+  <text x="940" y="615" font-family="sans-serif" font-size="22" font-weight="bold" fill="#FFF8E7" opacity="0.9">দাগ নং ৪১৪</text>
+
+  <!-- Foreground Plot and Boundary Pins -->
+  <polygon points="0,700 480,660 620,800 0,800" fill="#286B35" opacity="0.9"/>
+  <polygon points="520,665 1200,670 1200,800 590,800" fill="#1E4D27" opacity="0.95"/>
+
+  <!-- Cadastral Survey Marker Pins -->
+  <g transform="translate(420, 528)">
+    <circle cx="0" cy="0" r="10" fill="#E8A23A" stroke="#FFFFFF" stroke-width="3"/>
+    <line x1="0" y1="0" x2="0" y2="40" stroke="#E8A23A" stroke-width="4"/>
+  </g>
+  <g transform="translate(800, 508)">
+    <circle cx="0" cy="0" r="10" fill="#7ED957" stroke="#FFFFFF" stroke-width="3"/>
+    <line x1="0" y1="0" x2="0" y2="40" stroke="#7ED957" stroke-width="4"/>
+  </g>
+
+  <!-- Sunlight badge / Shield -->
+  <g transform="translate(1020, 80)">
+    <rect width="120" height="48" rx="24" fill="#FFFFFF" fill-opacity="0.9" stroke="#E5E0D2" stroke-width="2"/>
+    <circle cx="28" cy="24" r="10" fill="#7ED957"/>
+    <text x="48" y="30" font-family="sans-serif" font-size="14" font-weight="600" fill="#286B35">যাচাইকৃত মৌজা</text>
+  </g>
+</svg>

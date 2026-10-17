@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" fill="none">
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#F5EEDC"/>
+      <stop offset="100%" stop-color="#FFF8E7"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="500" rx="16" fill="url(#bgGrad)"/>
+  
+  <!-- Boundary Grid Paper Lines -->
+  <line x1="80" y1="50" x2="80" y2="450" stroke="#E5E0D2" stroke-width="1.5" stroke-dasharray="6 6"/>
+  <line x1="200" y1="50" x2="200" y2="450" stroke="#E5E0D2" stroke-width="1.5" stroke-dasharray="6 6"/>
+  <line x1="320" y1="50" x2="320" y2="450" stroke="#E5E0D2" stroke-width="1.5" stroke-dasharray="6 6"/>
+  <line x1="440" y1="50" x2="440" y2="450" stroke="#E5E0D2" stroke-width="1.5" stroke-dasharray="6 6"/>
+  <line x1="560" y1="50" x2="560" y2="450" stroke="#E5E0D2" stroke-width="1.5" stroke-dasharray="6 6"/>
+  <line x1="680" y1="50" x2="680" y2="450" stroke="#E5E0D2" stroke-width="1.5" stroke-dasharray="6 6"/>
+
+  <!-- Survey Theodolite Tripod -->
+  <g transform="translate(240, 200)">
+    <line x1="80" y1="80" x2="20" y2="240" stroke="#286B35" stroke-width="6" stroke-linecap="round"/>
+    <line x1="80" y1="80" x2="80" y2="240" stroke="#286B35" stroke-width="6" stroke-linecap="round"/>
+    <line x1="80" y1="80" x2="140" y2="240" stroke="#286B35" stroke-width="6" stroke-linecap="round"/>
+    <!-- Theodolite Head -->
+    <rect x="60" y="50" width="40" height="35" rx="6" fill="#7ED957" stroke="#286B35" stroke-width="4"/>
+    <rect x="40" y="58" width="80" height="18" rx="4" fill="#286B35"/>
+    <circle cx="80" cy="67" r="5" fill="#FFF8E7"/>
+  </g>
+
+  <!-- Surveyor Plan Tablet / Map Canvas -->
+  <g transform="translate(450, 160)">
+    <rect width="260" height="190" rx="12" fill="#FFFFFF" stroke="#E5E0D2" stroke-width="3" filter="drop-shadow(0 4px 6px rgba(0,0,0,0.05))"/>
+    <rect x="20" y="20" width="220" height="30" rx="6" fill="#F5EEDC"/>
+    <text x="35" y="42" font-family="sans-serif" font-size="14" font-weight="bold" fill="#286B35">মৌজা ম্যাপ জরিপ ও প্লট নিরীক্ষা</text>
+    
+    <!-- Mini Plot Boundary -->
+    <polygon points="40,80 140,70 160,140 50,150" fill="#7ED957" fill-opacity="0.3" stroke="#286B35" stroke-width="2"/>
+    <text x="80" y="115" font-family="sans-serif" font-size="12" font-weight="bold" fill="#286B35">দাগ ৪১২</text>
+    <polygon points="150,68 220,80 210,135 168,138" fill="#E8A23A" fill-opacity="0.25" stroke="#E8A23A" stroke-width="2" stroke-dasharray="3 3"/>
+    <text x="175" y="105" font-family="sans-serif" font-size="11" fill="#E8A23A">বিরোধ</text>
+  </g>
+</svg>
