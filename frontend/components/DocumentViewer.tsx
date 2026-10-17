@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { DocumentItem, ExtractedField, api } from '@/lib/api';
+import { useLanguage } from '@/lib/i18n';
 import { FileText, CheckCircle, Edit3, Save, Eye, Hash, ShieldCheck, AlertCircle } from 'lucide-react';
 import Image from 'next/image';
 
@@ -11,6 +12,7 @@ interface DocumentViewerProps {
 }
 
 export const DocumentViewer: React.FC<DocumentViewerProps> = ({ document: doc, onFieldUpdated }) => {
+  const { language, t, formatNumber } = useLanguage();
   const [editingFieldId, setEditingFieldId] = useState<number | null>(null);
   const [editValue, setEditValue] = useState<string>('');
   const [isSaving, setIsSaving] = useState(false);
@@ -39,6 +41,16 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({ document: doc, o
     }
   };
 
+  const getFieldLabel = (field: ExtractedField) => {
+    if (language === 'bn') {
+      return field.field_label_bn;
+    }
+    const key = `field_${field.field_key}`;
+    const translated = t(key);
+    if (translated !== key) return translated;
+    return field.field_key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  };
+
   return (
     <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)] overflow-hidden shadow-sm">
       {/* Document Header & SHA-256 Fingerprint */}
@@ -49,7 +61,9 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({ document: doc, o
           </div>
           <div>
             <h4 className="text-sm font-bold text-[var(--text-primary)]">{doc.title}</h4>
-            <p className="text-xs text-[var(--text-secondary)]">{doc.document_type_display} • {doc.page_count} পৃষ্ঠা</p>
+            <p className="text-xs text-[var(--text-secondary)]">
+              {t('doc_pages_label', { type: doc.document_type_display, count: doc.page_count })}
+            </p>
           </div>
         </div>
 
@@ -57,10 +71,10 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({ document: doc, o
         <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-color)] text-xs">
           <Hash className="w-3.5 h-3.5 text-[var(--accent-deep)]" />
           <span className="font-mono text-[11px] text-[var(--text-secondary)]">
-            {doc.file_hash ? `${doc.file_hash.slice(0, 16)}...` : 'ক্রিপ্টোগ্রাফিক হ্যাশ প্রস্তুত'}
+            {doc.file_hash ? `${doc.file_hash.slice(0, 16)}...` : t('hash_ready')}
           </span>
           <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-emerald-700 bg-emerald-100 dark:bg-emerald-950 px-1.5 py-0.5 rounded">
-            <ShieldCheck className="w-3 h-3" /> এনরোল্ড
+            <ShieldCheck className="w-3 h-3" /> {t('hash_enrolled')}
           </span>
         </div>
       </div>
@@ -73,16 +87,16 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({ document: doc, o
             <div className="relative aspect-[3/4] w-full">
               <Image
                 src="/images/documents/deed-sample.svg"
-                alt="দলিল স্ক্যান অনুলিপি"
+                alt={t('doc_alt_scan')}
                 fill
                 sizes="(max-width: 768px) 100vw, 35vw"
                 className="object-contain p-2"
               />
             </div>
             <div className="p-2 border-t border-gray-100 bg-gray-50 flex justify-between items-center text-[11px] text-gray-500">
-              <span>পৃষ্ঠা ১ / {doc.page_count}</span>
+              <span>{t('page_counter', { current: 1, total: doc.page_count })}</span>
               <span className="text-[var(--accent-deep)] font-medium flex items-center gap-1">
-                <Eye className="w-3 h-3" /> স্ক্যান ভিউয়ার
+                <Eye className="w-3 h-3" /> {t('scan_viewer_btn')}
               </span>
             </div>
           </div>
@@ -93,17 +107,17 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({ document: doc, o
           <div>
             <div className="flex items-center justify-between mb-3 pb-2 border-b border-[var(--border-color)]">
               <span className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">
-                স্বয়ংক্রিয়ভাবে আহরিত ক্ষেত্র (Extracted Fields)
+                {t('extracted_fields_header')}
               </span>
               <span className="text-xs text-[var(--text-secondary)]">
-                {fields.length}টি তথ্য সনাক্ত
+                {t('extracted_fields_count', { count: fields.length })}
               </span>
             </div>
 
             {saveSuccess && (
               <div className="mb-3 p-2 rounded-lg bg-emerald-50 text-emerald-800 text-xs font-medium flex items-center gap-1.5 border border-emerald-200">
                 <CheckCircle className="w-4 h-4 text-emerald-600" />
-                <span>তথ্য সফলভাবে সংশোধন করা হয়েছে এবং অডিট লগ লিপিবদ্ধ হয়েছে।</span>
+                <span>{t('field_save_success')}</span>
               </div>
             )}
 
@@ -123,7 +137,7 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({ document: doc, o
                   >
                     <div className="flex items-center justify-between text-xs mb-1">
                       <span className="font-semibold text-[var(--text-primary)]">
-                        {field.field_label_bn}
+                        {getFieldLabel(field)}
                       </span>
                       <div className="flex items-center gap-2">
                         {/* Confidence Meter */}
@@ -134,13 +148,13 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({ document: doc, o
                               : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
                           }`}
                         >
-                          OCR: {Math.round(field.confidence * 100)}%
+                          {t('ocr_confidence_badge', { pct: Math.round(field.confidence * 100) })}
                         </span>
                         {!isEditing && (
                           <button
                             onClick={() => handleStartEdit(field)}
                             className="p-1 text-[var(--text-secondary)] hover:text-[var(--accent-deep)] rounded"
-                            title="সংশোধন করুন"
+                            title={t('edit_btn_title')}
                           >
                             <Edit3 className="w-3.5 h-3.5" />
                           </button>
@@ -161,7 +175,7 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({ document: doc, o
                             onClick={() => setEditingFieldId(null)}
                             className="px-2.5 py-1 text-xs border border-[var(--border-color)] rounded"
                           >
-                            বাতিল
+                            {t('cancel_btn')}
                           </button>
                           <button
                             onClick={() => handleSaveEdit(field)}
@@ -169,7 +183,7 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({ document: doc, o
                             className="px-3 py-1 text-xs bg-[var(--accent-deep)] text-white rounded font-medium flex items-center gap-1"
                           >
                             <Save className="w-3 h-3" />
-                            <span>{isSaving ? 'সংরক্ষণ...' : 'সংরক্ষণ করুন'}</span>
+                            <span>{isSaving ? t('saving_btn') : t('save_btn')}</span>
                           </button>
                         </div>
                       </div>
@@ -180,7 +194,7 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({ document: doc, o
                         </p>
                         {field.status === 'corrected' && (
                           <span className="text-[10px] text-blue-600 dark:text-blue-400 font-medium bg-blue-50 dark:bg-blue-950 px-1 rounded">
-                            সংশোধিত
+                            {t('corrected_badge')}
                           </span>
                         )}
                       </div>
@@ -192,8 +206,8 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({ document: doc, o
           </div>
 
           <div className="pt-3 border-t border-[var(--border-color)] text-[11px] text-[var(--text-secondary)] flex items-center justify-between">
-            <span>উৎস স্থানাঙ্ক ও বাউন্ডিং বক্স ট্র্যাকিং সক্রিয়</span>
-            <span className="text-emerald-700 dark:text-[#7ED957] font-semibold">✓ প্রমান যাচাইযোগ্য</span>
+            <span>{t('coord_tracking')}</span>
+            <span className="text-emerald-700 dark:text-[#7ED957] font-semibold">{t('traceable_evidence')}</span>
           </div>
         </div>
       </div>

@@ -19,7 +19,7 @@ interface UploadItem {
 
 export default function NewAnalysisPage() {
   const router = useRouter();
-  const { language } = useLanguage();
+  const { language, t, formatNumber } = useLanguage();
 
   // Step 1: Case & Parcel metadata
   const [title, setTitle] = useState('');
@@ -51,20 +51,14 @@ export default function NewAnalysisPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  const docTypeLabels: Record<string, string> = {
-    deed: 'মূল সাফ-কবলা দলিল (Deed)',
-    baya_deed: 'বায়া দলিল / পূর্ববর্তী দলিল (Baya Deed)',
-    khatian: 'খতিয়ান / সিএস-এসএ-আরএস-বিএস (Khatian)',
-    mutation: 'নামজারি খতিয়ান ও ডিসিআর (Mutation)',
-    mouza_map: 'মৌজা নকশা / ক্যাডাস্ট্রাল ম্যাপ (Mouza Map)',
-    tax_receipt: 'ভূমি উন্নয়ন কর দাখিলা (Dakhila)',
-  };
+  const docTypeKeys = ['deed', 'baya_deed', 'khatian', 'mutation', 'mouza_map', 'tax_receipt'];
 
   const handleAddSyntheticFile = () => {
     const randomHex = Math.random().toString(16).substring(2, 10) + Math.random().toString(16).substring(2, 10);
+    const prefix = t(`doctype_${newDocType}`).split(' ')[0];
     const newItem: UploadItem = {
       id: `doc-${Date.now()}`,
-      name: `${docTypeLabels[newDocType].split(' ')[0]}_নথি_${Date.now().toString().slice(-4)}.pdf`,
+      name: `${prefix}_doc_${Date.now().toString().slice(-4)}.pdf`,
       type: newDocType,
       size: Math.floor(Math.random() * 800000) + 400000,
       hash: `${randomHex}${randomHex}${randomHex}${randomHex}`.slice(0, 64)
@@ -79,11 +73,11 @@ export default function NewAnalysisPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title) {
-      setErrorMsg('অনুগ্রহ করে কেসের একটি শিরোনাম প্রদান করুন।');
+      setErrorMsg(t('title_required_error'));
       return;
     }
     if (documents.length === 0) {
-      setErrorMsg('কমপক্ষে একটি ভূমি দলিল আপলোড করা আবশ্যক।');
+      setErrorMsg(t('docs_required_error'));
       return;
     }
 
@@ -104,7 +98,7 @@ export default function NewAnalysisPage() {
       await api.runChecks(createdCase.case_number);
       router.push(`/cases/${createdCase.case_number}`);
     } catch (err: any) {
-      setErrorMsg(err.message || 'কেস তৈরিতে সমস্যা হয়েছে। পুনরায় চেষ্টা করুন।');
+      setErrorMsg(err.message || (language === 'bn' ? 'কেস তৈরিতে সমস্যা হয়েছে। পুনরায় চেষ্টা করুন।' : 'Failed to create case. Please try again.'));
       setIsSubmitting(false);
     }
   };
@@ -115,13 +109,13 @@ export default function NewAnalysisPage() {
       <div className="border-b border-[var(--border-color)] pb-4 space-y-1">
         <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[var(--bg-surface-soft)] text-[var(--accent-deep)] dark:text-[#7ED957] border border-[var(--border-color)]">
           <FileUp className="w-3.5 h-3.5" />
-          <span>নতুন যাচাই কেস সৃষ্টি</span>
+          <span>{t('new_doc_badge')}</span>
         </div>
         <h1 className="text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)]">
-          {language === 'bn' ? 'ভূমি দলিল ও রেকর্ড আপলোড ওয়ার্কফ্লো' : 'Document Ingestion Workflow'}
+          {t('new_doc_title')}
         </h1>
         <p className="text-xs sm:text-sm text-[var(--text-secondary)]">
-          প্রস্তাবিত দলিল, পূর্ববর্তী বায়া দলিল ও খতিয়ান আপলোড করুন। সিস্টেম স্বয়ংক্রিয়ভাবে হ্যাশ নির্ণয় ও ফিল্ড এক্সট্রাকশন সম্পন্ন করবে।
+          {t('new_doc_subtitle')}
         </p>
       </div>
 
@@ -135,27 +129,27 @@ export default function NewAnalysisPage() {
         {/* Step 1: Case & Parcel Details */}
         <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)] p-5 sm:p-6 space-y-4 shadow-sm">
           <h2 className="text-sm font-bold uppercase tracking-wider text-[var(--accent-deep)] dark:text-[#7ED957]">
-            ১. কেস ও দাগের বিবরণ
+            {t('step1_title')}
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="sm:col-span-2 space-y-1">
               <label className="text-xs font-semibold text-[var(--text-primary)]">
-                কেসের শিরোনাম / সনাক্তকারী বিবরণ *
+                {t('field_case_title')}
               </label>
               <input
                 type="text"
                 required
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="যেমন: মৌজা সাভার আরএস দাগ ৪১২ হস্তান্তর যাচাই"
+                placeholder={t('placeholder_case_title')}
                 className="w-full px-3 py-2 text-xs rounded-lg border border-[var(--border-color)] bg-[var(--bg-surface)] focus:ring-1 focus:ring-[var(--accent-deep)] focus:outline-none"
               />
             </div>
 
             <div className="space-y-1">
               <label className="text-xs font-semibold text-[var(--text-primary)]">
-                মৌজার নাম
+                {t('field_mouza')}
               </label>
               <input
                 type="text"
@@ -167,7 +161,7 @@ export default function NewAnalysisPage() {
 
             <div className="space-y-1">
               <label className="text-xs font-semibold text-[var(--text-primary)]">
-                দাগ নম্বর
+                {t('field_dag')}
               </label>
               <input
                 type="text"
@@ -179,24 +173,24 @@ export default function NewAnalysisPage() {
 
             <div className="space-y-1">
               <label className="text-xs font-semibold text-[var(--text-primary)]">
-                জরিপের ধরন
+                {t('field_survey')}
               </label>
               <select
                 value={surveyType}
                 onChange={(e) => setSurveyType(e.target.value)}
                 className="w-full px-3 py-2 text-xs rounded-lg border border-[var(--border-color)] bg-[var(--bg-surface)]"
               >
-                <option value="RS">আরএস (RS Survey)</option>
-                <option value="BS">বিএস (BS Survey)</option>
-                <option value="SA">এসএ (SA Survey)</option>
-                <option value="CS">সিএস (CS Survey)</option>
-                <option value="city">সিটি জরিপ (City Survey)</option>
+                <option value="RS">{t('survey_rs')}</option>
+                <option value="BS">{t('survey_bs')}</option>
+                <option value="SA">{t('survey_sa')}</option>
+                <option value="CS">{t('survey_cs')}</option>
+                <option value="city">{t('survey_city')}</option>
               </select>
             </div>
 
             <div className="space-y-1">
               <label className="text-xs font-semibold text-[var(--text-primary)]">
-                মোট জমির পরিমাণ (শতাংশ)
+                {t('field_area')}
               </label>
               <input
                 type="number"
@@ -209,13 +203,13 @@ export default function NewAnalysisPage() {
 
             <div className="sm:col-span-2 space-y-1">
               <label className="text-xs font-semibold text-[var(--text-primary)]">
-                পর্যালোচক নোট বা লেনদেনের প্রেক্ষাপট
+                {t('field_desc')}
               </label>
               <textarea
                 rows={2}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="প্রস্তাবিত জমি হস্তান্তর এবং পক্ষগণের প্রাথমিক তথ্য..."
+                placeholder={t('placeholder_desc')}
                 className="w-full px-3 py-2 text-xs rounded-lg border border-[var(--border-color)] bg-[var(--bg-surface)]"
               />
             </div>
@@ -226,10 +220,10 @@ export default function NewAnalysisPage() {
         <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)] p-5 sm:p-6 space-y-4 shadow-sm">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-bold uppercase tracking-wider text-[var(--accent-deep)] dark:text-[#7ED957]">
-              ২. দলিলের কপি সংযুক্তকরণ (Multi-Document Pack)
+              {t('doc_pack_title')}
             </h2>
             <span className="text-xs text-[var(--text-secondary)] font-medium">
-              সমর্থিত: PDF, JPG, PNG (সর্বোচ্চ ২৫MB)
+              {t('doc_pack_sub')}
             </span>
           </div>
 
@@ -240,10 +234,10 @@ export default function NewAnalysisPage() {
             </div>
             <div>
               <p className="text-xs sm:text-sm font-semibold text-[var(--text-primary)]">
-                দলিলের স্ক্যান কপি টেনে এখানে আনুন অথবা ফাইল সিলেক্ট করুন
+                {t('drop_title')}
               </p>
               <p className="text-[11px] text-[var(--text-secondary)] mt-0.5">
-                প্রতিটি আপলোডের জন্য SHA-256 ক্রিপ্টোগ্রাফিক হ্যাশ তৈরি করা হয়।
+                {t('drop_desc')}
               </p>
             </div>
 
@@ -253,8 +247,8 @@ export default function NewAnalysisPage() {
                 onChange={(e) => setNewDocType(e.target.value)}
                 className="px-2.5 py-1.5 text-xs rounded-lg border border-[var(--border-color)] bg-[var(--bg-surface)] font-medium"
               >
-                {Object.entries(docTypeLabels).map(([key, label]) => (
-                  <option key={key} value={key}>{label}</option>
+                {docTypeKeys.map((key) => (
+                  <option key={key} value={key}>{t(`doctype_${key}`)}</option>
                 ))}
               </select>
 
@@ -264,7 +258,7 @@ export default function NewAnalysisPage() {
                 className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--accent-deep)] text-[#FFF8E7] hover:bg-[var(--accent-deep)]/90 transition-colors flex items-center gap-1"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>নথি যোগ করুন</span>
+                <span>{t('add_doc')}</span>
               </button>
             </div>
           </div>
@@ -272,7 +266,7 @@ export default function NewAnalysisPage() {
           {/* List of Attached Documents */}
           <div className="space-y-2 pt-2">
             <span className="text-xs font-bold text-[var(--text-primary)] block">
-              সংযুক্ত নথিপত্র ({documents.length}টি)
+              {t('attached_docs', { count: documents.length })}
             </span>
 
             <div className="divide-y divide-[var(--border-color)] border border-[var(--border-color)] rounded-lg overflow-hidden bg-[var(--bg-surface)]">
@@ -283,7 +277,7 @@ export default function NewAnalysisPage() {
                     <div className="min-w-0">
                       <p className="font-semibold text-[var(--text-primary)] truncate">{doc.name}</p>
                       <p className="text-[10px] text-[var(--text-secondary)] font-mono truncate">
-                        SHA-256: {doc.hash.slice(0, 20)}... • {(doc.size / 1024).toFixed(0)} KB • {docTypeLabels[doc.type]}
+                        SHA-256: {doc.hash.slice(0, 20)}... • {(doc.size / 1024).toFixed(0)} KB • {t(`doctype_${doc.type}`)}
                       </p>
                     </div>
                   </div>
@@ -292,7 +286,7 @@ export default function NewAnalysisPage() {
                     type="button"
                     onClick={() => handleRemoveDoc(doc.id)}
                     className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded"
-                    title="বাতিল করুন"
+                    title={t('cancel')}
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -306,7 +300,7 @@ export default function NewAnalysisPage() {
         <div className="p-4 rounded-xl bg-[var(--bg-surface-soft)] border border-[var(--border-color)] flex items-start gap-3 text-xs text-[var(--text-secondary)]">
           <Info className="w-4 h-4 text-[var(--accent-deep)] shrink-0 mt-0.5" />
           <p>
-            <strong>ডেটা পলিসি নিশ্চিতকরণ:</strong> এই যাচাই প্রক্রিয়ায় ব্যবহৃত তথ্য এনক্রিপ্ট করে প্রসেস করা হবে। হ্যাকাতন প্রদর্শনীতে কেবল অনুমোদিত সিন্থেটিক তথ্য ব্যবহার করা হচ্ছে এবং কোনো সরকারি সার্ভারে অযাচিত রিকোয়েস্ট পাঠানো হয় না।
+            <strong>{t('privacy_title')}</strong> {t('privacy_desc')}
           </p>
         </div>
 
@@ -316,14 +310,14 @@ export default function NewAnalysisPage() {
             onClick={() => router.back()}
             className="px-5 py-2.5 text-xs font-semibold border border-[var(--border-color)] rounded-xl hover:bg-[var(--bg-surface-soft)]"
           >
-            বাতিল
+            {t('cancel')}
           </button>
           <button
             type="submit"
             disabled={isSubmitting}
             className="px-6 py-2.5 text-xs font-bold rounded-xl bg-[var(--accent-deep)] text-[#FFF8E7] hover:bg-[var(--accent-deep)]/90 transition-all flex items-center gap-2 shadow-sm"
           >
-            <span>{isSubmitting ? 'বিশ্লেষণ চলছে...' : 'কেস সৃষ্টি ও যাচাই শুরু করুন'}</span>
+            <span>{isSubmitting ? t('submitting_investigation') : t('create_and_verify_btn')}</span>
             <ArrowRight className="w-4 h-4 text-[#7ED957]" />
           </button>
         </div>

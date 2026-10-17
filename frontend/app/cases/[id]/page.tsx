@@ -23,7 +23,7 @@ export default function CaseDetailPage({ params }: CaseDetailPageProps) {
   const resolvedParams = use(params);
   const caseId = resolvedParams.id;
   const router = useRouter();
-  const { language } = useLanguage();
+  const { language, t, formatNumber, formatDate, getStatusLabel } = useLanguage();
 
   const [caseItem, setCaseItem] = useState<CaseItem | null>(null);
   const [graphData, setGraphData] = useState<GraphData | null>(null);
@@ -31,6 +31,8 @@ export default function CaseDetailPage({ params }: CaseDetailPageProps) {
   const [runningChecks, setRunningChecks] = useState(false);
   const [activeTab, setActiveTab] = useState<'findings' | 'graph' | 'documents' | 'audit'>('findings');
   const [selectedStatus, setSelectedStatus] = useState<string>('');
+  const [savingStatus, setSavingStatus] = useState(false);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
   const loadCaseData = async () => {
     try {
@@ -51,9 +53,6 @@ export default function CaseDetailPage({ params }: CaseDetailPageProps) {
     loadCaseData();
   }, [caseId]);
 
-  const [savingStatus, setSavingStatus] = useState(false);
-  const [statusMessage, setStatusMessage] = useState<string | null>(null);
-
   const handleUpdateStatus = async () => {
     if (!selectedStatus) return;
     setSavingStatus(true);
@@ -61,7 +60,7 @@ export default function CaseDetailPage({ params }: CaseDetailPageProps) {
     try {
       await api.updateCaseStatus(caseId, selectedStatus);
       await loadCaseData();
-      setStatusMessage('পর্যালোচকের সিদ্ধান্ত সফলভাবে ডাটাবেসে সংরক্ষিত হয়েছে।');
+      setStatusMessage(t('decision_saved_msg'));
       setTimeout(() => setStatusMessage(null), 4000);
     } catch (err) {
       console.error('Failed to update status:', err);
@@ -86,7 +85,7 @@ export default function CaseDetailPage({ params }: CaseDetailPageProps) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-20 flex flex-col items-center justify-center space-y-3">
         <RefreshCw className="w-8 h-8 text-[var(--accent-deep)] animate-spin" />
-        <p className="text-sm text-[var(--text-secondary)]">কেসের বিস্তারিত তথ্য লোড হচ্ছে...</p>
+        <p className="text-sm text-[var(--text-secondary)]">{t('loading_data')}</p>
       </div>
     );
   }
@@ -94,9 +93,9 @@ export default function CaseDetailPage({ params }: CaseDetailPageProps) {
   if (!caseItem) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-16 text-center space-y-4">
-        <p className="text-base text-red-600 font-semibold">কেস পাওয়া যায়নি (Case Not Found)</p>
+        <p className="text-base text-red-600 font-semibold">{t('case_not_found')}</p>
         <Link href="/cases" className="text-xs text-[var(--accent-deep)] underline">
-          সকল কেসে ফিরে যান
+          {t('back_to_cases')}
         </Link>
       </div>
     );
@@ -115,7 +114,7 @@ export default function CaseDetailPage({ params }: CaseDetailPageProps) {
           className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span>সকল কেসের তালিকা</span>
+          <span>{t('back_to_cases')}</span>
         </Link>
 
         <div className="flex items-center gap-2">
@@ -125,15 +124,15 @@ export default function CaseDetailPage({ params }: CaseDetailPageProps) {
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-[var(--border-color)] bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-soft)] text-[var(--text-primary)] transition-colors shadow-sm"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${runningChecks ? 'animate-spin' : ''}`} />
-            <span>{runningChecks ? 'যাচাই চলছে...' : 'পুনরায় চেক চালান'}</span>
+            <span>{runningChecks ? t('running_checks') : t('rerun_checks_btn')}</span>
           </button>
 
           <Link
             href={`/reports?case=${caseItem.case_number}`}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold bg-[var(--accent-deep)] text-[#FFF8E7] hover:bg-[var(--accent-deep)]/90 transition-all shadow-sm"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold bg-[var(--accent-deep)] text-[#FAF9F6] hover:opacity-90 transition-all shadow-sm"
           >
-            <Printer className="w-3.5 h-3.5 text-[#7ED957]" />
-            <span>প্রতিবেদন প্রিন্ট / PDF</span>
+            <Printer className="w-3.5 h-3.5" />
+            <span>{t('print_pdf')}</span>
           </Link>
         </div>
       </div>
@@ -143,12 +142,12 @@ export default function CaseDetailPage({ params }: CaseDetailPageProps) {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[var(--border-color)] pb-4">
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-mono text-sm font-bold text-[var(--accent-deep)] dark:text-[#7ED957]">
+              <span className="font-mono text-sm font-bold text-[var(--accent-deep)]">
                 {caseItem.case_number}
               </span>
               <RiskBadge level={caseItem.risk_level} score={caseItem.risk_score} />
-              <span className="text-xs px-2 py-0.5 rounded bg-[var(--bg-surface-soft)] text-[var(--text-secondary)] font-medium">
-                {caseItem.status_display}
+              <span className="text-xs px-2.5 py-0.5 rounded bg-[var(--bg-surface-soft)] text-[var(--text-secondary)] font-medium border border-[var(--border-color)]">
+                {getStatusLabel(caseItem.status)}
               </span>
             </div>
             <h1 className="text-xl sm:text-2xl font-extrabold text-[var(--text-primary)] mt-1">
@@ -156,29 +155,35 @@ export default function CaseDetailPage({ params }: CaseDetailPageProps) {
             </h1>
           </div>
 
-          <div className="text-xs text-[var(--text-secondary)] sm:text-right space-y-0.5">
-            <p>দাখিল: {new Date(caseItem.created_at).toLocaleDateString()}</p>
-            <p>সর্বশেষ আপডেট: {new Date(caseItem.updated_at).toLocaleTimeString()}</p>
+          <div className="text-xs text-[var(--text-secondary)] sm:text-right space-y-0.5 font-mono">
+            <p>{t('case_filed_date', { date: formatDate(caseItem.created_at) })}</p>
+            <p>{t('case_updated_date', { time: new Date(caseItem.updated_at).toLocaleTimeString() })}</p>
           </div>
         </div>
 
-        {/* Parcel Info Pills & Risk Summary */}
+        {/* Parcel Info Pills */}
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs">
           <div className="p-3 rounded-xl bg-[var(--bg-surface-soft)]/60 border border-[var(--border-color)]">
-            <span className="text-[var(--text-secondary)] block">মৌজা ও এলাকা</span>
+            <span className="text-[var(--text-secondary)] block">{t('mouza_area_label')}</span>
             <span className="font-semibold text-sm text-[var(--text-primary)]">{caseItem.mouza || 'সাভার'}</span>
           </div>
           <div className="p-3 rounded-xl bg-[var(--bg-surface-soft)]/60 border border-[var(--border-color)]">
-            <span className="text-[var(--text-secondary)] block">দাগ ও জরিপ</span>
-            <span className="font-semibold text-sm text-[var(--text-primary)]">দাগ নং {caseItem.dag_number || '৪১২'} (RS)</span>
+            <span className="text-[var(--text-secondary)] block">{t('dag_survey_label')}</span>
+            <span className="font-semibold text-sm text-[var(--text-primary)]">
+              {t('dag_survey_val', { dag: formatNumber(caseItem.dag_number || '৪১২'), survey: caseItem.parcel?.survey_type || 'RS' })}
+            </span>
           </div>
           <div className="p-3 rounded-xl bg-[var(--bg-surface-soft)]/60 border border-[var(--border-color)]">
-            <span className="text-[var(--text-secondary)] block">রেকর্ডকৃত জমি</span>
-            <span className="font-semibold text-sm text-[var(--text-primary)]">{caseItem.recorded_area || 25} শতাংশ</span>
+            <span className="text-[var(--text-secondary)] block">{t('recorded_area_label')}</span>
+            <span className="font-semibold text-sm text-[var(--text-primary)]">
+              {t('recorded_area_val', { area: formatNumber(caseItem.recorded_area || 25) })}
+            </span>
           </div>
           <div className="p-3 rounded-xl bg-[var(--bg-surface-soft)]/60 border border-[var(--border-color)]">
-            <span className="text-[var(--text-secondary)] block">সংযুক্ত নথিপত্র</span>
-            <span className="font-semibold text-sm text-[var(--text-primary)]">{documents.length}টি দলিল/খতিয়ান</span>
+            <span className="text-[var(--text-secondary)] block">{t('attached_docs_label')}</span>
+            <span className="font-semibold text-sm text-[var(--text-primary)]">
+              {t('attached_docs_val', { count: formatNumber(documents.length) })}
+            </span>
           </div>
         </div>
 
@@ -192,8 +197,12 @@ export default function CaseDetailPage({ params }: CaseDetailPageProps) {
         }`}>
           <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
           <div>
-            <p className="font-bold text-sm mb-0.5">ঝুঁকি সংকেতের কারণ ও সারসংক্ষেপ:</p>
-            <p>{caseItem.risk_summary_bn || 'প্রদত্ত নথিসমূহে কোনো সুস্পষ্ট স্বত্ব বিরোধ বা খতিয়ান অমিল শনাক্ত হয়নি।'}</p>
+            <p className="font-bold text-sm mb-0.5">{t('risk_reason_title')}</p>
+            <p>
+              {language === 'bn'
+                ? (caseItem.risk_summary_bn || t('risk_clean_summary'))
+                : (caseItem.risk_summary_en || caseItem.risk_summary_bn || t('risk_clean_summary'))}
+            </p>
           </div>
         </div>
       </div>
@@ -205,17 +214,17 @@ export default function CaseDetailPage({ params }: CaseDetailPageProps) {
             <ShieldCheck className="w-5 h-5 text-[var(--accent-deep)]" />
             <div>
               <h3 className="text-sm font-bold text-[var(--text-primary)]">
-                মানবীয় পর্যালোচনা ও কেস নিষ্পত্তি (Human Review & Case Disposition)
+                {t('review_panel_title')}
               </h3>
               <p className="text-xs text-[var(--text-secondary)]">
-                পর্যালোচকের সিদ্ধান্ত সরাসরি ডাটাবেসে সংরক্ষিত হয় এবং অডিট ট্রেইলে লিপিবদ্ধ থাকে
+                {t('review_panel_subtitle')}
               </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs text-[var(--text-secondary)]">বর্তমান স্থিতি:</span>
+            <span className="text-xs text-[var(--text-secondary)]">{t('current_status_label')}</span>
             <span className="text-xs px-2.5 py-1 rounded-md font-semibold bg-[var(--accent-light)] text-[var(--accent-deep)] border border-[var(--border-color)]">
-              {caseItem.status_display}
+              {getStatusLabel(caseItem.status)}
             </span>
           </div>
         </div>
@@ -223,7 +232,7 @@ export default function CaseDetailPage({ params }: CaseDetailPageProps) {
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-1">
           <div className="flex-1">
             <label htmlFor="review-status" className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">
-              নতুন স্থিতি নির্বাচন করুন:
+              {t('select_status_label')}
             </label>
             <select
               id="review-status"
@@ -231,10 +240,10 @@ export default function CaseDetailPage({ params }: CaseDetailPageProps) {
               onChange={(e) => setSelectedStatus(e.target.value)}
               className="w-full text-xs font-medium p-2 rounded-lg border border-[var(--border-color)] bg-[var(--bg-surface-soft)] text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-deep)]"
             >
-              <option value="flagged_review">পর্যালোচনা প্রয়োজন (Needs Review)</option>
-              <option value="verified_clean">যাচাই সম্পন্ন - অসঙ্গতিহীন (Verified Clean)</option>
-              <option value="resolved">পর্যালোচনা সম্পন্ন / নিষ্পত্তিকৃত (Review Resolved)</option>
-              <option value="processing">বিশ্লেষণ চলমান (Processing)</option>
+              <option value="flagged_review">{t('opt_flagged_review')}</option>
+              <option value="verified_clean">{t('opt_verified_clean')}</option>
+              <option value="resolved">{t('opt_resolved')}</option>
+              <option value="processing">{t('opt_processing')}</option>
             </select>
           </div>
 
@@ -249,7 +258,7 @@ export default function CaseDetailPage({ params }: CaseDetailPageProps) {
               }`}
             >
               {savingStatus && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
-              <span>{savingStatus ? 'সংরক্ষণ হচ্ছে...' : 'সিদ্ধান্ত সংরক্ষণ করুন'}</span>
+              <span>{savingStatus ? t('saving_decision') : t('save_decision_btn')}</span>
             </button>
           </div>
         </div>
@@ -263,53 +272,53 @@ export default function CaseDetailPage({ params }: CaseDetailPageProps) {
       </div>
 
       {/* Navigation Tabs */}
-      <div className="flex border-b border-[var(--border-color)] gap-2 text-xs font-semibold">
+      <div className="flex border-b border-[var(--border-color)] gap-2 text-xs font-semibold overflow-x-auto">
         <button
           onClick={() => setActiveTab('findings')}
-          className={`pb-3 px-3 flex items-center gap-1.5 border-b-2 transition-colors ${
+          className={`pb-3 px-3 flex items-center gap-1.5 border-b-2 transition-colors shrink-0 ${
             activeTab === 'findings'
-              ? 'border-[var(--accent-deep)] text-[var(--accent-deep)]'
+              ? 'border-[var(--accent-deep)] text-[var(--accent-deep)] font-bold'
               : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
           }`}
         >
           <AlertTriangle className="w-4 h-4" />
-          <span>শনাক্তকৃত অসঙ্গতিসমূহ ({anomalies.length})</span>
+          <span>{t('tab_findings', { count: formatNumber(anomalies.length) })}</span>
         </button>
 
         <button
           onClick={() => setActiveTab('graph')}
-          className={`pb-3 px-3 flex items-center gap-1.5 border-b-2 transition-colors ${
+          className={`pb-3 px-3 flex items-center gap-1.5 border-b-2 transition-colors shrink-0 ${
             activeTab === 'graph'
-              ? 'border-[var(--accent-deep)] text-[var(--accent-deep)]'
+              ? 'border-[var(--accent-deep)] text-[var(--accent-deep)] font-bold'
               : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
           }`}
         >
           <GitFork className="w-4 h-4" />
-          <span>মালিকানা ও লেনদেন গ্রাফ</span>
+          <span>{t('tab_graph')}</span>
         </button>
 
         <button
           onClick={() => setActiveTab('documents')}
-          className={`pb-3 px-3 flex items-center gap-1.5 border-b-2 transition-colors ${
+          className={`pb-3 px-3 flex items-center gap-1.5 border-b-2 transition-colors shrink-0 ${
             activeTab === 'documents'
-              ? 'border-[var(--accent-deep)] text-[var(--accent-deep)]'
+              ? 'border-[var(--accent-deep)] text-[var(--accent-deep)] font-bold'
               : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
           }`}
         >
           <FileText className="w-4 h-4" />
-          <span>নথি প্রিভিউ ও ওসিআর ({documents.length})</span>
+          <span>{t('tab_documents', { count: formatNumber(documents.length) })}</span>
         </button>
 
         <button
           onClick={() => setActiveTab('audit')}
-          className={`pb-3 px-3 flex items-center gap-1.5 border-b-2 transition-colors ${
+          className={`pb-3 px-3 flex items-center gap-1.5 border-b-2 transition-colors shrink-0 ${
             activeTab === 'audit'
-              ? 'border-[var(--accent-deep)] text-[var(--accent-deep)]'
+              ? 'border-[var(--accent-deep)] text-[var(--accent-deep)] font-bold'
               : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
           }`}
         >
           <History className="w-4 h-4" />
-          <span>অডিট ট্রেইল ({auditEvents.length})</span>
+          <span>{t('tab_audit', { count: formatNumber(auditEvents.length) })}</span>
         </button>
       </div>
 
@@ -326,19 +335,19 @@ export default function CaseDetailPage({ params }: CaseDetailPageProps) {
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[var(--border-color)] pb-3">
                   <div className="flex items-center gap-2">
                     <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-[var(--bg-surface-soft)] text-[var(--accent-deep)] border border-[var(--border-color)]">
-                      রুল: {f.rule_code_snapshot}
+                      {t('finding_rule_badge', { code: f.rule_code_snapshot })}
                     </span>
                     <h3 className="text-sm font-bold text-[var(--text-primary)]">
-                      {f.title_bn}
+                      {language === 'bn' ? f.title_bn : (f.title_en || f.title_bn)}
                     </h3>
                   </div>
                   <RiskBadge level={f.severity} showScore={false} />
                 </div>
 
-                {/* Finding Description (What was detected & Why it matters) */}
+                {/* Finding Description */}
                 <div className="text-xs text-[var(--text-secondary)] leading-relaxed space-y-1">
-                  <p className="font-medium text-[var(--text-primary)]">শনাক্তকরণের বিস্তারিত বিবরণ:</p>
-                  <p>{f.description_bn}</p>
+                  <p className="font-medium text-[var(--text-primary)]">{t('finding_details_label')}</p>
+                  <p>{language === 'bn' ? f.description_bn : (f.description_en || f.description_bn)}</p>
                 </div>
 
                 {/* Conflicting Records Table */}
@@ -346,14 +355,14 @@ export default function CaseDetailPage({ params }: CaseDetailPageProps) {
                   <div className="p-3.5 rounded-lg bg-[var(--bg-surface-soft)] border border-[var(--border-color)] space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] font-bold text-[var(--text-primary)]">
-                        পরস্পরবিরোধী রেকর্ডসমূহ (Discrepancy Breakdown):
+                        {t('discrepancy_title')}
                       </span>
                       <button
                         onClick={() => setActiveTab('documents')}
                         className="text-[11px] font-bold text-[var(--accent-deep)] hover:underline flex items-center gap-1"
                       >
                         <FileText className="w-3 h-3" />
-                        <span>নথি প্রমাণে যান</span>
+                        <span>{t('goto_docs_btn')}</span>
                       </button>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
@@ -376,7 +385,7 @@ export default function CaseDetailPage({ params }: CaseDetailPageProps) {
                   <div className="p-3 rounded-lg bg-[var(--accent-light)] border border-[var(--border-color)] text-xs text-[var(--text-primary)] flex items-start gap-2">
                     <Info className="w-4 h-4 text-[var(--accent-deep)] shrink-0 mt-0.5" />
                     <div>
-                      <span className="font-bold text-[var(--accent-deep)]">পর্যালোচকের করণীয়: </span>
+                      <span className="font-bold text-[var(--accent-deep)]">{t('reviewer_action_label')} </span>
                       <span>{f.human_action_recommended_bn}</span>
                     </div>
                   </div>
@@ -384,11 +393,11 @@ export default function CaseDetailPage({ params }: CaseDetailPageProps) {
               </div>
             ))
           ) : (
-            <div className="p-12 text-center rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)] space-y-2">
+            <div className="p-12 text-center rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)] space-y-2 shadow-sm">
               <CheckCircle2 className="w-10 h-10 text-emerald-600 mx-auto" />
-              <h4 className="text-base font-bold text-[var(--text-primary)]">কোনো অসঙ্গতি বা জালিয়াতির সংকেত পাওয়া যায়নি</h4>
+              <h4 className="text-base font-bold text-[var(--text-primary)]">{t('no_findings_title')}</h4>
               <p className="text-xs text-[var(--text-secondary)] max-w-md mx-auto">
-                সকল দাখিলকৃত দলিল, বায়া দলিল, আরএস খতিয়ান ও রাজস্ব রেকর্ড সম্পূর্ণ সামঞ্জস্যপূর্ণ।
+                {t('no_findings_desc')}
               </p>
             </div>
           )}
@@ -401,7 +410,7 @@ export default function CaseDetailPage({ params }: CaseDetailPageProps) {
           {graphData ? (
             <OwnershipGraphVisualizer data={graphData} />
           ) : (
-            <div className="p-8 text-center text-xs text-[var(--text-secondary)]">গ্রাফ প্রস্তুত হচ্ছে...</div>
+            <div className="p-8 text-center text-xs text-[var(--text-secondary)]">{t('loading_data')}</div>
           )}
         </div>
       )}
@@ -419,7 +428,7 @@ export default function CaseDetailPage({ params }: CaseDetailPageProps) {
       {activeTab === 'audit' && (
         <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)] overflow-hidden shadow-sm">
           <div className="p-4 border-b border-[var(--border-color)] font-bold text-xs bg-[var(--bg-surface-soft)]/50">
-            অডিট ট্রেইল ও পর্যালোচক পরিবর্তনের ইতিহাস
+            {t('report_sec4_title')}
           </div>
           <div className="divide-y divide-[var(--border-color)]">
             {auditEvents.map((a: any) => (
@@ -430,9 +439,9 @@ export default function CaseDetailPage({ params }: CaseDetailPageProps) {
                     {JSON.stringify(a.details)}
                   </p>
                 </div>
-                <div className="text-right text-[var(--text-secondary)] shrink-0">
+                <div className="text-right text-[var(--text-secondary)] shrink-0 font-mono">
                   <p>{a.user_email || 'System'}</p>
-                  <p className="text-[11px]">{new Date(a.created_at).toLocaleString()}</p>
+                  <p className="text-[11px]">{formatDate(a.created_at)}</p>
                 </div>
               </div>
             ))}

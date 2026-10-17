@@ -5,21 +5,93 @@ import { useLanguage } from '@/lib/i18n';
 import { BookOpen, ShieldCheck, Binary, GitFork, Cpu, AlertTriangle, CheckCircle } from 'lucide-react';
 
 export default function MethodologyPage() {
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
 
   const rules = [
-    { code: 'D001', name_bn: 'অভিন্ন ডিজিটাল ফাইলের হ্যাশ উপস্থিতি', family: 'নথির অখণ্ডতা', sev: 'মধ্যম' },
-    { code: 'D002', name_bn: 'দলিল নম্বর বা রেজিস্ট্রেশন তারিখ অমিল', family: 'নথির অখণ্ডতা', sev: 'উচ্চ' },
-    { code: 'O001', name_bn: 'মালিকানা ধারাবাহিকতা বিচ্ছিন্ন (বায়া দলিল অনুপস্থিত)', family: 'মালিকানা চেইন', sev: 'গুরুতর' },
-    { code: 'O002', name_bn: 'মালিকানা অর্জনের পূর্ববর্তী তারিখে জমি হস্তান্তর', family: 'মালিকানা চেইন', sev: 'গুরুতর' },
-    { code: 'P001', name_bn: 'সম্ভাব্য দ্বৈত বিক্রি (একই দাগ একাধিক দলিলে বিক্রি)', family: 'দাগ ও বিরোধ', sev: 'গুরুতর' },
-    { code: 'P002', name_bn: 'বিক্রিত জমির পরিমাণ খতিয়ানের রেকর্ড অতিক্রম', family: 'দাগ ও বিরোধ', sev: 'উচ্চ' },
-    { code: 'P003', name_bn: 'চৌহদ্দি ও মৌজা নকশার সীমানা বর্ণনায় গরমিল', family: 'দাগ ও বিরোধ', sev: 'মধ্যম' },
-    { code: 'K001', name_bn: 'দলিল বনাম আরএস/বিএস খতিয়ান স্বত্ব অমিল', family: 'রেকর্ড সামঞ্জস্য', sev: 'উচ্চ' },
-    { code: 'M001', name_bn: 'দলিল বনাম নামজারি খতিয়ানের তথ্য অমিল', family: 'রেকর্ড সামঞ্জস্য', sev: 'উচ্চ' },
-    { code: 'T001', name_bn: 'সহায়ক ভূমি উন্নয়ন কর দাখিলার তথ্যে গরমিল', family: 'সহায়ক প্রমাণ', sev: 'স্বল্প' },
-    { code: 'G001', name_bn: 'মালিকানা গ্রাফে সমান্তরাল হস্তান্তর পথ শনাক্ত', family: 'গ্রাফ বিশ্লেষণ', sev: 'গুরুতর' },
-    { code: 'X001', name_bn: 'গুরুত্বপূর্ণ তথ্যে ওসিআর পাঠোদ্ধারের নিম্ন মান', family: 'আহরণ মান', sev: 'স্বল্প' },
+    {
+      code: 'D001',
+      name_bn: 'অভিন্ন ডিজিটাল ফাইলের হ্যাশ উপস্থিতি',
+      name_en: 'Identical Digital File Hash Registered (Exact Duplicate)',
+      family_key: 'rule_family_integrity',
+      sev_key: 'sev_med'
+    },
+    {
+      code: 'D002',
+      name_bn: 'দলিল নম্বর বা রেজিস্ট্রেশন তারিখ অমিল',
+      name_en: 'Deed Number or Registration Date Discrepancy',
+      family_key: 'rule_family_integrity',
+      sev_key: 'sev_high'
+    },
+    {
+      code: 'O001',
+      name_bn: 'মালিকানা ধারাবাহিকতা বিচ্ছিন্ন (বায়া দলিল অনুপস্থিত)',
+      name_en: 'Broken Chain of Title (Missing Baya Deed)',
+      family_key: 'rule_family_chain',
+      sev_key: 'sev_crit'
+    },
+    {
+      code: 'O002',
+      name_bn: 'মালিকানা অর্জনের পূর্ববর্তী তারিখে জমি হস্তান্তর',
+      name_en: 'Transfer Date Precedes Recorded Ownership Acquisition',
+      family_key: 'rule_family_chain',
+      sev_key: 'sev_crit'
+    },
+    {
+      code: 'P001',
+      name_bn: 'সম্ভাব্য দ্বৈত বিক্রি (একই দাগ একাধিক দলিলে বিক্রি)',
+      name_en: 'Potential Double-Selling Conflict (Same Parcel in Multiple Active Deeds)',
+      family_key: 'rule_family_plot',
+      sev_key: 'sev_crit'
+    },
+    {
+      code: 'P002',
+      name_bn: 'বিক্রিত জমির পরিমাণ খতিয়ানের রেকর্ড অতিক্রম',
+      name_en: 'Transferred Area Exceeds Recorded Khatian Ceiling',
+      family_key: 'rule_family_plot',
+      sev_key: 'sev_high'
+    },
+    {
+      code: 'P003',
+      name_bn: 'চৌহদ্দি ও মৌজা নকশার সীমানা বর্ণনায় গরমিল',
+      name_en: 'Boundary & Mouza Map Description Inconsistency',
+      family_key: 'rule_family_plot',
+      sev_key: 'sev_med'
+    },
+    {
+      code: 'K001',
+      name_bn: 'দলিল বনাম আরএস/বিএস খতিয়ান স্বত্ব অমিল',
+      name_en: 'Deed Executant vs RS/BS Survey Ownership Mismatch',
+      family_key: 'rule_family_records',
+      sev_key: 'sev_high'
+    },
+    {
+      code: 'M001',
+      name_bn: 'দলিল বনাম নামজারি খতিয়ানের তথ্য অমিল',
+      name_en: 'Deed vs Mutation (Namjari) DCR Discrepancy',
+      family_key: 'rule_family_records',
+      sev_key: 'sev_high'
+    },
+    {
+      code: 'T001',
+      name_bn: 'সহায়ক ভূমি উন্নয়ন কর দাখিলার তথ্যে গরমিল',
+      name_en: 'Land Development Tax (Dakhila) Verification Discrepancy',
+      family_key: 'rule_family_evidence',
+      sev_key: 'sev_low'
+    },
+    {
+      code: 'G001',
+      name_bn: 'মালিকানা গ্রাফে সমান্তরাল হস্তান্তর পথ শনাক্ত',
+      name_en: 'Competing Parallel Transfer Paths Detected in Graph',
+      family_key: 'rule_family_graph',
+      sev_key: 'sev_crit'
+    },
+    {
+      code: 'X001',
+      name_bn: 'গুরুত্বপূর্ণ তথ্যে ওসিআর পাঠোদ্ধারের নিম্ন মান',
+      name_en: 'Low OCR Optical Confidence on Critical Identifier',
+      family_key: 'rule_family_ocr',
+      sev_key: 'sev_low'
+    },
   ];
 
   return (
@@ -28,13 +100,13 @@ export default function MethodologyPage() {
       <div className="space-y-3 text-center sm:text-left border-b border-[var(--border-color)] pb-8">
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[var(--bg-surface-soft)] text-[var(--accent-deep)] border border-[var(--border-color)]">
           <BookOpen className="w-3.5 h-3.5" />
-          <span>প্রযুক্তিগত কার্যপ্রণালী ও রুল ইঞ্জিন</span>
+          <span>{t('methodology_badge')}</span>
         </div>
         <h1 className="text-3xl sm:text-4xl font-extrabold text-[var(--text-primary)]">
-          {language === 'bn' ? 'যাচাই পদ্ধতি ও সীমাবদ্ধতা' : 'Methodology & Limitations'}
+          {t('methodology_title')}
         </h1>
         <p className="text-sm sm:text-base text-[var(--text-secondary)] leading-relaxed">
-          আনলেফট ল্যান্ডগার্ডের ওসিআর, ফিল্ড নরমালাইজেশন, ডিটারমিনিস্টিক রুল ইঞ্জিন ও গ্রাফ বিশ্লেষণের বৈজ্ঞানিক ব্যাখ্যা।
+          {t('methodology_subtitle')}
         </p>
       </div>
 
@@ -42,25 +114,25 @@ export default function MethodologyPage() {
       <div className="p-5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)] space-y-3 shadow-sm">
         <h2 className="text-sm font-bold text-[var(--text-primary)] flex items-center gap-2">
           <ShieldCheck className="w-4 h-4 text-[var(--accent-deep)]" />
-          <span>প্রযুক্তিগত দাবির সুনির্দিষ্ট পার্থক্য (Critical Distinctions)</span>
+          <span>{t('distinction_header')}</span>
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
           <div className="p-3 rounded-lg bg-[var(--bg-surface-soft)] border border-[var(--border-color)] space-y-1">
-            <span className="font-bold text-[var(--accent-deep)] block">ক্রিপ্টোগ্রাফিক হ্যাশ (SHA-256)</span>
-            <p className="text-[11px] text-[var(--text-secondary)]">
-              ডিজিটাল ফাইলটি হুবহু একই বাইটের কিনা তা প্রমাণ করে। এটি দলিলের অন্তর্নিহিত আইনি বৈধতা বা স্বত্ব প্রমাণ করে না।
+            <span className="font-bold text-[var(--accent-deep)] block">{t('dist_hash_title')}</span>
+            <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed">
+              {t('dist_hash_desc')}
             </p>
           </div>
           <div className="p-3 rounded-lg bg-[var(--bg-surface-soft)] border border-[var(--border-color)] space-y-1">
-            <span className="font-bold text-[var(--accent-deep)] block">ডিটারমিনিস্টিক রুলস</span>
-            <p className="text-[11px] text-[var(--text-secondary)]">
-              ১২টি স্পষ্ট নিয়ম দিয়ে রেকর্ডসমূহের মধ্যকার গাণিতিক ও তথ্যের অমিল শনাক্ত করে। ফলাফল ১০০% টেস্টেবল ও পুনরাবৃত্তিযোগ্য।
+            <span className="font-bold text-[var(--accent-deep)] block">{t('dist_rules_title')}</span>
+            <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed">
+              {t('dist_rules_desc')}
             </p>
           </div>
           <div className="p-3 rounded-lg bg-[var(--bg-surface-soft)] border border-[var(--border-color)] space-y-1">
-            <span className="font-bold text-[var(--accent-deep)] block">মানবীয় পর্যালোচনা</span>
-            <p className="text-[11px] text-[var(--text-secondary)]">
-              সিস্টেম কেবল প্রমাণ নির্দেশক ও সংকেত প্রদানকারী। কোনো অবস্থাতেই সিস্টেম স্বয়ংক্রিয়ভাবে "জালিয়াত" ঘোষণা করে না।
+            <span className="font-bold text-[var(--accent-deep)] block">{t('dist_human_title')}</span>
+            <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed">
+              {t('dist_human_desc')}
             </p>
           </div>
         </div>
@@ -70,35 +142,35 @@ export default function MethodologyPage() {
       <div className="space-y-6">
         <h2 className="text-lg font-bold text-[var(--text-primary)] flex items-center gap-2">
           <Cpu className="w-5 h-5 text-[var(--accent-deep)]" />
-          <span>১. চার স্তরের বিশ্লেষণ আর্কিটেকচার</span>
+          <span>{t('pipe_sec_title')}</span>
         </h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="p-4 rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)] space-y-2">
-            <span className="text-xs font-bold text-[var(--accent-deep)] block">ধাপ ১: ক্রিপ্টোগ্রাফিক ফিঙ্গারপ্রিন্ট (P2)</span>
+            <span className="text-xs font-bold text-[var(--accent-deep)] block">{t('pipe_step1_title')}</span>
             <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
-              আপলোডকৃত ফাইলের SHA-256 হ্যাশ গণনা করে পূর্বে সংরক্ষিত কোনো নমুনার সাথে হুবহু মিল রয়েছে কিনা তা পরীক্ষা করা হয়।
+              {t('pipe_step1_desc')}
             </p>
           </div>
 
           <div className="p-4 rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)] space-y-2">
-            <span className="text-xs font-bold text-[var(--accent-deep)] block">ধাপ ২: ওসিআর ও স্ট্রাকচার্ড এক্সট্রাকশন</span>
+            <span className="text-xs font-bold text-[var(--accent-deep)] block">{t('pipe_step2_title')}</span>
             <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
-              দলিলের স্ক্যান কপি থেকে বাংলা সংখ্যা, দাগ, খতিয়ান, মৌজা, ক্রেতা-বিক্রেতার নাম বাউন্ডিং বক্স ও আস্থাসীমাসহ আলাদা করা হয়।
+              {t('pipe_step2_desc')}
             </p>
           </div>
 
           <div className="p-4 rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)] space-y-2">
-            <span className="text-xs font-bold text-[var(--accent-deep)] block">ধাপ ৩: ডিটারমিনিস্টিক রুল ইঞ্জিন (P3)</span>
+            <span className="text-xs font-bold text-[var(--accent-deep)] block">{t('pipe_step3_title')}</span>
             <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
-              জেনারেটিভ এআই-এর পরিবর্তে ১২টি সুনির্দিষ্ট যাচাই নিয়মের মাধ্যমে তথ্যের সুস্পষ্ট বৈপরীত্য ও দ্বৈত বিক্রি শনাক্তকরণ।
+              {t('pipe_step3_desc')}
             </p>
           </div>
 
           <div className="p-4 rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)] space-y-2">
-            <span className="text-xs font-bold text-[var(--accent-deep)] block">ধাপ ৪: নেটওয়ার্কএক্স মালিকানা গ্রাফ</span>
+            <span className="text-xs font-bold text-[var(--accent-deep)] block">{t('pipe_step4_title')}</span>
             <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
-              দাগ, ব্যক্তি ও দলিলের মধ্যকার হস্তান্তর সম্পর্ক দিয়ে গ্রাফ তৈরি করে সাইকেল ও সমান্তরাল প্রতিদ্বন্দ্বী পথ খুঁজে বের করা।
+              {t('pipe_step4_desc')}
             </p>
           </div>
         </div>
@@ -108,26 +180,32 @@ export default function MethodologyPage() {
       <div className="space-y-4">
         <h2 className="text-lg font-bold text-[var(--text-primary)] flex items-center gap-2">
           <Binary className="w-5 h-5 text-[var(--accent-deep)]" />
-          <span>২. ডিটারমিনিস্টিক রুল ক্যাটালগ (Rules Inventory)</span>
+          <span>{t('rules_sec_title')}</span>
         </h2>
 
         <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)] overflow-hidden">
           <table className="w-full text-xs text-left border-collapse">
             <thead>
               <tr className="bg-[var(--bg-surface-soft)]/60 border-b border-[var(--border-color)] text-[var(--text-secondary)] font-semibold">
-                <th className="py-2.5 px-3">কোড</th>
-                <th className="py-2.5 px-3">নিয়মের শিরোনাম</th>
-                <th className="py-2.5 px-3">শ্রেণি</th>
-                <th className="py-2.5 px-3">তীব্রতা</th>
+                <th className="py-2.5 px-3">{t('tbl_col_code')}</th>
+                <th className="py-2.5 px-3">{t('tbl_col_name')}</th>
+                <th className="py-2.5 px-3">{t('tbl_col_family')}</th>
+                <th className="py-2.5 px-3">{t('tbl_col_severity')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border-color)]">
               {rules.map((r) => (
                 <tr key={r.code} className="hover:bg-[var(--bg-surface-soft)]/30">
                   <td className="py-2 px-3 font-mono font-bold text-[var(--accent-deep)]">{r.code}</td>
-                  <td className="py-2 px-3 font-medium text-[var(--text-primary)]">{r.name_bn}</td>
-                  <td className="py-2 px-3 text-[var(--text-secondary)]">{r.family}</td>
-                  <td className="py-2 px-3 font-semibold">{r.sev}</td>
+                  <td className="py-2 px-3 font-medium text-[var(--text-primary)]">
+                    {language === 'bn' ? r.name_bn : r.name_en}
+                  </td>
+                  <td className="py-2 px-3 text-[var(--text-secondary)]">
+                    {t(r.family_key)}
+                  </td>
+                  <td className="py-2 px-3 font-semibold">
+                    {t(r.sev_key)}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -139,12 +217,12 @@ export default function MethodologyPage() {
       <div id="safeguards" className="p-6 rounded-2xl bg-[var(--bg-surface-soft)] border border-[var(--border-color)] space-y-3">
         <h3 className="text-base font-bold text-[var(--text-primary)] flex items-center gap-2">
           <AlertTriangle className="w-5 h-5 text-amber-600" />
-          <span>৩. সীমাবদ্ধতা ও দায়িত্বশীল এআই গাইডলাইন</span>
+          <span>{t('safeguards_sec_title')}</span>
         </h3>
         <ul className="text-xs text-[var(--text-secondary)] space-y-2 list-disc pl-5 leading-relaxed">
-          <li><strong>অনুপস্থিতি মানেই জালিয়াতি নয়:</strong> কোনো বায়া দলিল আপলোড না থাকলে সিস্টেম "নথি অনুপস্থিত" নির্দেশ করবে, তবে স্বত্ব চূড়ান্তভাবে অস্বীকার করবে না।</li>
-          <li><strong>নামের বানানে পার্থক্য:</strong> নামের সাধারণ বানান বিভ্রাট বা টাইপোকে জালিয়াতি বলা হয় না; নরমালাইজেশন সাপেক্ষে পর্যালোচকের মতামত চাওয়া হয়।</li>
-          <li><strong>চূড়ান্ত কর্তৃত্ব মানব পর্যালোচকের:</strong> এআই কেবল সম্ভাব্য অসংগতির সপক্ষে দলিলের পৃষ্ঠা ও সংখ্যা নির্দেশ করে; বৈধতার সিদ্ধান্ত সর্বদা অনুমোদিত মানুষের।</li>
+          <li>{t('sg_point1')}</li>
+          <li>{t('sg_point2')}</li>
+          <li>{t('sg_point3')}</li>
         </ul>
       </div>
     </div>

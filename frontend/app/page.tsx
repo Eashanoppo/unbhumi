@@ -17,81 +17,77 @@ export default function LandingPage() {
   const syntheticDemos = [
     {
       id: 'UB-2026-1001',
-      title: 'মৌজা কাউন্দিয়া আরএস দাগ ৪১২',
-      type: 'clean',
-      desc: 'স্বাভাবিক ও বৈধ হস্তান্তর। সাফ-কবলা দলিল, খতিয়ান ও নামজারি সম্পূর্ণ সামঞ্জস্যপূর্ণ।',
-      risk: 'low',
-      riskText: 'অসঙ্গতিহীন'
+      title_bn: 'মৌজা কাউন্দিয়া আরএস দাগ ৪১২',
+      title_en: 'Mouza Kaundia RS Dag 412',
+      desc_bn: 'স্বাভাবিক ও বৈধ হস্তান্তর। সাফ-কবলা দলিল, খতিয়ান ও নামজারি সম্পূর্ণ সামঞ্জস্যপূর্ণ।',
+      desc_en: 'Legitimate transaction. Title deed, khatian, and mutation records are mutually consistent.',
+      risk: 'low'
     },
     {
       id: 'UB-2026-1002',
-      title: 'মৌজা ধামরাই আরএস দাগ ৮৮',
-      type: 'double_sale',
-      desc: 'সম্ভাব্য দ্বৈত বিক্রি: একই দাগ পূর্বে অন্য ক্রেতার নিকট বিক্রির স্পষ্ট রেকর্ড শনাক্ত।',
-      risk: 'critical',
-      riskText: 'গুরুতর সংকেত (দ্বৈত বিক্রি)'
+      title_bn: 'মৌজা ধামরাই আরএস দাগ ৮৮',
+      title_en: 'Mouza Dhamrai RS Dag 88',
+      desc_bn: 'সম্ভাব্য দ্বৈত বিক্রি: একই দাগ পূর্বে অন্য ক্রেতার নিকট বিক্রির স্পষ্ট রেকর্ড শনাক্ত।',
+      desc_en: 'Potential double-selling: active competing deed registered on the same parcel.',
+      risk: 'critical'
     },
     {
       id: 'UB-2026-1003',
-      title: 'মৌজা তেঁতুলঝোড়া দাগ ২৯১',
-      type: 'broken_chain',
-      desc: 'মালিকানা ধারাবাহিকতা বিচ্ছিন্ন: খতিয়ান স্বত্বাধিকারীর সাথে বিক্রেতার বায়া দলিল অনুপস্থিত।',
-      risk: 'high',
-      riskText: 'উচ্চ ঝুঁকি (বায়া দলিল বিচ্ছিন্ন)'
+      title_bn: 'মৌজা তেঁতুলঝোড়া দাগ ২৯১',
+      title_en: 'Mouza Tetuljhora Dag 291',
+      desc_bn: 'মালিকানা ধারাবাহিকতা বিচ্ছিন্ন: খতিয়ান স্বত্বাধিকারীর সাথে বিক্রেতার বায়া দলিল অনুপস্থিত।',
+      desc_en: 'Broken chain of title: Missing baya deed connecting seller to recorded khatian owner.',
+      risk: 'high'
     },
     {
       id: 'UB-2026-1004',
-      title: 'মৌজা সাভার দাগ ৫১০',
-      type: 'deed_khatian_mismatch',
-      desc: 'দলিল বনাম খতিয়ান স্বত্ব অমিল: দলিলের বিক্রেতার নামের সাথে খতিয়ানের মূল মালিক মিলছে না।',
-      risk: 'high',
-      riskText: 'উচ্চ ঝুঁকি (খতিয়ান অমিল)'
+      title_bn: 'মৌজা সাভার দাগ ৫১০',
+      title_en: 'Mouza Savar Dag 510',
+      desc_bn: 'দলিল বনাম খতিয়ান স্বত্ব অমিল: দলিলের বিক্রেতার নামের সাথে খতিয়ানের মূল মালিক মিলছে না।',
+      desc_en: 'Deed vs khatian discrepancy: deed executant name does not match survey record.',
+      risk: 'high'
     }
   ];
 
   const workflowSteps = [
     {
-      step: '০১',
-      title_bn: 'নথি আপলোড ও ফিঙ্গারপ্রিন্ট',
-      title_en: 'Upload & Hash Fingerprint',
-      desc_bn: 'মূল দলিল, বায়া দলিল, আরএস খতিয়ান ও নামজারি আপলোডের সাথে সাথে SHA-256 ক্রিপ্টোগ্রাফিক হ্যাশ নিবন্ধিত হয়।'
+      step: t('flow_s1_step'),
+      title: t('flow_s1_title'),
+      desc: t('flow_s1_desc')
     },
     {
-      step: '০২',
-      title_bn: 'ওসিআর ও তথ্য নিষ্কাশন',
-      title_en: 'OCR & Field Extraction',
-      desc_bn: 'বাংলা ও ইংরেজি দলিলের দাগ, খতিয়ান, নাম, তারিখ ও জমির পরিমাণ আস্থাসীমাসহ এক্সট্রাক্ট করা হয়।'
+      step: t('flow_s2_step'),
+      title: t('flow_s2_title'),
+      desc: t('flow_s2_desc')
     },
     {
-      step: '০৩',
-      title_bn: 'ক্রস-ডকুমেন্ট ও রুল ইঞ্জিন',
-      title_en: 'Cross-Document Rule Checks',
-      desc_bn: '১২টি সুনির্দিষ্ট ডিটারমিনিস্টিক রুলের মাধ্যমে দ্বৈত বিক্রি, অতিরিক্ত জমি দাবি ও বায়া চেইন বিশ্লেষণ।'
+      step: t('flow_s3_step'),
+      title: t('flow_s3_title'),
+      desc: t('flow_s3_desc')
     },
     {
-      step: '০৪',
-      title_bn: 'মালিকানা গ্রাফ ও মানবীয় পর্যালোচনা',
-      title_en: 'Graph & Human Decision',
-      desc_bn: 'পারস্পরিক সংযোগের গ্রাফ ও পৃষ্ঠার প্রমাণ রেফারেন্সসহ পর্যালোচকের চূড়ান্ত সিদ্ধান্তের জন্য পেশ করা হয়।'
+      step: t('flow_s4_step'),
+      title: t('flow_s4_title'),
+      desc: t('flow_s4_desc')
     }
   ];
 
   const faqs = [
     {
-      q: 'আনভূমি ডিটেক্টর কি সরকারি রেজিস্ট্রি প্রতিস্থাপন করে?',
-      a: 'না। এটি একটি এআই-সহায়তাকৃত পর্যালোচনামূলক সিদ্ধান্ত সমর্থন সফটওয়্যার। এটি সাব-রেজিস্ট্রার, সহকারী কমিশনার (ভূমি) বা আদালতের বিচারিক এখতিয়ারকে প্রতিস্থাপন করে না।'
+      q: t('faq1_q'),
+      a: t('faq1_a')
     },
     {
-      q: 'দ্বৈত বিক্রি কীভাবে শনাক্ত করা হয়?',
-      a: 'সিস্টেমে সংরক্ষিত পূর্ববর্তী নিবন্ধিত দলিলের দাগ নম্বর, মৌজা ও চৌহদ্দির সাথে নতুন প্রস্তাবিত দলিলের তথ্য মিলিয়ে দেখা হয়। কোনো দাগে পূর্বে সক্রিয় হস্তান্তর থাকলে সিস্টেমে দ্বৈত বিক্রির অ্যালার্ট ও গ্রাফ তৈরি হয়।'
+      q: t('faq2_q'),
+      a: t('faq2_a')
     },
     {
-      q: 'ডেমোতে ব্যবহৃত নথিপত্র কি বাস্তব মানুষের?',
-      a: 'একেবারেই না। হ্যাকাথনের নীতিমালা ও ব্যক্তিগত গোপনীয়তা বজায় রাখতে সকল প্রদর্শনী কেস, নাম, ঠিকানা ও দাগ কাল্পনিক ও কৃত্রিমভাবে তৈরি।'
+      q: t('faq3_q'),
+      a: t('faq3_a')
     },
     {
-      q: 'ফাইলের হ্যাশ (SHA-256) মিললেই কি দলিল বৈধ প্রমাণিত হয়?',
-      a: 'না। হ্যাশ প্রমাণ করে যে ফাইলটি হুবহু একই ডিজিটাল কপি কিনা। আইনি স্বত্বের বৈধতা নির্ধারণে নথির ভেতরের তথ্য ও রাজস্ব রেকর্ডের ক্রস-চেক অপরিহার্য।'
+      q: t('faq4_q'),
+      a: t('faq4_a')
     }
   ];
 
@@ -121,9 +117,7 @@ export default function LandingPage() {
             </h1>
 
             <p className="text-base sm:text-lg text-[var(--text-secondary)] max-w-2xl leading-relaxed">
-              {language === 'bn'
-                ? 'দলিল, খতিয়ান রেকর্ড, নামজারি তথ্য এবং দাগের পারস্পরিক সম্পর্ক ক্রস-চেক করে দ্বৈত বিক্রি ও স্বত্ব বিরোধ শনাক্ত করুন এবং তদন্তের জন্য সুনির্দিষ্ট প্রমাণ নিশ্চিত করুন।'
-                : 'Cross-check deeds, khatian records, mutation information, and parcel relationships to identify suspicious conflicts and give reviewers traceable evidence for investigation.'}
+              {t('hero_description')}
             </p>
 
             <div className="flex flex-wrap items-center gap-3 pt-2">
@@ -138,23 +132,23 @@ export default function LandingPage() {
                 href="/cases/UB-2026-1002"
                 className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold border border-[var(--border-color)] bg-[var(--bg-surface)] text-[var(--text-primary)] hover:bg-[var(--bg-surface-soft)] transition-colors"
               >
-                <span>{language === 'bn' ? 'দ্বৈত বিক্রি ডেমো দেখুন (UB-2026-1002)' : 'Demo Case: Double-Selling (UB-2026-1002)'}</span>
+                <span>{t('cta_demo_explore')}</span>
               </Link>
             </div>
 
             {/* Trust points */}
             <div className="pt-4 grid grid-cols-3 gap-3 border-t border-[var(--border-color)]">
               <div>
-                <p className="text-xs text-[var(--text-secondary)] font-medium">প্রাথমিক ট্র্যাক</p>
-                <p className="text-sm font-bold text-[var(--accent-deep)]">P3 দ্বৈত বিক্রি রোধ</p>
+                <p className="text-xs text-[var(--text-secondary)] font-medium">{t('trust_p1_label')}</p>
+                <p className="text-sm font-bold text-[var(--accent-deep)]">{t('trust_p1_val')}</p>
               </div>
               <div>
-                <p className="text-xs text-[var(--text-secondary)] font-medium">সহায়ক যাচাই</p>
-                <p className="text-sm font-bold text-[var(--accent-deep)]">P2 দলিল ও বায়া চেইন</p>
+                <p className="text-xs text-[var(--text-secondary)] font-medium">{t('trust_p2_label')}</p>
+                <p className="text-sm font-bold text-[var(--accent-deep)]">{t('trust_p2_val')}</p>
               </div>
               <div>
-                <p className="text-xs text-[var(--text-secondary)] font-medium">আইনি নিশ্চয়তা</p>
-                <p className="text-sm font-bold text-[var(--accent-deep)]">পর্যালোচক সিদ্ধান্ত</p>
+                <p className="text-xs text-[var(--text-secondary)] font-medium">{t('trust_p3_label')}</p>
+                <p className="text-sm font-bold text-[var(--accent-deep)]">{t('trust_p3_val')}</p>
               </div>
             </div>
           </div>
@@ -163,10 +157,10 @@ export default function LandingPage() {
           <div className="lg:col-span-5">
             <ImageArea
               src="/images/landing/hero-landscape.svg"
-              alt="বাংলাদেশের গ্রামীণ কৃষি জমি ও ক্যাডাস্ট্রাল মৌজা জরিপ"
+              alt={t('hero_img_alt')}
               aspectRatio="video"
               className="shadow-lg"
-              caption="সাভার ও ধামরাই অঞ্চলের ক্যাডাস্ট্রাল মৌজা নকশা ও প্লট বাউন্ডারি সিমুলেশন"
+              caption={t('hero_img_caption')}
               priority
             />
           </div>
@@ -178,13 +172,13 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto space-y-3 mb-10">
             <h2 className="text-xs font-bold uppercase tracking-wider text-[var(--accent-deep)] dark:text-[#7ED957]">
-              সমস্যার মূল প্রেক্ষাপট
+              {t('prob_badge')}
             </h2>
             <h3 className="text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)]">
-              কেন একই জমি বারবার বিক্রি ও জাল দলিলের সৃষ্টি হয়?
+              {t('prob_title')}
             </h3>
             <p className="text-sm text-[var(--text-secondary)]">
-              বাংলাদেশের ভূমি রেকর্ড ব্যবস্থার ঐতিহাসিক বিকেন্দ্রীকরণ ও বিচ্ছিন্ন নথিপত্রের কারণে একাধিক জটিলতার সৃষ্টি হয় যা স্বত্ব ক্রেতা ও ব্যাংক কর্মকর্তাদের জন্য ঝুঁকিপূর্ণ।
+              {t('prob_subtitle')}
             </p>
           </div>
 
@@ -193,9 +187,9 @@ export default function LandingPage() {
               <div className="w-10 h-10 rounded-lg bg-red-100 dark:bg-red-950/60 flex items-center justify-center text-red-600">
                 <AlertTriangle className="w-5 h-5" />
               </div>
-              <h4 className="text-base font-bold text-[var(--text-primary)]">দ্বৈত বিক্রি (Duplicate Selling)</h4>
+              <h4 className="text-base font-bold text-[var(--text-primary)]">{t('prob_card1_title')}</h4>
               <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
-                একজন অসৎ ব্যক্তি একই দাগের জমি একজনের নিকট বিক্রির পর নামজারি সম্পূর্ণ হওয়ার পূর্বেই অন্য সাব-রেজিস্ট্রি অফিসে পুনরায় বিক্রয় দলিল সম্পাদন করে।
+                {t('prob_card1_desc')}
               </p>
             </div>
 
@@ -203,9 +197,9 @@ export default function LandingPage() {
               <div className="w-10 h-10 rounded-lg bg-amber-100 dark:bg-amber-950/60 flex items-center justify-center text-amber-700">
                 <GitFork className="w-5 h-5" />
               </div>
-              <h4 className="text-base font-bold text-[var(--text-primary)]">বায়া দলিলের ধারাবাহিকতা বিচ্ছিন্ন</h4>
+              <h4 className="text-base font-bold text-[var(--text-primary)]">{t('prob_card2_title')}</h4>
               <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
-                খতিয়ানভুক্ত মূল প্রজার নিকট থেকে বর্তমান বিক্রেতা কীভাবে জমিটি ক্রয় বা ওয়ারিশসূত্রে পেলেন তার প্রয়োজনীয় বায়া দলিল ও রেকর্ড চেইন অনুপস্থিত থাকে।
+                {t('prob_card2_desc')}
               </p>
             </div>
 
@@ -213,9 +207,9 @@ export default function LandingPage() {
               <div className="w-10 h-10 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 flex items-center justify-center text-emerald-700">
                 <FileText className="w-5 h-5" />
               </div>
-              <h4 className="text-base font-bold text-[var(--text-primary)]">দলিল বনাম খতিয়ান গরমিল</h4>
+              <h4 className="text-base font-bold text-[var(--text-primary)]">{t('prob_card3_title')}</h4>
               <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
-                দলিলে উল্লেখিত মোট জমির পরিমাণ অপেক্ষা খতিয়ানের রেকর্ডকৃত হিস্যা কম থাকে, অথবা মালিকের নাম ও সিএস/এসএ/আরএস জরিপ দাগে বৈসাদৃশ্য দেখা দেয়।
+                {t('prob_card3_desc')}
               </p>
             </div>
           </div>
@@ -226,13 +220,13 @@ export default function LandingPage() {
       <section id="how-it-works" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-3xl mx-auto space-y-3 mb-12">
           <h2 className="text-xs font-bold uppercase tracking-wider text-[var(--accent-deep)] dark:text-[#7ED957]">
-            কার্যপদ্ধতি
+            {t('flow_badge')}
           </h2>
           <h3 className="text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)]">
-            আনভূমি ডিটেক্টর কীভাবে দলিল যাচাই করে?
+            {t('flow_title')}
           </h3>
           <p className="text-sm text-[var(--text-secondary)]">
-            একটি সুশৃঙ্খল চার-ধাপের প্রক্রিয়া যা ওসিআর থেকে শুরু করে মানবীয় পর্যালোচকের চূড়ান্ত অনুমোদন পর্যন্ত বিস্তৃত।
+            {t('flow_subtitle')}
           </p>
         </div>
 
@@ -243,10 +237,10 @@ export default function LandingPage() {
                 {ws.step}
               </span>
               <h4 className="text-base font-bold text-[var(--text-primary)]">
-                {ws.title_bn}
+                {ws.title}
               </h4>
               <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
-                {ws.desc_bn}
+                {ws.desc}
               </p>
             </div>
           ))}
@@ -259,20 +253,20 @@ export default function LandingPage() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[var(--border-color)] pb-6">
             <div>
               <span className="text-xs font-bold uppercase text-[var(--accent-deep)] dark:text-[#7ED957] block mb-1">
-                লাইভ ডেমো প্রদর্শন
+                {t('demo_badge')}
               </span>
               <h3 className="text-2xl font-extrabold text-[var(--text-primary)]">
-                ৮টি প্রস্তুতকৃত সিন্থেটিক কেস স্টাডি
+                {t('demo_title')}
               </h3>
               <p className="text-xs text-[var(--text-secondary)]">
-                স্বচ্ছ পরীক্ষার জন্য প্রস্তুত বাস্তবসম্মত বৈধ ও সন্দেহজনক পরিস্থিতি
+                {t('demo_subtitle')}
               </p>
             </div>
             <Link
               href="/cases"
               className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold bg-[var(--bg-surface-soft)] text-[var(--accent-deep)] dark:text-[#7ED957] border border-[var(--border-color)] hover:bg-[var(--border-color)] transition-colors"
             >
-              <span>সকল কেস দেখুন</span>
+              <span>{t('demo_view_all')}</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
@@ -292,14 +286,14 @@ export default function LandingPage() {
                 </div>
                 <div>
                   <h4 className="text-sm font-bold text-[var(--text-primary)] group-hover:text-[var(--accent-deep)] transition-colors">
-                    {demo.title}
+                    {language === 'bn' ? demo.title_bn : demo.title_en}
                   </h4>
                   <p className="text-xs text-[var(--text-secondary)] mt-1">
-                    {demo.desc}
+                    {language === 'bn' ? demo.desc_bn : demo.desc_en}
                   </p>
                 </div>
                 <div className="pt-2 border-t border-[var(--border-color)]/60 flex items-center justify-between text-[11px] text-[var(--text-secondary)]">
-                  <span>বিশ্লেষণ ফলাফল দেখুন</span>
+                  <span>{t('demo_view_results')}</span>
                   <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                 </div>
               </Link>
@@ -312,10 +306,10 @@ export default function LandingPage() {
       <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         <div className="text-center space-y-2">
           <h2 className="text-xs font-bold uppercase tracking-wider text-[var(--accent-deep)] dark:text-[#7ED957]">
-            সাধারণ জিজ্ঞাসা
+            {t('faq_badge')}
           </h2>
           <h3 className="text-2xl font-bold text-[var(--text-primary)]">
-            প্রায়শই জিজ্ঞাসিত প্রশ্নোত্তর (FAQ)
+            {t('faq_title')}
           </h3>
         </div>
 
@@ -340,17 +334,17 @@ export default function LandingPage() {
           <div className="space-y-2">
             <h4 className="text-base font-bold text-[var(--text-primary)] flex items-center gap-2">
               <ShieldCheck className="w-5 h-5 text-[var(--accent-deep)] dark:text-[#7ED957]" />
-              <span>দায়িত্বশীল এআই ও স্বচ্ছ যাচাইকরণ প্রতিজ্ঞা</span>
+              <span>{t('responsible_title')}</span>
             </h4>
             <p className="text-xs text-[var(--text-secondary)] max-w-2xl leading-relaxed">
-              সিস্টেমের কোনো অ্যালার্ট কাউকে সরাসরি প্রতারক ঘোষণা করে না; এটি কেবল পর্যালোচকের নিকট অসঙ্গতির উৎস ও প্রাসঙ্গিক পৃষ্ঠা প্রদর্শন করে সিদ্ধান্ত গ্রহণে সহায়তা করে।
+              {t('responsible_desc')}
             </p>
           </div>
           <Link
             href="/methodology"
             className="px-5 py-2.5 rounded-xl text-xs font-bold bg-[var(--bg-surface)] border border-[var(--border-color)] text-[var(--text-primary)] hover:bg-[var(--border-color)] transition-colors shrink-0"
           >
-            পদ্ধতি ও সীমাবদ্ধতা পড়ুন
+            {t('responsible_btn')}
           </Link>
         </div>
       </section>

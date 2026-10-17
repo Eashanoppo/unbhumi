@@ -61,6 +61,7 @@ export interface AnomalyFinding {
   source_pages: number[];
   source_fields: string[];
   human_action_recommended_bn: string;
+  human_action_recommended_en?: string;
   status: string;
   status_display: string;
   created_at: string;
@@ -82,6 +83,7 @@ export interface CaseItem {
   anomalies_count?: number;
   mouza?: string;
   dag_number?: string;
+  parcel?: any;
   recorded_area?: number;
   documents?: DocumentItem[];
   anomalies?: AnomalyFinding[];

@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { GraphData, GraphNode, GraphEdge } from '@/lib/api';
+import { useLanguage } from '@/lib/i18n';
 import { GitFork, AlertCircle, Info, ZoomIn, ZoomOut, RotateCcw, List, Network, Clock, Calendar, ArrowRight, ShieldCheck } from 'lucide-react';
 
 interface OwnershipGraphVisualizerProps {
@@ -10,6 +11,7 @@ interface OwnershipGraphVisualizerProps {
 }
 
 export const OwnershipGraphVisualizer: React.FC<OwnershipGraphVisualizerProps> = ({ data, className = '' }) => {
+  const { language, t, formatNumber } = useLanguage();
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
   const [selectedEdge, setSelectedEdge] = useState<GraphEdge | null>(null);
   const [viewMode, setViewMode] = useState<'graph' | 'timeline' | 'table'>('graph');
@@ -76,7 +78,7 @@ export const OwnershipGraphVisualizer: React.FC<OwnershipGraphVisualizerProps> =
       title: deed.label,
       subtitle: deed.subtext,
       year: year,
-      parcel: parcelNode?.label || 'দাগ রেকর্ড',
+      parcel: parcelNode?.label || (language === 'bn' ? 'দাগ রেকর্ড' : 'Parcel Record'),
       isConflict: Boolean(conflictEdge),
       conflictReason: conflictEdge?.conflict_reason || '',
       edges: deedEdges
@@ -91,10 +93,10 @@ export const OwnershipGraphVisualizer: React.FC<OwnershipGraphVisualizerProps> =
           <GitFork className="w-5 h-5 text-[var(--accent-deep)]" />
           <div>
             <h3 className="text-sm font-bold text-[var(--text-primary)]">
-              মালিকানা ও লেনদেন সংযোগ গ্রাফ (Ownership & Transaction Graph)
+              {t('graph_card_title')}
             </h3>
             <p className="text-xs text-[var(--text-secondary)]">
-              {nodes.length}টি নোড • {edges.length}টি সংযোগ • {data.metrics?.conflict_edges || 0}টি দ্বন্দ্ব শনাক্ত
+              {t('graph_card_sub', { nodes: nodes.length, edges: edges.length, conflicts: data.metrics?.conflict_edges || 0 })}
             </p>
           </div>
         </div>
@@ -109,7 +111,7 @@ export const OwnershipGraphVisualizer: React.FC<OwnershipGraphVisualizerProps> =
               }`}
             >
               <Network className="w-3.5 h-3.5" />
-              <span>গ্রাফ</span>
+              <span>{t('btn_graph')}</span>
             </button>
             <button
               onClick={() => setViewMode('timeline')}
@@ -118,7 +120,7 @@ export const OwnershipGraphVisualizer: React.FC<OwnershipGraphVisualizerProps> =
               }`}
             >
               <Clock className="w-3.5 h-3.5" />
-              <span>টাইমলাইন</span>
+              <span>{t('btn_timeline')}</span>
             </button>
             <button
               onClick={() => setViewMode('table')}
@@ -127,7 +129,7 @@ export const OwnershipGraphVisualizer: React.FC<OwnershipGraphVisualizerProps> =
               }`}
             >
               <List className="w-3.5 h-3.5" />
-              <span>তালিকা</span>
+              <span>{t('btn_table')}</span>
             </button>
           </div>
 
@@ -167,7 +169,7 @@ export const OwnershipGraphVisualizer: React.FC<OwnershipGraphVisualizerProps> =
           {data.metrics?.has_conflicting_paths && (
             <div className="absolute top-3 left-3 z-10 flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium bg-red-50 text-red-800 dark:bg-red-950/80 dark:text-red-300 border border-red-300 dark:border-red-800 shadow-sm">
               <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400 shrink-0" />
-              <span>একই দাগে পরস্পরবিরোধী হস্তান্তরের পথ শনাক্ত হয়েছে (P001 / G001)</span>
+              <span>{t('graph_conflict_banner')}</span>
             </div>
           )}
 
@@ -284,7 +286,7 @@ export const OwnershipGraphVisualizer: React.FC<OwnershipGraphVisualizerProps> =
                       fontWeight="bold"
                       fill={color.text}
                     >
-                      {node.type === 'parcel' ? 'দাগ' : node.type === 'deed' ? 'দলিল' : 'ব্যক্তি'}
+                      {node.type === 'parcel' ? (language === 'bn' ? 'দাগ' : 'Plot') : node.type === 'deed' ? (language === 'bn' ? 'দলিল' : 'Deed') : (language === 'bn' ? 'ব্যক্তি' : 'Person')}
                     </text>
                     <text
                       textAnchor="middle"
@@ -305,7 +307,7 @@ export const OwnershipGraphVisualizer: React.FC<OwnershipGraphVisualizerProps> =
           {(selectedNode || selectedEdge) && (
             <div className="absolute bottom-3 right-3 max-w-xs p-3 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-color)] shadow-lg text-xs space-y-1.5 animate-in fade-in">
               <div className="flex items-center justify-between font-bold border-b border-[var(--border-color)] pb-1">
-                <span>{selectedNode ? 'নোড বিবরণ' : 'হস্তান্তর বিবরণ'}</span>
+                <span>{selectedNode ? t('node_detail_title') : t('edge_detail_title')}</span>
                 <button
                   onClick={() => { setSelectedNode(null); setSelectedEdge(null); }}
                   className="text-gray-400 hover:text-gray-600"
@@ -317,7 +319,7 @@ export const OwnershipGraphVisualizer: React.FC<OwnershipGraphVisualizerProps> =
                 <>
                   <p className="font-semibold text-sm text-[var(--accent-deep)]">{selectedNode.label}</p>
                   <p className="text-[var(--text-secondary)]">{selectedNode.subtext}</p>
-                  <p className="text-[10px] uppercase font-mono text-gray-500">আইডি: {selectedNode.id}</p>
+                  <p className="text-[10px] uppercase font-mono text-gray-500">{t('id_label')} {selectedNode.id}</p>
                 </>
               )}
               {selectedEdge && (
@@ -330,7 +332,7 @@ export const OwnershipGraphVisualizer: React.FC<OwnershipGraphVisualizerProps> =
                       ⚠️ {selectedEdge.conflict_reason}
                     </p>
                   )}
-                  <p className="text-[var(--text-secondary)]">সম্পর্ক: {selectedEdge.relation}</p>
+                  <p className="text-[var(--text-secondary)]">{t('relation_label')} {selectedEdge.relation}</p>
                 </>
               )}
             </div>
@@ -342,19 +344,19 @@ export const OwnershipGraphVisualizer: React.FC<OwnershipGraphVisualizerProps> =
           <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-3">
             <div>
               <h4 className="text-sm font-bold text-[var(--text-primary)]">
-                কালানুক্রমিক জমি হস্তান্তর ও বিরোধ টাইমলাইন (Chronological Timeline)
+                {t('timeline_header_title')}
               </h4>
               <p className="text-xs text-[var(--text-secondary)]">
-                নথির সম্পাদন তারিখ ও হস্তান্তরের পর্যায়ক্রম অনুসারে সাজানো হয়েছে
+                {t('timeline_header_sub')}
               </p>
             </div>
             <span className="text-xs font-semibold px-2 py-0.5 rounded bg-[var(--bg-surface-soft)] text-[var(--text-secondary)] border border-[var(--border-color)]">
-              {timelineEvents.length}টি প্রধান ইভেন্ট
+              {t('timeline_event_count', { count: timelineEvents.length })}
             </span>
           </div>
 
           <div className="relative pl-6 space-y-6 before:content-[''] before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-[var(--border-color)]">
-            {timelineEvents.map((evt, idx) => (
+            {timelineEvents.map((evt) => (
               <div key={evt.id} className="relative group">
                 {/* Timeline node dot */}
                 <div className={`absolute -left-6 top-1 w-4 h-4 rounded-full border-2 bg-[var(--bg-surface)] flex items-center justify-center ${
@@ -372,7 +374,7 @@ export const OwnershipGraphVisualizer: React.FC<OwnershipGraphVisualizerProps> =
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
                       <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-[var(--bg-surface-soft)] border border-[var(--border-color)] text-[var(--text-primary)]">
-                        সন: {evt.year}
+                        {t('year_prefix', { year: formatNumber(evt.year) })}
                       </span>
                       <h5 className="text-sm font-bold text-[var(--text-primary)]">
                         {evt.title}
@@ -382,18 +384,18 @@ export const OwnershipGraphVisualizer: React.FC<OwnershipGraphVisualizerProps> =
                     {evt.isConflict ? (
                       <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300 border border-red-300 dark:border-red-800 flex items-center gap-1">
                         <AlertCircle className="w-3.5 h-3.5 text-red-600" />
-                        <span>সম্ভাব্য দ্বৈত বিক্রির দ্বন্দ্ব (P001)</span>
+                        <span>{t('double_sale_badge')}</span>
                       </span>
                     ) : (
                       <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 flex items-center gap-1">
                         <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                        <span>বৈধ হস্তান্তর শৃঙ্খল</span>
+                        <span>{t('legit_chain_badge')}</span>
                       </span>
                     )}
                   </div>
 
                   <p className="text-xs text-[var(--text-secondary)]">
-                    {evt.subtitle || `লক্ষ্য প্লট: ${evt.parcel}`}
+                    {evt.subtitle || (language === 'bn' ? `লক্ষ্য প্লট: ${evt.parcel}` : `Target Plot: ${evt.parcel}`)}
                   </p>
 
                   {/* Conflict alert callout */}
@@ -401,7 +403,7 @@ export const OwnershipGraphVisualizer: React.FC<OwnershipGraphVisualizerProps> =
                     <div className="p-3 rounded-lg bg-red-100/70 dark:bg-red-950/80 border border-red-300 dark:border-red-800 text-xs text-red-900 dark:text-red-200 space-y-1">
                       <p className="font-bold flex items-center gap-1.5">
                         <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
-                        <span>দ্বন্দ্বের কারণ ও ট্রেসেবিলিটি:</span>
+                        <span>{t('conflict_reason_lead')}</span>
                       </p>
                       <p className="text-[11px] leading-relaxed">
                         {evt.conflictReason}
@@ -411,7 +413,7 @@ export const OwnershipGraphVisualizer: React.FC<OwnershipGraphVisualizerProps> =
 
                   {/* Linked Parties */}
                   <div className="flex flex-wrap items-center gap-2 pt-1 text-[11px] text-[var(--text-secondary)]">
-                    <span className="font-medium">সংযুক্ত নোডসমূহ:</span>
+                    <span className="font-medium">{t('connected_nodes_lead')}</span>
                     {evt.edges.map(e => (
                       <span key={e.id} className="px-2 py-0.5 rounded bg-[var(--bg-surface-soft)] border border-[var(--border-color)]">
                         {e.label}
@@ -429,10 +431,10 @@ export const OwnershipGraphVisualizer: React.FC<OwnershipGraphVisualizerProps> =
           <table className="w-full text-xs text-left border-collapse">
             <thead>
               <tr className="border-b border-[var(--border-color)] text-[var(--text-secondary)] bg-[var(--bg-surface-soft)]/50">
-                <th className="py-2.5 px-3">উৎস নোড (Source)</th>
-                <th className="py-2.5 px-3">সম্পর্ক (Relation)</th>
-                <th className="py-2.5 px-3">লক্ষ্য নোড (Target)</th>
-                <th className="py-2.5 px-3">স্থিতি ও ঝুঁকি (Status)</th>
+                <th className="py-2.5 px-3">{t('tbl_source')}</th>
+                <th className="py-2.5 px-3">{t('tbl_relation')}</th>
+                <th className="py-2.5 px-3">{t('tbl_target')}</th>
+                <th className="py-2.5 px-3">{t('tbl_status')}</th>
               </tr>
             </thead>
             <tbody>
@@ -448,12 +450,12 @@ export const OwnershipGraphVisualizer: React.FC<OwnershipGraphVisualizerProps> =
                       {edge.is_conflict ? (
                         <span className="inline-flex items-center gap-1 text-red-700 dark:text-red-400 font-semibold">
                           <AlertCircle className="w-3.5 h-3.5" />
-                          <span>দ্বৈত বিক্রির বিরোধ</span>
+                          <span>{t('tbl_conflict')}</span>
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-400">
                           <ShieldCheck className="w-3.5 h-3.5" />
-                          <span>সামঞ্জস্যপূর্ণ</span>
+                          <span>{t('tbl_consistent')}</span>
                         </span>
                       )}
                     </td>
