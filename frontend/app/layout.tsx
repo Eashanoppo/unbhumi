@@ -20,7 +20,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="bn" suppressHydrationWarning>
-      <body className="flex flex-col min-h-screen antialiased selection:bg-[#7ED957]/30 selection:text-[#286B35]">
+      <body className="flex flex-col min-h-screen antialiased selection:bg-[#15803D]/20 selection:text-[#15803D]">
         <ThemeProvider>
           <LanguageProvider>
             <Suspense fallback={<div className="h-16 w-full border-b border-[var(--border-color)] bg-[var(--bg-surface)]" />}>

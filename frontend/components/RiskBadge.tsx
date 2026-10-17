@@ -13,35 +13,35 @@ export const RiskBadge: React.FC<RiskBadgeProps> = ({ level, score, showScore = 
   switch (level) {
     case 'critical':
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800 dark:bg-red-950/60 dark:text-red-300 border border-red-300 dark:border-red-800">
-          <AlertCircle className="w-3.5 h-3.5 text-red-600 dark:text-red-400" />
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-500/20">
+          <AlertCircle className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
           <span>গুরুতর সংকেত</span>
-          {showScore && score !== undefined && <span className="opacity-80">({score})</span>}
+          {showScore && score !== undefined && <span className="opacity-80 font-mono">({score})</span>}
         </span>
       );
     case 'high':
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-900 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-800 dark:text-amber-300 border border-amber-500/20">
           <AlertTriangle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
           <span>উচ্চ ঝুঁকি</span>
-          {showScore && score !== undefined && <span className="opacity-80">({score})</span>}
+          {showScore && score !== undefined && <span className="opacity-80 font-mono">({score})</span>}
         </span>
       );
     case 'review':
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-900 dark:bg-yellow-950/60 dark:text-yellow-300 border border-yellow-300 dark:border-yellow-800">
-          <HelpCircle className="w-3.5 h-3.5 text-yellow-600 dark:text-yellow-400" />
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-500/10 text-sky-800 dark:text-sky-300 border border-sky-500/20">
+          <HelpCircle className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
           <span>পর্যালোচনা স্তর</span>
-          {showScore && score !== undefined && <span className="opacity-80">({score})</span>}
+          {showScore && score !== undefined && <span className="opacity-80 font-mono">({score})</span>}
         </span>
       );
     case 'low':
     default:
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border border-emerald-500/20">
           <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
           <span>স্বাভাবিক</span>
-          {showScore && score !== undefined && <span className="opacity-80">({score})</span>}
+          {showScore && score !== undefined && <span className="opacity-80 font-mono">({score})</span>}
         </span>
       );
   }

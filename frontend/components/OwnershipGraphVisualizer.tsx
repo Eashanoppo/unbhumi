@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { GraphData, GraphNode, GraphEdge } from '@/lib/api';
 import { useLanguage } from '@/lib/i18n';
-import { GitFork, AlertCircle, Info, ZoomIn, ZoomOut, RotateCcw, List, Network, Clock, Calendar, ArrowRight, ShieldCheck } from 'lucide-react';
+import { GitFork, AlertCircle, Info, ZoomIn, ZoomOut, RotateCcw, List, Network, Clock, Calendar, ArrowRight, ShieldCheck, X, AlertTriangle } from 'lucide-react';
 
 interface OwnershipGraphVisualizerProps {
   data: GraphData;
@@ -310,9 +310,9 @@ export const OwnershipGraphVisualizer: React.FC<OwnershipGraphVisualizerProps> =
                 <span>{selectedNode ? t('node_detail_title') : t('edge_detail_title')}</span>
                 <button
                   onClick={() => { setSelectedNode(null); setSelectedEdge(null); }}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-gray-400 hover:text-gray-600 p-0.5 rounded hover:bg-[var(--bg-surface-soft)] transition-colors"
                 >
-                  ✕
+                  <X className="w-3.5 h-3.5" />
                 </button>
               </div>
               {selectedNode && (
@@ -328,8 +328,9 @@ export const OwnershipGraphVisualizer: React.FC<OwnershipGraphVisualizerProps> =
                     {selectedEdge.label}
                   </p>
                   {selectedEdge.conflict_reason && (
-                    <p className="text-red-700 bg-red-50 p-1.5 rounded text-[11px] font-medium border border-red-200">
-                      ⚠️ {selectedEdge.conflict_reason}
+                    <p className="text-red-700 bg-red-50 p-1.5 rounded text-[11px] font-medium border border-red-200 flex items-start gap-1">
+                      <AlertTriangle className="w-3.5 h-3.5 shrink-0 text-red-600 mt-0.5" />
+                      <span>{selectedEdge.conflict_reason}</span>
                     </p>
                   )}
                   <p className="text-[var(--text-secondary)]">{t('relation_label')} {selectedEdge.relation}</p>

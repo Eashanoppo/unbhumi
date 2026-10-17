@@ -1,66 +1,80 @@
 @import "tailwindcss";
 
 :root {
-  /* Base & Canvas Layers (60%) */
-  --bg-primary: #FBF9F4;          /* Warm Cream — Core canvas background */
-  --bg-surface: #FFFFFF;          /* Pure White — Cards, data grids, floating panels */
-  --bg-surface-soft: #F2EFE7;     /* Soft warm cream for secondary panels, chips, table headers */
-  --border-color: #E2DDD3;        /* Soft structural borders */
-  --border-focus: #A1E52B;        /* Brand accent focus */
+  /* Base & Canvas Layers (60%) — Executive Light Mode */
+  --bg-primary: #F8FAFC;          /* Clean, crisp Pearl Slate canvas */
+  --bg-surface: #FFFFFF;          /* Pure White cards and data grids */
+  --bg-surface-soft: #F1F5F9;     /* Soft slate for secondary panels, chips, table headers */
+  --border-color: #E2E8F0;        /* Precision structural border */
+  --border-focus: #15803D;        /* Deep Sovereign Emerald focus */
 
   /* Typography & Hierarchy (30%) */
-  --text-primary: #0B1B28;        /* Deep Topography Navy — High-contrast headings and body */
-  --text-secondary: #5A6E7F;      /* Slate Gray — Labels, timestamps, captions */
-  --text-muted: #8294A5;          /* Tertiary structural text */
+  --text-primary: #0F172A;        /* Slate-900 — Authoritative, high-contrast text */
+  --text-secondary: #475569;      /* Slate-600 — Clean, readable secondary info */
+  --text-muted: #94A3B8;          /* Slate-400 — Structural metadata */
 
-  /* Brand & Action Accents (10%) */
-  --brand-accent: #A1E52B;        /* Vibrant Parrot Lime — Conversion actions & CTAs */
-  --brand-accent-hover: #89C720;  /* Deepened Lime — Hover state */
-  --accent-deep: #0B1B28;         /* Deep Topography Navy for solid dark brand badges */
-  --accent-parrot: #A1E52B;       /* Vibrant Parrot Lime */
-  --accent-light: rgba(161, 229, 43, 0.16); /* Tint for active item pills */
-  --cta-text: #0B1B28;            /* High contrast dark navy text on lime buttons */
+  /* Brand & Action Accents (10%) — Executive Sovereign Emerald */
+  --brand-accent: #15803D;        /* Prestige Forest Emerald — Authoritative & Executive */
+  --brand-accent-hover: #166534;  /* Deepened Forest Green */
+  --accent-deep: #0F5132;         /* Deep Jade Green for badges */
+  --accent-parrot: #15803D;       /* Unified with brand */
+  --accent-light: rgba(21, 128, 61, 0.08); /* Subtle 8% luxury emerald tint */
+  --cta-text: #FFFFFF;            /* Pure white text on prestige emerald buttons */
 
   /* System Alerts & Map States */
-  --success: #10B981;             /* Emerald Green */
+  --success: #15803D;             /* Forest Emerald */
   --success-bg: #ECFDF5;
-  --warning: #F59E0B;             /* Amber Orange */
+  --warning: #D97706;             /* Amber */
   --warning-bg: #FFFBEB;
-  --error: #EF4444;               /* Crimson Red */
+  --error: #DC2626;               /* Crimson Red */
   --error-bg: #FEF2F2;
+
+  --card-critical-bg: rgba(220, 38, 38, 0.04);
+  --card-critical-border: rgba(220, 38, 38, 0.20);
+  --card-warning-bg: rgba(217, 119, 6, 0.04);
+  --card-warning-border: rgba(217, 119, 6, 0.20);
+  --card-success-bg: rgba(21, 128, 61, 0.04);
+  --card-success-border: rgba(21, 128, 61, 0.20);
 
   --background: var(--bg-primary);
   --foreground: var(--text-primary);
 }
 
 .dark {
-  /* Base & Canvas Layers (60%) */
-  --bg-primary: #0B1116;          /* Earth Night Slate — Foundation dampening screen glare */
-  --bg-surface: #17222A;          /* Topography Gray-Navy — Panels and dashboard cards */
-  --bg-surface-soft: #1E2D38;     /* Elevated slate for secondary panels, chips, table headers */
-  --border-color: #273845;        /* Slate border */
-  --border-focus: #B4F53C;        /* Adaptive neon lime focus */
+  /* Base & Canvas Layers (60%) — Executive Obsidian Dark Mode */
+  --bg-primary: #0A0F15;          /* Deep Obsidian Midnight */
+  --bg-surface: #111823;          /* Titanium Slate cards and panels */
+  --bg-surface-soft: #17212E;     /* Elevated slate for secondary panels & chips */
+  --border-color: #1E293B;        /* Crisp dark border */
+  --border-focus: #16A34A;        /* Sovereign emerald focus */
 
   /* Typography & Hierarchy (30%) */
-  --text-primary: #F4F6F0;        /* Tinted Cream — Soft readable text */
-  --text-secondary: #8A9E91;      /* Muted Sage — Secondary info, units, metadata */
-  --text-muted: #5E7366;          /* Tertiary dark metadata */
+  --text-primary: #F8FAFC;        /* Soft White / Slate-50 */
+  --text-secondary: #94A3B8;      /* Slate-400 */
+  --text-muted: #64748B;          /* Slate-500 */
 
-  /* Brand & Action Accents (10%) */
-  --brand-accent: #B4F53C;        /* Adaptive Neon Lime — Glows cleanly on dark backgrounds */
-  --brand-accent-hover: #C8F964;  /* Brightened Lime — Hover state */
-  --accent-deep: #17222A;         /* Dark navy for solid base badges */
-  --accent-parrot: #B4F53C;       /* Adaptive Neon Lime */
-  --accent-light: rgba(180, 245, 60, 0.14); /* Subtle neon glow tint */
-  --cta-text: #0B1116;            /* High contrast dark text on neon lime */
+  /* Brand & Action Accents (10%) — Sovereign Emerald in Dark Mode */
+  --brand-accent: #16A34A;        /* Emerald-600 */
+  --brand-accent-hover: #15803D;  /* Emerald-700 */
+  --accent-deep: #22C55E;         /* Visible emerald text */
+  --accent-parrot: #16A34A;
+  --accent-light: rgba(22, 163, 74, 0.12); /* Subtle glow */
+  --cta-text: #FFFFFF;            /* Pure white text on emerald CTA */
 
   /* System Alerts & Map States */
-  --success: #10B981;             /* Emerald Green */
+  --success: #16A34A;             /* Emerald Green */
   --success-bg: #064E3B;
   --warning: #F59E0B;             /* Amber Orange */
   --warning-bg: #78350F;
   --error: #EF4444;               /* Crimson Red */
   --error-bg: #7F1D1D;
+
+  --card-critical-bg: rgba(239, 68, 68, 0.06);
+  --card-critical-border: rgba(239, 68, 68, 0.25);
+  --card-warning-bg: rgba(245, 158, 11, 0.06);
+  --card-warning-border: rgba(245, 158, 11, 0.25);
+  --card-success-bg: rgba(22, 163, 74, 0.06);
+  --card-success-border: rgba(22, 163, 74, 0.25);
 
   --background: var(--bg-primary);
   --foreground: var(--text-primary);

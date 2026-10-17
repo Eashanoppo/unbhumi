@@ -97,7 +97,7 @@ export default function StandaloneOwnershipGraphPage() {
           <span className="font-bold text-[var(--text-primary)] block">নোড লেজেন্ড (Node Types)</span>
           <div className="space-y-1.5 text-[11px]">
             <div className="flex items-center gap-2">
-              <span className="w-3.5 h-3.5 rounded-full bg-[#286B35] border border-[#7ED957]"></span>
+              <span className="w-3.5 h-3.5 rounded-full bg-[#286B35] border border-[#15803D]"></span>
               <span>দাগ নোড: খতিয়ানভুক্ত নির্দিষ্ট জমি / প্লট</span>
             </div>
             <div className="flex items-center gap-2">

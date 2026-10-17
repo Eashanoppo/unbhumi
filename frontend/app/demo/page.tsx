@@ -8,7 +8,9 @@ import {
   Sparkles, ShieldCheck, FileText, CheckCircle2, AlertTriangle, AlertOctagon,
   ArrowRight, RotateCcw, Play, Download, Printer, Eye, Layers, Lock,
   UploadCloud, Trash2, Plus, Search, Maximize2, X, GitFork, Cpu,
-  Clock, Check, ChevronRight, Hash, Database, BookOpen, AlertCircle
+  Clock, Check, ChevronRight, Hash, Database, BookOpen, AlertCircle,
+  Folder, FolderOpen, Grid, List as ListIcon, ChevronLeft, ArrowUp,
+  HardDrive, GripVertical, CheckSquare, History
 } from 'lucide-react';
 
 // --- TYPES ---
@@ -382,6 +384,8 @@ export default function InteractiveDemoPage() {
   const [workspaceDocs, setWorkspaceDocs] = useState<DemoDocumentFixture[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
   const [fileFilter, setFileFilter] = useState('');
+  const [currentFolder, setCurrentFolder] = useState<'root' | 'deeds' | 'khatian' | 'revenue' | 'all'>('root');
+  const [fmViewMode, setFmViewMode] = useState<'grid' | 'list'>('grid');
 
   // Document Preview Modal State
   const [previewDoc, setPreviewDoc] = useState<DemoDocumentFixture | null>(null);
@@ -408,6 +412,8 @@ export default function InteractiveDemoPage() {
     setFileManagerDocs([...scenario.documents]);
     setSelectedDocIds([]);
     setWorkspaceDocs([]);
+    setCurrentFolder('root');
+    setFileFilter('');
     setPipelineFinished(false);
     setActiveInspectorStageId(1);
     initStages(scenario.documents.length);
@@ -554,6 +560,17 @@ export default function InteractiveDemoPage() {
   const handleAddAllToWorkspace = () => {
     setWorkspaceDocs([...fileManagerDocs]);
     setSelectedDocIds([]);
+  };
+
+  const handleAddFolderToWorkspace = (types: string[]) => {
+    const toAdd = fileManagerDocs.filter((d) => types.includes(d.type));
+    const newWorkspace = [...workspaceDocs];
+    toAdd.forEach((item) => {
+      if (!newWorkspace.some((w) => w.id === item.id)) {
+        newWorkspace.push(item);
+      }
+    });
+    setWorkspaceDocs(newWorkspace);
   };
 
   const handleRemoveFromWorkspace = (id: string) => {
@@ -801,16 +818,86 @@ export default function InteractiveDemoPage() {
     }
   };
 
-  // Filtered documents in file manager
+  // Categorized documents by folder
+  const deedDocs = useMemo(
+    () => fileManagerDocs.filter((d) => d.type === 'deed' || d.type === 'baya_deed'),
+    [fileManagerDocs]
+  );
+  const khatianDocs = useMemo(
+    () => fileManagerDocs.filter((d) => d.type === 'khatian'),
+    [fileManagerDocs]
+  );
+  const revenueDocs = useMemo(
+    () => fileManagerDocs.filter((d) => d.type === 'mutation' || d.type === 'tax_receipt'),
+    [fileManagerDocs]
+  );
+
+  // Folder categories metadata
+  const folderCategories = useMemo(
+    () => [
+      {
+        id: 'deeds' as const,
+        nameBn: 'দলিল ও বায়া দলিল',
+        nameEn: 'Title & Baya Deeds',
+        count: deedDocs.length,
+        types: ['deed', 'baya_deed'],
+        descBn: 'মূল সাফ-কবলা ও ঐতিহাসিক বায়া দলিল',
+        descEn: 'Conveyance & historical title deeds',
+        accentColor: 'text-amber-600 dark:text-amber-400',
+        borderColor: 'border-[var(--border-color)] hover:border-[var(--brand-accent)]/50',
+        bgColor: 'bg-[var(--bg-surface-soft)]/50 hover:bg-[var(--bg-surface)]',
+        sizeBytes: deedDocs.reduce((acc, d) => acc + d.sizeBytes, 0),
+      },
+      {
+        id: 'khatian' as const,
+        nameBn: 'খতিয়ান ও জরিপ রেকর্ড',
+        nameEn: 'Khatian & Survey Records',
+        count: khatianDocs.length,
+        types: ['khatian'],
+        descBn: 'সিএস, আরএস ও বিএস রেকর্ড অফ রাইটস',
+        descEn: 'Official government land records',
+        accentColor: 'text-emerald-600 dark:text-emerald-400',
+        borderColor: 'border-[var(--border-color)] hover:border-[var(--brand-accent)]/50',
+        bgColor: 'bg-[var(--bg-surface-soft)]/50 hover:bg-[var(--bg-surface)]',
+        sizeBytes: khatianDocs.reduce((acc, d) => acc + d.sizeBytes, 0),
+      },
+      {
+        id: 'revenue' as const,
+        nameBn: 'নামজারি ও কর দাখিলা',
+        nameEn: 'Mutation & Tax Receipts',
+        count: revenueDocs.length,
+        types: ['mutation', 'tax_receipt'],
+        descBn: 'অনুমোদিত খারিজ খতিয়ান, ডিসিআর ও খাজনা রসিদ',
+        descEn: 'Approved mutations, DCRs & tax dakhilas',
+        accentColor: 'text-slate-600 dark:text-slate-400',
+        borderColor: 'border-[var(--border-color)] hover:border-[var(--brand-accent)]/50',
+        bgColor: 'bg-[var(--bg-surface-soft)]/50 hover:bg-[var(--bg-surface)]',
+        sizeBytes: revenueDocs.reduce((acc, d) => acc + d.sizeBytes, 0),
+      },
+    ],
+    [deedDocs, khatianDocs, revenueDocs]
+  );
+
+  // Filtered documents by active folder and search query
   const filteredFmDocs = useMemo(() => {
-    if (!fileFilter.trim()) return fileManagerDocs;
-    return fileManagerDocs.filter(
+    let list = fileManagerDocs;
+    if (currentFolder === 'deeds') {
+      list = deedDocs;
+    } else if (currentFolder === 'khatian') {
+      list = khatianDocs;
+    } else if (currentFolder === 'revenue') {
+      list = revenueDocs;
+    }
+    if (!fileFilter.trim()) return list;
+    const q = fileFilter.toLowerCase();
+    return list.filter(
       (d) =>
-        d.name.toLowerCase().includes(fileFilter.toLowerCase()) ||
-        d.summaryBn.includes(fileFilter) ||
-        d.type.includes(fileFilter)
+        d.name.toLowerCase().includes(q) ||
+        d.summaryBn.toLowerCase().includes(q) ||
+        d.summaryEn.toLowerCase().includes(q) ||
+        d.type.toLowerCase().includes(q)
     );
-  }, [fileManagerDocs, fileFilter]);
+  }, [fileManagerDocs, currentFolder, deedDocs, khatianDocs, revenueDocs, fileFilter]);
 
   // Selected stage for inspector
   const activeInspectorStage = useMemo(
@@ -824,7 +911,7 @@ export default function InteractiveDemoPage() {
       <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-surface)] p-6 shadow-sm space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1.5">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-[var(--brand-accent)] text-[var(--cta-text)]">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-[var(--accent-light)] text-[var(--brand-accent)] border border-[var(--brand-accent)]/20">
               <Sparkles className="w-3.5 h-3.5" />
               <span>{t('demo_page_badge')}</span>
             </div>
@@ -898,13 +985,13 @@ export default function InteractiveDemoPage() {
                 onClick={() => setSelectedCaseId(sc.id)}
                 className={`text-left p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-3 ${
                   isSelected
-                    ? 'border-[var(--brand-accent)] bg-[var(--accent-light)] shadow-sm ring-1 ring-[var(--brand-accent)]'
-                    : 'border-[var(--border-color)] bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-soft)]'
+                    ? 'border-[var(--brand-accent)] bg-[var(--bg-surface)] shadow-md ring-2 ring-[var(--brand-accent)]/15'
+                    : 'border-[var(--border-color)] bg-[var(--bg-surface)] hover:border-[var(--brand-accent)]/40 hover:bg-[var(--bg-surface-soft)]/50'
                 }`}
               >
                 <div className="space-y-1.5 w-full">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="font-mono text-xs font-bold text-[var(--brand-accent)]">
+                    <span className={`font-mono text-xs font-bold ${isSelected ? 'text-[var(--brand-accent)]' : 'text-[var(--text-secondary)]'}`}>
                       {sc.id}
                     </span>
                     <span
@@ -939,131 +1026,545 @@ export default function InteractiveDemoPage() {
 
       {/* 3. WORKSPACE & BUILT-IN FILE MANAGER GRID */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* LEFT COLUMN: BUILT-IN DEMO FILE MANAGER (5 COLS) */}
-        <div className="lg:col-span-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-surface)] p-5 space-y-4 shadow-sm">
-          <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-3">
-            <div>
-              <h2 className="text-sm font-bold text-[var(--text-primary)] flex items-center gap-2">
-                <BookOpen className="w-4 h-4 text-[var(--brand-accent)]" />
-                <span>{t('demo_file_manager')}</span>
-              </h2>
-              <p className="text-[11px] text-[var(--text-secondary)] mt-0.5">
-                {t('demo_file_manager_desc')}
-              </p>
+        {/* LEFT COLUMN: AUTHENTIC BUILT-IN DEMO FILE MANAGER (6 COLS) */}
+        <div className="lg:col-span-6 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-surface)] overflow-hidden shadow-sm flex flex-col">
+          {/* OS Window Chrome Titlebar */}
+          <div className="px-4 py-2.5 bg-[var(--bg-surface-soft)] border-b border-[var(--border-color)] flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 mr-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-rose-500/80 inline-block" />
+                <span className="w-2.5 h-2.5 rounded-full bg-amber-500/80 inline-block" />
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/80 inline-block" />
+              </div>
+              <HardDrive className="w-3.5 h-3.5 text-[var(--brand-accent)]" />
+              <span className="text-xs font-mono font-bold text-[var(--text-primary)] truncate">
+                vault://unbhumi/{activeScenario.id}{currentFolder !== 'root' ? `/${currentFolder}` : ''}
+              </span>
             </div>
-            <button
-              onClick={handleAddAllToWorkspace}
-              className="text-xs font-bold text-[var(--brand-accent)] hover:underline shrink-0"
-            >
-              {t('demo_add_all')}
-            </button>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="inline-flex items-center gap-1 text-[10px] font-mono font-semibold px-2 py-0.5 rounded-md bg-[var(--bg-surface)] border border-[var(--border-color)] text-[var(--text-secondary)]">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                {t('fm_fs_mode')}
+              </span>
+            </div>
           </div>
 
-          {/* Search/Filter Bar */}
-          <div className="relative">
-            <Search className="w-3.5 h-3.5 text-[var(--text-secondary)] absolute left-3 top-2.5" />
-            <input
-              type="text"
-              value={fileFilter}
-              onChange={(e) => setFileFilter(e.target.value)}
-              placeholder={language === 'bn' ? 'নথি বা দলিলের নাম লিখুন...' : 'Filter sample documents...'}
-              className="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface-soft)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--brand-accent)]"
-            />
-          </div>
+          <div className="p-4 space-y-3.5 flex-1 flex flex-col">
+            {/* Header Title & Bulk Action */}
+            <div className="flex items-center justify-between gap-2 border-b border-[var(--border-color)]/70 pb-3">
+              <div>
+                <h2 className="text-sm font-bold text-[var(--text-primary)] flex items-center gap-2">
+                  <FolderOpen className="w-4 h-4 text-[var(--brand-accent)]" />
+                  <span>{t('demo_file_manager')}</span>
+                </h2>
+                <p className="text-[11px] text-[var(--text-secondary)] mt-0.5">
+                  {t('demo_file_manager_desc')}
+                </p>
+              </div>
 
-          {/* Document Fixtures List */}
-          <div className="space-y-2.5 max-h-[380px] overflow-y-auto pr-1">
-            {filteredFmDocs.map((doc) => {
-              const isSelected = selectedDocIds.includes(doc.id);
-              const isInWorkspace = workspaceDocs.some((w) => w.id === doc.id);
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  onClick={handleAddAllToWorkspace}
+                  className="text-xs font-bold text-[var(--brand-accent)] hover:underline shrink-0"
+                >
+                  {t('demo_add_all')}
+                </button>
+              </div>
+            </div>
 
-              return (
-                <div
-                  key={doc.id}
-                  draggable
-                  onDragStart={(e) => handleDragStartFromFM(e, doc)}
-                  className={`p-3 rounded-xl border transition-all cursor-grab active:cursor-grabbing flex flex-col gap-2 ${
-                    isInWorkspace
-                      ? 'border-[var(--brand-accent)]/50 bg-[var(--accent-light)]/40'
-                      : isSelected
-                      ? 'border-[var(--brand-accent)] bg-[var(--bg-surface-soft)]'
-                      : 'border-[var(--border-color)] bg-[var(--bg-surface-soft)] hover:border-[var(--brand-accent)]/40'
+            {/* Explorer Navigation & Breadcrumb Toolbar */}
+            <div className="flex flex-wrap items-center justify-between gap-2 bg-[var(--bg-surface-soft)]/60 p-2 rounded-xl border border-[var(--border-color)]">
+              {/* Back / Up Button + Clickable Breadcrumbs */}
+              <div className="flex items-center gap-1.5 text-xs overflow-x-auto py-0.5">
+                <button
+                  type="button"
+                  disabled={currentFolder === 'root'}
+                  onClick={() => setCurrentFolder('root')}
+                  title={t('fm_back_root')}
+                  className="p-1 rounded-lg border border-[var(--border-color)] bg-[var(--bg-surface)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  <ArrowUp className="w-3.5 h-3.5" />
+                </button>
+
+                <div className="flex items-center gap-1 font-mono text-[11px] text-[var(--text-secondary)] pl-1">
+                  <button
+                    onClick={() => setCurrentFolder('root')}
+                    className={`hover:underline flex items-center gap-1 ${currentFolder === 'root' ? 'font-bold text-[var(--text-primary)]' : ''}`}
+                  >
+                    <Folder className="w-3 h-3 text-[var(--brand-accent)]" />
+                    <span>{t('fm_vault_root')}</span>
+                  </button>
+
+                  <ChevronRight className="w-3 h-3 text-[var(--text-secondary)]/50" />
+
+                  <button
+                    onClick={() => setCurrentFolder('root')}
+                    className={`hover:underline font-semibold ${currentFolder === 'root' ? 'text-[var(--text-primary)]' : ''}`}
+                  >
+                    {activeScenario.id}
+                  </button>
+
+                  {currentFolder !== 'root' && (
+                    <>
+                      <ChevronRight className="w-3 h-3 text-[var(--text-secondary)]/50" />
+                      <span className="font-bold text-[var(--brand-accent)] flex items-center gap-1">
+                        <FolderOpen className="w-3 h-3" />
+                        {currentFolder === 'deeds' && t('fm_folder_deeds')}
+                        {currentFolder === 'khatian' && t('fm_folder_khatian')}
+                        {currentFolder === 'revenue' && t('fm_folder_revenue')}
+                        {currentFolder === 'all' && t('fm_all_files')}
+                      </span>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* View Switcher: Grid vs List */}
+              <div className="flex items-center gap-1 bg-[var(--bg-surface)] p-0.5 rounded-lg border border-[var(--border-color)]">
+                <button
+                  type="button"
+                  onClick={() => setFmViewMode('grid')}
+                  title={t('fm_grid_view')}
+                  className={`p-1 rounded-md transition-colors ${
+                    fmViewMode === 'grid'
+                      ? 'bg-[var(--accent-light)] text-[var(--text-primary)] font-bold'
+                      : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                   }`}
                 >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-start gap-2.5">
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={() => handleToggleSelectDoc(doc.id)}
-                        className="mt-1 rounded accent-[var(--brand-accent)]"
-                      />
-                      <div>
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-xs font-bold text-[var(--text-primary)] hover:underline">
-                            {doc.name}
-                          </span>
-                          <span className="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded bg-[var(--bg-surface)] text-[var(--text-secondary)] border border-[var(--border-color)]">
-                            {doc.type}
-                          </span>
+                  <Grid className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFmViewMode('list')}
+                  title={t('fm_list_view')}
+                  className={`p-1 rounded-md transition-colors ${
+                    fmViewMode === 'list'
+                      ? 'bg-[var(--accent-light)] text-[var(--text-primary)] font-bold'
+                      : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                  }`}
+                >
+                  <ListIcon className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Quick Folder Directory Segmented Control */}
+            <div className="bg-[var(--bg-surface-soft)] p-1 rounded-xl border border-[var(--border-color)] flex items-center gap-1 overflow-x-auto text-xs">
+              <button
+                type="button"
+                onClick={() => setCurrentFolder('root')}
+                className={`px-2.5 py-1 rounded-lg font-semibold flex items-center gap-1.5 transition-all shrink-0 ${
+                  currentFolder === 'root'
+                    ? 'bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-xs border border-[var(--border-color)] font-bold'
+                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                }`}
+              >
+                <Folder className="w-3.5 h-3.5 text-[var(--brand-accent)]" />
+                <span>{t('fm_vault_root')}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setCurrentFolder('all')}
+                className={`px-2.5 py-1 rounded-lg font-semibold flex items-center gap-1.5 transition-all shrink-0 ${
+                  currentFolder === 'all'
+                    ? 'bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-xs border border-[var(--border-color)] font-bold'
+                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                }`}
+              >
+                <span>{t('fm_all_files')}</span>
+                <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-[var(--border-color)]/70 text-[var(--text-secondary)]">
+                  {formatNumber(fileManagerDocs.length)}
+                </span>
+              </button>
+
+              {folderCategories.map((f) => (
+                <button
+                  key={f.id}
+                  type="button"
+                  onClick={() => setCurrentFolder(f.id)}
+                  className={`px-2.5 py-1 rounded-lg font-semibold flex items-center gap-1.5 transition-all shrink-0 ${
+                    currentFolder === f.id
+                      ? 'bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-xs border border-[var(--border-color)] font-bold'
+                      : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                  }`}
+                >
+                  <Folder className={`w-3.5 h-3.5 ${f.accentColor}`} />
+                  <span>{language === 'bn' ? f.nameBn : f.nameEn}</span>
+                  <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-[var(--border-color)]/70 text-[var(--text-secondary)]">
+                    {formatNumber(f.count)}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {/* Search/Filter Bar */}
+            <div className="relative">
+              <Search className="w-3.5 h-3.5 text-[var(--text-secondary)] absolute left-3 top-2.5" />
+              <input
+                type="text"
+                value={fileFilter}
+                onChange={(e) => setFileFilter(e.target.value)}
+                placeholder={t('fm_search_placeholder')}
+                className="w-full pl-8 pr-8 py-1.5 text-xs rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface-soft)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--brand-accent)]"
+              />
+              {fileFilter && (
+                <button
+                  type="button"
+                  onClick={() => setFileFilter('')}
+                  className="absolute right-2.5 top-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+
+            {/* FOLDERS GRID (Shown when currentFolder === 'root') */}
+            {currentFolder === 'root' && !fileFilter && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-[11px] font-bold text-[var(--text-secondary)] uppercase tracking-wider px-1">
+                  <span>{language === 'bn' ? 'ফোল্ডার ডিরেক্টরি' : 'Directories'}</span>
+                  <span>{formatNumber(folderCategories.length)} {language === 'bn' ? 'টি ফোল্ডার' : 'Folders'}</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                  {folderCategories.map((cat) => (
+                    <div
+                      key={cat.id}
+                      className={`p-3 rounded-xl border transition-all cursor-pointer flex flex-col justify-between gap-2 hover:scale-[1.02] shadow-xs ${cat.bgColor} ${cat.borderColor}`}
+                      onClick={() => setCurrentFolder(cat.id)}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="w-8 h-8 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-color)] flex items-center justify-center shadow-2xs">
+                          <Folder className={`w-4 h-4 ${cat.accentColor}`} />
                         </div>
-                        <p className="text-[11px] text-[var(--text-secondary)] line-clamp-1 mt-0.5">
-                          {language === 'bn' ? doc.summaryBn : doc.summaryEn}
+                        <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-[var(--bg-surface)] text-[var(--text-secondary)] border border-[var(--border-color)]">
+                          {formatNumber(cat.count)} {language === 'bn' ? 'নথি' : 'files'}
+                        </span>
+                      </div>
+
+                      <div>
+                        <h4 className="text-xs font-bold text-[var(--text-primary)] line-clamp-1">
+                          {language === 'bn' ? cat.nameBn : cat.nameEn}
+                        </h4>
+                        <p className="text-[10px] text-[var(--text-secondary)] line-clamp-1 mt-0.5">
+                          {(cat.sizeBytes / 1024 / 1024).toFixed(2)} MB
                         </p>
                       </div>
+
+                      <div className="pt-1.5 border-t border-[var(--border-color)]/50 flex items-center justify-between text-[10px]">
+                        <span className="text-[var(--brand-accent)] font-semibold flex items-center gap-1 hover:underline">
+                          <FolderOpen className="w-3 h-3" />
+                          {t('fm_open_folder')}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleAddFolderToWorkspace(cat.types);
+                          }}
+                          className="font-bold text-[var(--text-primary)] hover:text-[var(--brand-accent)] transition-colors"
+                          title={t('fm_add_folder_files')}
+                        >
+                          + {language === 'bn' ? 'সব যোগ' : 'Add all'}
+                        </button>
+                      </div>
                     </div>
-
-                    <button
-                      onClick={() => setPreviewDoc(doc)}
-                      title={language === 'bn' ? 'নথি প্রিভিউ দেখুন' : 'Preview Document'}
-                      className="p-1 text-[var(--text-secondary)] hover:text-[var(--text-primary)] rounded-lg hover:bg-[var(--bg-surface)]"
-                    >
-                      <Eye className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-
-                  <div className="flex items-center justify-between text-[10px] text-[var(--text-secondary)] font-mono pt-1 border-t border-[var(--border-color)]/60">
-                    <span>
-                      {(doc.sizeBytes / 1024 / 1024).toFixed(2)} MB • {doc.hash.slice(0, 10)}...
-                    </span>
-
-                    {isInWorkspace ? (
-                      <span className="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
-                        <Check className="w-3 h-3" />
-                        {language === 'bn' ? 'যুক্ত রয়েছে' : 'In Workspace'}
-                      </span>
-                    ) : (
-                      <button
-                        onClick={() => {
-                          if (!workspaceDocs.some((w) => w.id === doc.id)) {
-                            setWorkspaceDocs([...workspaceDocs, doc]);
-                          }
-                        }}
-                        className="font-bold text-[var(--brand-accent)] hover:underline"
-                      >
-                        + {language === 'bn' ? 'যোগ করুন' : 'Add'}
-                      </button>
-                    )}
-                  </div>
+                  ))}
                 </div>
-              );
-            })}
-          </div>
+              </div>
+            )}
 
-          {selectedDocIds.length > 0 && (
-            <button
-              onClick={handleAddSelectedToWorkspace}
-              className="w-full py-2 rounded-xl text-xs font-bold bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-[var(--cta-text)] transition-all shadow-xs"
-            >
-              {language === 'bn'
-                ? `নির্বাচিত (${formatNumber(selectedDocIds.length)}) টি ওয়ার্কস্পেসে আনুন`
-                : `Move Selected (${selectedDocIds.length}) to Workspace`}
-            </button>
-          )}
+            {/* FILES VIEW HEADER */}
+            <div className="flex items-center justify-between text-[11px] font-bold text-[var(--text-secondary)] uppercase tracking-wider px-1 pt-1">
+              <span>
+                {currentFolder === 'root'
+                  ? (language === 'bn' ? 'সকল ফাইল তালিকা' : 'Files in Vault')
+                  : currentFolder === 'deeds'
+                  ? (language === 'bn' ? 'দলিল নথিসমূহ' : 'Title Deed Files')
+                  : currentFolder === 'khatian'
+                  ? (language === 'bn' ? 'খতিয়ান নথিসমূহ' : 'Khatian Record Files')
+                  : currentFolder === 'revenue'
+                  ? (language === 'bn' ? 'খারিজ ও খাজনা দাখিলা' : 'Revenue & Tax Files')
+                  : (language === 'bn' ? 'সকল নথি' : 'All Documents')}
+              </span>
+              <span>
+                {formatNumber(filteredFmDocs.length)} {language === 'bn' ? 'টি নথি' : 'items'}
+              </span>
+            </div>
+
+            {/* FILES CONTAINER: GRID VIEW OR LIST VIEW */}
+            <div className="flex-1 min-h-[220px] max-h-[380px] overflow-y-auto pr-1">
+              {filteredFmDocs.length === 0 ? (
+                <div className="h-44 flex flex-col items-center justify-center text-center text-xs text-[var(--text-secondary)] space-y-2 border border-dashed border-[var(--border-color)] rounded-xl">
+                  <Folder className="w-8 h-8 opacity-40 text-[var(--brand-accent)]" />
+                  <p>{t('fm_empty_folder')}</p>
+                </div>
+              ) : fmViewMode === 'grid' ? (
+                /* GRID VIEW */
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  {filteredFmDocs.map((doc) => {
+                    const isSelected = selectedDocIds.includes(doc.id);
+                    const isInWorkspace = workspaceDocs.some((w) => w.id === doc.id);
+                    const isDeed = doc.type === 'deed' || doc.type === 'baya_deed';
+                    const isKhatian = doc.type === 'khatian';
+
+                    return (
+                      <div
+                        key={doc.id}
+                        draggable
+                        onDragStart={(e) => handleDragStartFromFM(e, doc)}
+                        className={`p-3 rounded-xl border transition-all cursor-grab active:cursor-grabbing flex flex-col justify-between gap-2.5 group hover:shadow-xs ${
+                          isInWorkspace
+                            ? 'border-[var(--brand-accent)]/50 bg-[var(--accent-light)]/40'
+                            : isSelected
+                            ? 'border-[var(--brand-accent)] bg-[var(--bg-surface-soft)] ring-1 ring-[var(--brand-accent)]'
+                            : 'border-[var(--border-color)] bg-[var(--bg-surface-soft)] hover:border-[var(--brand-accent)]/50'
+                        }`}
+                      >
+                        {/* Top: Drag Handle + Checkbox + Type Tag + Preview Eye */}
+                        <div className="flex items-center justify-between gap-1.5">
+                          <div className="flex items-center gap-1.5">
+                            <span
+                              title={t('fm_drag_hint')}
+                              className="text-[var(--text-secondary)] opacity-60 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing"
+                            >
+                              <GripVertical className="w-3.5 h-3.5" />
+                            </span>
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => handleToggleSelectDoc(doc.id)}
+                              className="rounded accent-[var(--brand-accent)] cursor-pointer"
+                            />
+                            <span
+                              className={`text-[9px] uppercase font-bold px-1.5 py-0.5 rounded border font-mono ${
+                                isDeed
+                                  ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20'
+                                  : isKhatian
+                                  ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20'
+                                  : 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20'
+                              }`}
+                            >
+                              {doc.type}
+                            </span>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => setPreviewDoc(doc)}
+                            title={t('demo_preview_title')}
+                            className="p-1 rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface)] transition-colors"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+
+                        {/* Middle: Document Icon & Name */}
+                        <div className="flex items-start gap-2.5">
+                          <div
+                            className={`w-9 h-9 rounded-lg shrink-0 flex items-center justify-center border shadow-2xs ${
+                              isDeed
+                                ? 'bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400'
+                                : isKhatian
+                                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400'
+                                : 'bg-blue-500/10 border-blue-500/30 text-blue-600 dark:text-blue-400'
+                            }`}
+                          >
+                            {isDeed ? (
+                              <FileText className="w-4 h-4" />
+                            ) : isKhatian ? (
+                              <BookOpen className="w-4 h-4" />
+                            ) : (
+                              <Layers className="w-4 h-4" />
+                            )}
+                          </div>
+
+                          <div className="min-w-0 flex-1">
+                            <h4
+                              className="text-xs font-bold text-[var(--text-primary)] truncate hover:underline"
+                              title={doc.name}
+                            >
+                              {doc.name}
+                            </h4>
+                            <p className="text-[10px] text-[var(--text-secondary)] line-clamp-1 mt-0.5">
+                              {language === 'bn' ? doc.summaryBn : doc.summaryEn}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Bottom: Metadata & Workspace Status / Add */}
+                        <div className="pt-2 border-t border-[var(--border-color)]/70 flex items-center justify-between text-[10px]">
+                          <span className="font-mono text-[var(--text-secondary)]">
+                            {(doc.sizeBytes / 1024 / 1024).toFixed(2)} MB • {formatNumber(doc.pageCount)} পৃ.
+                          </span>
+
+                          {isInWorkspace ? (
+                            <span className="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
+                              <Check className="w-2.5 h-2.5" />
+                              {t('fm_status_in_ws')}
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (!workspaceDocs.some((w) => w.id === doc.id)) {
+                                  setWorkspaceDocs([...workspaceDocs, doc]);
+                                }
+                              }}
+                              className="font-bold text-[var(--brand-accent)] hover:underline flex items-center gap-0.5"
+                            >
+                              <Plus className="w-3 h-3" />
+                              <span>{language === 'bn' ? 'যোগ করুন' : 'Add'}</span>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                /* LIST VIEW */
+                <div className="border border-[var(--border-color)] rounded-xl overflow-hidden bg-[var(--bg-surface)]">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-[var(--bg-surface-soft)] border-b border-[var(--border-color)] text-[10px] font-bold text-[var(--text-secondary)] uppercase">
+                      <tr>
+                        <th className="py-2 px-2.5 w-6">
+                          <input
+                            type="checkbox"
+                            checked={
+                              filteredFmDocs.length > 0 &&
+                              filteredFmDocs.every((d) => selectedDocIds.includes(d.id))
+                            }
+                            onChange={() => {
+                              const ids = filteredFmDocs.map((d) => d.id);
+                              const allSel = ids.every((id) => selectedDocIds.includes(id));
+                              if (allSel) {
+                                setSelectedDocIds((prev) => prev.filter((id) => !ids.includes(id)));
+                              } else {
+                                setSelectedDocIds((prev) => Array.from(new Set([...prev, ...ids])));
+                              }
+                            }}
+                            className="rounded accent-[var(--brand-accent)]"
+                          />
+                        </th>
+                        <th className="py-2 px-2">{t('fm_col_name')}</th>
+                        <th className="py-2 px-2">{t('fm_col_type')}</th>
+                        <th className="py-2 px-2">{t('fm_col_size')}</th>
+                        <th className="py-2 px-2 text-right">{t('fm_col_action')}</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[var(--border-color)]">
+                      {filteredFmDocs.map((doc) => {
+                        const isSelected = selectedDocIds.includes(doc.id);
+                        const isInWorkspace = workspaceDocs.some((w) => w.id === doc.id);
+
+                        return (
+                          <tr
+                            key={doc.id}
+                            draggable
+                            onDragStart={(e) => handleDragStartFromFM(e, doc)}
+                            className={`hover:bg-[var(--bg-surface-soft)]/60 cursor-grab active:cursor-grabbing transition-colors ${
+                              isInWorkspace ? 'bg-[var(--accent-light)]/30' : isSelected ? 'bg-[var(--bg-surface-soft)]' : ''
+                            }`}
+                          >
+                            <td className="py-2 px-2.5">
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={() => handleToggleSelectDoc(doc.id)}
+                                className="rounded accent-[var(--brand-accent)]"
+                              />
+                            </td>
+                            <td className="py-2 px-2 font-semibold text-[var(--text-primary)]">
+                              <div className="flex items-center gap-1.5 truncate max-w-[180px]">
+                                <GripVertical className="w-3 h-3 text-[var(--text-secondary)] opacity-50 shrink-0" />
+                                <span className="truncate" title={doc.name}>
+                                  {doc.name}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="py-2 px-2">
+                              <span className="text-[9px] uppercase font-mono font-bold px-1.5 py-0.5 rounded bg-[var(--bg-surface-soft)] text-[var(--text-secondary)] border border-[var(--border-color)]">
+                                {doc.type}
+                              </span>
+                            </td>
+                            <td className="py-2 px-2 font-mono text-[10px] text-[var(--text-secondary)]">
+                              {(doc.sizeBytes / 1024 / 1024).toFixed(2)} MB
+                            </td>
+                            <td className="py-2 px-2 text-right">
+                              <div className="flex items-center justify-end gap-1.5">
+                                <button
+                                  type="button"
+                                  onClick={() => setPreviewDoc(doc)}
+                                  className="p-1 text-[var(--text-secondary)] hover:text-[var(--text-primary)] rounded"
+                                >
+                                  <Eye className="w-3.5 h-3.5" />
+                                </button>
+                                {isInWorkspace ? (
+                                  <span className="text-emerald-600 text-[10px] font-bold">✓</span>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      if (!workspaceDocs.some((w) => w.id === doc.id)) {
+                                        setWorkspaceDocs([...workspaceDocs, doc]);
+                                      }
+                                    }}
+                                    className="text-[10px] font-bold text-[var(--brand-accent)] hover:underline"
+                                  >
+                                    + {language === 'bn' ? 'যোগ' : 'Add'}
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            {/* Bottom Status Bar & Bulk Actions */}
+            <div className="pt-2 border-t border-[var(--border-color)] flex flex-col gap-2">
+              <div className="flex items-center justify-between text-[11px] text-[var(--text-secondary)] font-mono">
+                <span>
+                  📁 {formatNumber(filteredFmDocs.length)} {language === 'bn' ? 'টি নথি' : 'items'} • {(filteredFmDocs.reduce((acc, d) => acc + d.sizeBytes, 0) / 1024 / 1024).toFixed(2)} MB
+                </span>
+                {selectedDocIds.length > 0 && (
+                  <span className="text-[var(--brand-accent)] font-bold">
+                    {formatNumber(selectedDocIds.length)} {language === 'bn' ? 'টি নির্বাচিত' : 'selected'}
+                  </span>
+                )}
+              </div>
+
+              {selectedDocIds.length > 0 ? (
+                <button
+                  onClick={handleAddSelectedToWorkspace}
+                  className="w-full py-2 rounded-xl text-xs font-bold bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-[var(--cta-text)] transition-all shadow-xs flex items-center justify-center gap-1.5"
+                >
+                  <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+                  <span>
+                    {language === 'bn'
+                      ? `নির্বাচিত (${formatNumber(selectedDocIds.length)}) টি ওয়ার্কস্পেসে আনুন`
+                      : `Move Selected (${selectedDocIds.length}) to Workspace`}
+                  </span>
+                </button>
+              ) : (
+                <div className="text-[10px] text-center text-[var(--text-secondary)] font-medium flex items-center justify-center gap-1 py-0.5">
+                  <GripVertical className="w-3 h-3 opacity-60 text-[var(--brand-accent)]" />
+                  <span>{language === 'bn' ? 'নথি সরাসরি ডানপাশের ড্রপ জোনে টেনে আনুন' : 'Drag documents directly into the workspace on the right'}</span>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
-        {/* RIGHT COLUMN: INVESTIGATION WORKSPACE DROPZONE (7 COLS) */}
-        <div className="lg:col-span-7 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-surface)] p-5 space-y-4 shadow-sm">
+        {/* RIGHT COLUMN: INVESTIGATION WORKSPACE DROPZONE (6 COLS) */}
+        <div className="lg:col-span-6 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-surface)] p-5 space-y-4 shadow-sm">
           <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-3">
             <div>
               <h2 className="text-sm font-bold text-[var(--text-primary)] flex items-center gap-2">
@@ -1189,12 +1690,12 @@ export default function InteractiveDemoPage() {
 
             const statusColors =
               st.status === 'completed'
-                ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
                 : st.status === 'warning'
-                ? 'border-amber-500/50 bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                ? 'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400'
                 : st.status === 'running'
-                ? 'border-[var(--brand-accent)] bg-[var(--accent-light)] text-[var(--text-primary)] animate-pulse'
-                : 'border-[var(--border-color)] bg-[var(--bg-surface-soft)] text-[var(--text-secondary)]';
+                ? 'border-[var(--brand-accent)]/40 bg-[var(--accent-light)] text-[var(--brand-accent)] animate-pulse'
+                : 'border-[var(--border-color)] bg-[var(--bg-surface)] text-[var(--text-secondary)]';
 
             return (
               <button
@@ -1202,8 +1703,8 @@ export default function InteractiveDemoPage() {
                 onClick={() => setActiveInspectorStageId(st.id)}
                 className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-3 ${
                   isSelected
-                    ? 'ring-2 ring-[var(--brand-accent)] border-[var(--brand-accent)] bg-[var(--accent-light)]'
-                    : 'border-[var(--border-color)] hover:border-[var(--brand-accent)]/50'
+                    ? 'ring-2 ring-[var(--brand-accent)]/20 border-[var(--brand-accent)] bg-[var(--bg-surface)] shadow-xs'
+                    : 'border-[var(--border-color)] bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-soft)]/60 hover:border-[var(--brand-accent)]/40'
                 }`}
               >
                 <div className="space-y-1.5 w-full">
@@ -1300,7 +1801,7 @@ export default function InteractiveDemoPage() {
                 Risk Score
               </span>
               <span className="text-lg font-black text-[var(--text-primary)]">
-                {formatNumber(liveCase?.risk_score ?? activeScenario.expectedRiskScore)} / ১০০
+                {formatNumber(liveCase?.risk_score ?? activeScenario.expectedRiskScore)} {language === 'bn' ? '/ ১০০' : '/ 100'}
               </span>
             </div>
 
@@ -1664,8 +2165,9 @@ export default function InteractiveDemoPage() {
             {/* Modal Content - Bangladeshi Legal Document Emulation */}
             <div className="p-6 overflow-y-auto space-y-4">
               {/* Synthetic Disclaimer Watermark */}
-              <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-400 text-center text-xs font-bold">
-                ⚠️ {t('demo_synthetic_watermark')}
+              <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-400 text-center text-xs font-bold flex items-center justify-center gap-1.5">
+                <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                <span>{t('demo_synthetic_watermark')}</span>
               </div>
 
               {/* Rendered Deed Sheet */}
@@ -1703,13 +2205,13 @@ export default function InteractiveDemoPage() {
                 </div>
 
                 {/* Highlighted OCR Bounding Boxes */}
-                <div className="border border-dashed border-[#286B35] p-3 rounded-lg bg-[#7ED957]/10 space-y-1.5 font-sans">
-                  <span className="text-[11px] font-bold text-[#286B35] block">
+                <div className="border border-dashed border-[var(--brand-accent)]/50 p-3 rounded-lg bg-[var(--accent-light)] space-y-1.5 font-sans">
+                  <span className="text-[11px] font-bold text-[var(--brand-accent)] block">
                     নিষ্কাশিত ওসিআর উপাত্ত (Multimodal Field Extraction):
                   </span>
                   <div className="grid grid-cols-2 gap-2 text-[10px]">
                     {previewDoc.extractedFields.map((f, i) => (
-                      <div key={i} className="p-1.5 rounded bg-white/80 border border-[#286B35]/20">
+                      <div key={i} className="p-1.5 rounded bg-white/90 border border-[var(--brand-accent)]/20">
                         <span className="text-gray-500 block">{f.labelBn}:</span>
                         <span className="font-bold text-gray-900">{f.rawValue} ({(f.confidence * 100).toFixed(0)}%)</span>
                       </div>
@@ -1720,7 +2222,10 @@ export default function InteractiveDemoPage() {
                 {/* Registry Seal & SHA-256 Digest */}
                 <div className="pt-3 border-t border-[#E5E0D2] flex items-center justify-between text-[10px] font-mono text-gray-600">
                   <span>SHA-256: {previewDoc.hash}</span>
-                  <span className="text-[#2E7D46] font-bold">✓ VERIFIED FINGERPRINT</span>
+                  <span className="text-[#2E7D46] font-bold flex items-center gap-1">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#2E7D46]" />
+                    <span>VERIFIED FINGERPRINT</span>
+                  </span>
                 </div>
               </div>
             </div>

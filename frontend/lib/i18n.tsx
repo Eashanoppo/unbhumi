@@ -515,7 +515,37 @@ export const DICTIONARY: Translations = {
   demo_s3_name: { bn: 'ওসিআর ও ফিল্ড নিষ্কাশন', en: 'OCR & Field Extraction' },
   demo_s4_name: { bn: 'উপাত্ত স্বাভাবিকীকরণ', en: 'Field Normalization' },
   demo_s5_name: { bn: 'রুল ইঞ্জিন ক্রস-ভেরিফিকেশন', en: 'Rule Engine Cross-Check' },
-  demo_s6_name: { bn: 'গ্রাফ ও ঝুঁকি নিরূপণ', en: 'Graph & Risk Scoring' }
+  demo_s6_name: { bn: 'গ্রাফ ও ঝুঁকি নিরূপণ', en: 'Graph & Risk Scoring' },
+
+  // Authentic File Manager Keys
+  fm_vault_root: { bn: 'ভল্ট রুট', en: 'Vault Root' },
+  fm_folder_deeds: { bn: 'দলিল ও বায়া দলিল', en: 'Deeds & Title Records' },
+  fm_folder_deeds_desc: { bn: 'সাফ-কবলা ও ঐতিহাসিক বায়া দলিল', en: 'Conveyance & Historical Deeds' },
+  fm_folder_khatian: { bn: 'খতিয়ান ও জরিপ রেকর্ড', en: 'Khatian & Survey Records' },
+  fm_folder_khatian_desc: { bn: 'সিএস/আরএস/বিএস রেকর্ড অফ রাইটস', en: 'CS/RS/BS Survey Records' },
+  fm_folder_revenue: { bn: 'নামজারি ও কর দাখিলা', en: 'Mutation & Tax Receipts' },
+  fm_folder_revenue_desc: { bn: 'খারিজ খতিয়ান, ডিসিআর ও দাখিলা', en: 'Mutations, DCRs & Tax Dakhilas' },
+  fm_all_files: { bn: 'সকল ফাইল', en: 'All Files' },
+  fm_open_folder: { bn: 'ফোল্ডার খুলুন', en: 'Open Folder' },
+  fm_back_root: { bn: 'মূল ডিরেক্টরি', en: 'Root Directory' },
+  fm_grid_view: { bn: 'গ্রিড ভিউ', en: 'Grid View' },
+  fm_list_view: { bn: 'তালিকা ভিউ', en: 'List View' },
+  fm_items_count: { bn: '{count} টি নথি', en: '{count} items' },
+  fm_selected_count: { bn: '{count} টি নির্বাচিত', en: '{count} selected' },
+  fm_drag_hint: { bn: 'ওয়ার্কস্পেসে ড্র্যাগ করুন', en: 'Drag into Workspace' },
+  fm_add_folder_files: { bn: 'ফোল্ডারের সব যুক্ত করুন', en: 'Add Folder Files' },
+  fm_search_placeholder: { bn: 'নথি বা দলিলের নাম লিখুন...', en: 'Filter sample documents...' },
+  fm_col_name: { bn: 'ফাইলের নাম', en: 'File Name' },
+  fm_col_type: { bn: 'নথির ধরন', en: 'Document Type' },
+  fm_col_size: { bn: 'আকার', en: 'Size' },
+  fm_col_pages: { bn: 'পৃষ্ঠা', en: 'Pages' },
+  fm_col_hash: { bn: 'হ্যাশ', en: 'Hash' },
+  fm_col_status: { bn: 'অবস্থা', en: 'Status' },
+  fm_col_action: { bn: 'অ্যাকশন', en: 'Action' },
+  fm_status_in_ws: { bn: 'যুক্ত রয়েছে', en: 'In Workspace' },
+  fm_status_ready: { bn: 'প্রস্তুত', en: 'Ready' },
+  fm_fs_mode: { bn: 'ফাইলসিস্টেম: সক্রিয় নমুনা ভল্ট', en: 'Filesystem: Active Sample Vault' },
+  fm_empty_folder: { bn: 'এই ফোল্ডারে কোনো নথি পাওয়া যায়নি।', en: 'No documents found in this folder.' }
 };
 
 // Helper function to format numbers (converts English digits to Bengali digits in 'bn' mode)

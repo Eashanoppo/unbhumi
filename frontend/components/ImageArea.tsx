@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
+import { ImageIcon } from 'lucide-react';
 
 interface ImageAreaProps {
   src: string;
@@ -47,7 +48,7 @@ export const ImageArea: React.FC<ImageAreaProps> = ({
         ) : (
           <div className="flex flex-col items-center justify-center p-6 text-center text-[var(--text-secondary)]">
             <div className="w-12 h-12 mb-2 rounded-full bg-[var(--border-color)] flex items-center justify-center text-[var(--accent-deep)]">
-              📷
+              <ImageIcon className="w-6 h-6 text-[var(--text-secondary)]" />
             </div>
             <p className="text-sm font-medium">{fallbackText || alt}</p>
           </div>

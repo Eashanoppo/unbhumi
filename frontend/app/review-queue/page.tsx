@@ -8,7 +8,7 @@ import { RiskBadge } from '@/components/RiskBadge';
 import {
   AlertTriangle, CheckCircle, HelpCircle, XCircle, Filter,
   RefreshCw, Eye, MessageSquare, ArrowRight, ShieldAlert,
-  ArrowLeft, Check, ShieldCheck
+  ArrowLeft, Check, ShieldCheck, X
 } from 'lucide-react';
 
 export default function ReviewQueuePage() {
@@ -189,9 +189,9 @@ export default function ReviewQueuePage() {
               </div>
               <button
                 onClick={() => setSelectedAlert(null)}
-                className="text-[var(--text-secondary)] hover:text-black dark:hover:text-white p-1 rounded-lg"
+                className="text-[var(--text-secondary)] hover:text-black dark:hover:text-white p-1 rounded-lg hover:bg-[var(--bg-surface-soft)] transition-colors"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 
@@ -224,7 +224,7 @@ export default function ReviewQueuePage() {
                   className={`flex items-center gap-1 font-semibold ${modalStep === 1 ? 'text-[var(--accent-deep)] dark:text-[#7ED957]' : 'text-[var(--text-secondary)]'}`}
                 >
                   <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] ${modalStep > 1 ? 'bg-emerald-600 text-white' : modalStep === 1 ? 'bg-[var(--accent-deep)] text-white' : 'bg-gray-200 text-gray-700'}`}>
-                    {modalStep > 1 ? '✓' : formatNumber(1)}
+                    {modalStep > 1 ? <Check className="w-2.5 h-2.5" /> : formatNumber(1)}
                   </span>
                   <span>{t('disp_step1')}</span>
                 </button>
@@ -235,7 +235,7 @@ export default function ReviewQueuePage() {
                   className={`flex items-center gap-1 font-semibold ${modalStep === 2 ? 'text-[var(--accent-deep)] dark:text-[#7ED957]' : 'text-[var(--text-secondary)]'}`}
                 >
                   <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] ${modalStep > 2 ? 'bg-emerald-600 text-white' : modalStep === 2 ? 'bg-[var(--accent-deep)] text-white' : 'bg-gray-200 text-gray-700'}`}>
-                    {modalStep > 2 ? '✓' : formatNumber(2)}
+                    {modalStep > 2 ? <Check className="w-2.5 h-2.5" /> : formatNumber(2)}
                   </span>
                   <span>{t('disp_step2')}</span>
                 </button>

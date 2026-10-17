@@ -124,7 +124,7 @@ function ReportContent() {
         <div className="border-b-2 border-[#286B35] pb-6 flex items-start justify-between">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded bg-[#286B35] flex items-center justify-center text-[#7ED957]">
+              <div className="w-7 h-7 rounded bg-[#286B35] flex items-center justify-center text-white">
                 <ShieldCheck className="w-4 h-4" />
               </div>
               <span className="font-extrabold text-lg tracking-tight text-[#286B35]">
