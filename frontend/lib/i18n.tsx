@@ -66,6 +66,15 @@ export const DICTIONARY: Translations = {
   nav_settings: { bn: 'সেটিংস ও প্রোফাইল', en: 'Settings & Profile' },
   nav_login: { bn: 'ডেমো সাইন ইন', en: 'Demo Sign In' },
   nav_logout: { bn: 'সাইন আউট', en: 'Sign Out' },
+  nav_investigations: { bn: 'তদন্ত ও মামলা', en: 'Investigations' },
+  nav_resources: { bn: 'প্রতিবেদন ও তথ্য', en: 'Reports & Docs' },
+  nav_about: { bn: 'সিস্টেম পরিচিতি', en: 'About System' },
+  nav_cases_desc: { bn: 'সকল কেসের তালিকা ও রেকর্ড', en: 'All Case Files & Records' },
+  nav_alerts_desc: { bn: 'পর্যালোচনা সারি ও সিদ্ধান্ত', en: 'Adjudication Review Queue' },
+  nav_graph_desc: { bn: 'মালিকানা ও লেনদেন নেটওয়ার্ক', en: 'Ownership & Transfer Topology' },
+  nav_reports_desc: { bn: 'অফিসিয়াল অডিট প্রতিবেদন', en: 'Official Audit Reports' },
+  nav_methodology_desc: { bn: '১২টি রুল ও ডিটেকশন প্রযুক্তি', en: 'Detection Rules & Engine' },
+  nav_about_desc: { bn: 'প্ল্যাটফর্ম পরিচিতি ও নির্দেশিকা', en: 'Platform Mission & Specs' },
 
   // Operational Inquiries (Overview Page)
   dash_title: { bn: 'ভূমি স্বত্ব ও দলিল তদন্ত সারসংক্ষেপ', en: 'Investigation Overview' },
@@ -477,7 +486,36 @@ export const DICTIONARY: Translations = {
   disclaimer_short: {
     bn: 'আনলেফট ল্যান্ডগার্ড একটি এআই-সহায়তাকৃত পর্যালোচনামূলক টুল; এটি কোনো সরকারি সংস্থা বা আদালতের চূড়ান্ত স্বত্ব নির্ধারণী সিদ্ধান্ত নয়।',
     en: 'UNLEFT LandGuard is an AI-assisted decision-support platform; it does not replace authorized land officials, courts, or title legal clearance.'
-  }
+  },
+
+  // Interactive Demo Mode
+  nav_demo: { bn: 'ইন্টারেক্টিভ ডেমো', en: 'Interactive Demo' },
+  demo_page_badge: { bn: 'সিন্থেটিক ডেমো মোড (P3: জালিয়াতি ও দ্বৈত বিক্রি প্রতিরোধ)', en: 'Interactive Demo Mode (P3: Land Fraud & Double-Selling)' },
+  demo_page_title: { bn: 'ইন্টারেক্টিভ তদন্ত ওয়ার্কস্পেস', en: 'Interactive Investigation Workspace' },
+  demo_page_subtitle: { bn: 'বিল্ট-ইন ফাইল ম্যানেজার থেকে সিন্থেটিক জমি দলিল ড্র্যাগ-অ্যান্ড-ড্রপ করে ছয়-ধাপ বিশিষ্ট এআই যাচাই পাইপলাইন চালান।', en: 'Drag and drop synthetic land records from the built-in file manager and run the 6-stage verification pipeline.' },
+  demo_cases_tab: { bn: 'দৃশ্যকল্প নির্বাচন করুন', en: 'Select Scenario' },
+  demo_file_manager: { bn: 'বিল্ট-ইন ডেমো ফাইল ম্যানেজার', en: 'Built-in Demo File Manager' },
+  demo_file_manager_desc: { bn: 'নির্বাচিত মামলার জন্য প্রস্তুতকৃত সিন্থেটিক দলিলসমূহ। ড্র্যাগ করে ওয়ার্কস্পেসে আনুন।', en: 'Synthetic document fixtures prepared for this scenario. Drag directly into workspace.' },
+  demo_workspace: { bn: 'তদন্ত ওয়ার্কস্পেস ও ড্রপ জোন', en: 'Investigation Workspace & Drop Zone' },
+  demo_workspace_drop_hint: { bn: 'ফাইল ড্র্যাগ করে এখানে ফেলুন অথবা ফাইল সিলেক্ট করুন', en: 'Drag documents here from file manager or browse local files' },
+  demo_add_all: { bn: 'সবগুলো ওয়ার্কস্পেসে যোগ করুন', en: 'Add All to Workspace' },
+  demo_run_pipeline: { bn: 'যাচাই পাইপলাইন চালু করুন', en: 'Run Verification Pipeline' },
+  demo_pipeline_running: { bn: 'পাইপলাইন চলমান...', en: 'Pipeline Running...' },
+  demo_reset_case: { bn: 'ডেমো রিসেট করুন', en: 'Reset Demo' },
+  demo_stage_inspector: { bn: 'ধাপের বিস্তারিত পর্যবেক্ষণ (Stage Inspector)', en: 'Stage Details Inspector' },
+  demo_preview_title: { bn: 'নথি পরিদর্শন প্রিভিউ', en: 'Document Preview' },
+  demo_synthetic_watermark: { bn: 'সিন্থেটিক ডেমো নমুনা — কোনো বাস্তব নাগরিকের নথি নয়', en: 'SYNTHETIC DEMO FIXTURE — NOT A REAL CITIZEN RECORD' },
+  demo_provenance: { bn: 'অ্যালগরিদম উৎস ও প্রামাণ্যতা', en: 'Algorithm Provenance' },
+  demo_findings_tab: { bn: 'শনাক্তকৃত অসঙ্গতিসমূহ', en: 'Detected Anomalies' },
+  demo_graph_tab: { bn: 'মালিকানা সম্পর্ক গ্রাফ', en: 'Ownership Graph' },
+  demo_report_tab: { bn: 'তদন্ত প্রতিবেদন', en: 'Investigation Report' },
+  demo_evidence_tab: { bn: 'নিষ্কাশিত উপাত্ত', en: 'Extracted Fields' },
+  demo_s1_name: { bn: 'দলিল আপলোড', en: 'Document Intake' },
+  demo_s2_name: { bn: 'SHA-256 ফিঙ্গারপ্রিন্ট', en: 'SHA-256 Fingerprint' },
+  demo_s3_name: { bn: 'ওসিআর ও ফিল্ড নিষ্কাশন', en: 'OCR & Field Extraction' },
+  demo_s4_name: { bn: 'উপাত্ত স্বাভাবিকীকরণ', en: 'Field Normalization' },
+  demo_s5_name: { bn: 'রুল ইঞ্জিন ক্রস-ভেরিফিকেশন', en: 'Rule Engine Cross-Check' },
+  demo_s6_name: { bn: 'গ্রাফ ও ঝুঁকি নিরূপণ', en: 'Graph & Risk Scoring' }
 };
 
 // Helper function to format numbers (converts English digits to Bengali digits in 'bn' mode)

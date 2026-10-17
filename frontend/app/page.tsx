@@ -8,7 +8,7 @@ import { ImageArea } from '@/components/ImageArea';
 import { RiskBadge } from '@/components/RiskBadge';
 import {
   ShieldCheck, AlertTriangle, GitFork, FileText, CheckCircle2,
-  ArrowRight, Search, Lock, Layers, Eye, HelpCircle, FileCheck
+  ArrowRight, Search, Lock, Layers, Eye, HelpCircle, FileCheck, Sparkles
 } from 'lucide-react';
 
 export default function LandingPage() {
@@ -129,10 +129,11 @@ export default function LandingPage() {
                 <ArrowRight className="w-4 h-4 stroke-[2.5]" />
               </Link>
               <Link
-                href="/cases/UB-2026-1002"
-                className="flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold border border-[var(--border-color)] bg-[var(--bg-surface)] text-[var(--text-primary)] hover:bg-[var(--bg-surface-soft)] transition-colors"
+                href="/demo"
+                className="flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-bold border border-[var(--brand-accent)]/60 bg-[var(--accent-light)] text-[var(--accent-deep)] dark:text-[#7ED957] hover:bg-[var(--brand-accent)] hover:text-[var(--cta-text)] transition-all shadow-xs"
               >
-                <span>{t('cta_demo_explore')}</span>
+                <Sparkles className="w-4 h-4" />
+                <span>{language === 'bn' ? 'ইন্টারেক্টিভ ডেমো চালান' : 'Try Interactive Demo'}</span>
               </Link>
             </div>
 

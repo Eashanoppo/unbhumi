@@ -20,6 +20,9 @@ class OCRService:
             document.calculate_hash(file_bytes)
         elif document.file:
             document.calculate_hash()
+        elif not document.file_hash:
+            document.file_hash = hashlib.sha256(f"{document.title}_{document.case_id or 'demo'}_{document.id}".encode()).hexdigest()
+            document.save()
 
         document.status = 'processing'
         document.save()

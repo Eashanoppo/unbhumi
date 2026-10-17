@@ -46,11 +46,16 @@ class DocumentListView(APIView):
         if case_id:
             case = get_object_or_404(Case, pk=case_id) if str(case_id).isdigit() else get_object_or_404(Case, case_number=case_id)
 
+        file_hash = request.data.get('file_hash', '')
+        file_size_bytes = int(request.data.get('file_size_bytes', 0))
+
         doc = Document.objects.create(
             case=case,
             document_type=doc_type,
             title=title,
             file=file_obj,
+            file_hash=file_hash,
+            file_size_bytes=file_size_bytes,
             uploaded_by=request.user if request.user.is_authenticated else None
         )
 
@@ -76,6 +81,15 @@ class DocumentDetailView(APIView):
     def get(self, request, pk):
         doc = get_object_or_404(Document, pk=pk)
         return Response(DocumentSerializer(doc).data)
+
+    def delete(self, request, pk):
+        doc = get_object_or_404(Document, pk=pk)
+        case = doc.case
+        doc.delete()
+        if case:
+            engine = RuleEngine(case)
+            engine.evaluate_all()
+        return Response({'success': True, 'message': 'নথি সফলভাবে অপসারিত হয়েছে।'}, status=status.HTTP_200_OK)
 
 
 class DocumentFieldsView(APIView):
@@ -129,12 +143,16 @@ class CaseDocumentUploadView(APIView):
         doc_type = request.data.get('document_type', 'deed')
         title = request.data.get('title', 'সংযুক্ত দলিল')
         file_obj = request.FILES.get('file')
+        file_hash = request.data.get('file_hash', '')
+        file_size_bytes = int(request.data.get('file_size_bytes', 0))
 
         doc = Document.objects.create(
             case=case,
             document_type=doc_type,
             title=title,
             file=file_obj,
+            file_hash=file_hash,
+            file_size_bytes=file_size_bytes,
             uploaded_by=request.user if request.user.is_authenticated else None
         )
 

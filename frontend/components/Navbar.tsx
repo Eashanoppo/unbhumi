@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useLanguage } from '@/lib/i18n';
@@ -9,7 +9,7 @@ import { api, User } from '@/lib/api';
 import {
   FileText, PlusCircle, ShieldCheck, Sun, Moon, Globe, Settings,
   Menu, X, GitFork, AlertTriangle, Layers, BookOpen, LogIn, LogOut,
-  ChevronRight, Sparkles
+  ChevronRight, ChevronDown, Sparkles, Info
 } from 'lucide-react';
 
 export const Navbar: React.FC = () => {
@@ -18,12 +18,27 @@ export const Navbar: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState<'investigations' | 'reports' | null>(null);
   const [mounted, setMounted] = useState(false);
+  const navRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setMounted(true);
     setCurrentUser(api.getCurrentUser());
+    setOpenDropdown(null);
+    setMobileMenuOpen(false);
   }, [pathname]);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (navRef.current && !navRef.current.contains(e.target as Node)) {
+        setOpenDropdown(null);
+      }
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, []);
 
   // Keep Render server live (pings /api/v1/health/ every 8 minutes)
   useEffect(() => {
@@ -43,20 +58,69 @@ export const Navbar: React.FC = () => {
     setLanguage(language === 'bn' ? 'en' : 'bn');
   };
 
-  const navLinks = [
-    { href: '/dashboard', label: t('nav_overview'), icon: Layers },
-    { href: '/cases', label: t('nav_cases'), icon: ShieldCheck },
-    { href: '/review-queue', label: t('nav_alerts'), icon: AlertTriangle },
-    { href: '/ownership-graph', label: t('nav_graph'), icon: GitFork },
-    { href: '/reports', label: t('nav_reports'), icon: FileText },
-    { href: '/methodology', label: t('nav_methodology'), icon: BookOpen },
+  // Submenu items
+  const investigationSubmenu = [
+    {
+      href: '/cases',
+      title: t('nav_cases'),
+      desc: t('nav_cases_desc'),
+      icon: ShieldCheck,
+      badge: 'Database'
+    },
+    {
+      href: '/review-queue',
+      title: t('nav_alerts'),
+      desc: t('nav_alerts_desc'),
+      icon: AlertTriangle,
+      badge: 'Action'
+    },
+    {
+      href: '/ownership-graph',
+      title: t('nav_graph'),
+      desc: t('nav_graph_desc'),
+      icon: GitFork,
+      badge: 'Network'
+    }
   ];
 
+  const resourcesSubmenu = [
+    {
+      href: '/reports',
+      title: t('nav_reports'),
+      desc: t('nav_reports_desc'),
+      icon: FileText
+    },
+    {
+      href: '/methodology',
+      title: t('nav_methodology'),
+      desc: t('nav_methodology_desc'),
+      icon: BookOpen
+    },
+    {
+      href: '/about',
+      title: t('nav_about'),
+      desc: t('nav_about_desc'),
+      icon: Info
+    }
+  ];
+
+  const isInvestigationActive = ['/cases', '/review-queue', '/ownership-graph'].some((p) =>
+    pathname.startsWith(p)
+  );
+
+  const isResourcesActive = ['/reports', '/methodology', '/about'].some((p) =>
+    pathname.startsWith(p)
+  );
+
   return (
-    <header suppressHydrationWarning className="sticky top-0 z-50 w-full border-b border-[var(--border-color)] bg-[var(--bg-surface)]/95 backdrop-blur-md transition-colors duration-200">
+    <header
+      ref={navRef}
+      suppressHydrationWarning
+      className="sticky top-0 z-50 w-full border-b border-[var(--border-color)] bg-[var(--bg-surface)]/95 backdrop-blur-md transition-colors duration-200"
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Logo & Brand */}
+          {/* 1. Logo & Brand */}
           <Link href="/" className="flex items-center gap-3 group shrink-0">
             <div className="w-9 h-9 rounded-xl bg-[var(--brand-accent)] text-[#0B1B28] dark:text-[#0B1116] flex items-center justify-center shadow-sm transition-transform group-hover:scale-105">
               <ShieldCheck className="w-5 h-5 stroke-[2.4]" />
@@ -71,31 +135,160 @@ export const Navbar: React.FC = () => {
             </div>
           </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center gap-1">
-            {navLinks.map((link) => {
-              const Icon = link.icon;
-              const isActive = pathname === link.href || (link.href !== '/' && pathname.startsWith(link.href));
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
-                    isActive
-                      ? 'bg-[var(--accent-light)] text-[var(--text-primary)] border border-[var(--border-color)] shadow-xs'
-                      : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-soft)]'
-                  }`}
-                >
-                  <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-[var(--brand-accent)] dark:text-[var(--brand-accent)]' : 'opacity-70'}`} />
-                  <span>{link.label}</span>
-                </Link>
-              );
-            })}
+          {/* 2. Desktop Navigation with Clean Submenus */}
+          <nav className="hidden lg:flex items-center gap-1.5">
+            {/* Direct Link: Dashboard */}
+            <Link
+              href="/dashboard"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                pathname === '/dashboard'
+                  ? 'bg-[var(--accent-light)] text-[var(--text-primary)] border border-[var(--border-color)] shadow-xs'
+                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-soft)]'
+              }`}
+            >
+              <Layers className={`w-3.5 h-3.5 ${pathname === '/dashboard' ? 'text-[var(--brand-accent)]' : 'opacity-70'}`} />
+              <span>{t('nav_overview')}</span>
+            </Link>
+
+            {/* Direct Link: Interactive Demo */}
+            <Link
+              href="/demo"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                pathname === '/demo'
+                  ? 'bg-[var(--accent-light)] text-[var(--text-primary)] border border-[var(--brand-accent)] shadow-xs ring-1 ring-[var(--brand-accent)]/30'
+                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-soft)]'
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5 text-[var(--brand-accent)]" />
+              <span>{t('nav_demo')}</span>
+              <span className="ml-1 text-[9px] font-mono px-1.5 py-0.2 rounded-full bg-[var(--brand-accent)] text-[var(--cta-text)] font-extrabold">
+                P3
+              </span>
+            </Link>
+
+            {/* Submenu Dropdown 1: Investigations & Analysis */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setOpenDropdown(openDropdown === 'investigations' ? null : 'investigations')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                  isInvestigationActive || openDropdown === 'investigations'
+                    ? 'bg-[var(--accent-light)] text-[var(--text-primary)] border border-[var(--border-color)] shadow-xs'
+                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-soft)]'
+                }`}
+              >
+                <ShieldCheck className={`w-3.5 h-3.5 ${isInvestigationActive ? 'text-[var(--brand-accent)]' : 'opacity-70'}`} />
+                <span>{t('nav_investigations')}</span>
+                <ChevronDown className={`w-3 h-3 transition-transform ${openDropdown === 'investigations' ? 'rotate-180 text-[var(--brand-accent)]' : 'opacity-60'}`} />
+              </button>
+
+              {/* Investigations Popover Menu */}
+              {openDropdown === 'investigations' && (
+                <div className="absolute left-0 mt-2 w-72 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-surface)] p-2 shadow-xl ring-1 ring-black/5 animate-in fade-in-50 slide-in-from-top-1 z-50">
+                  <div className="px-3 py-1.5 border-b border-[var(--border-color)]/60 text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-wider">
+                    {language === 'bn' ? 'অনুসন্ধান ও সিদ্ধান্ত মডিউল' : 'Investigation Modules'}
+                  </div>
+                  <div className="space-y-1 mt-1">
+                    {investigationSubmenu.map((item) => {
+                      const Icon = item.icon;
+                      const isActive = pathname.startsWith(item.href);
+                      return (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          onClick={() => setOpenDropdown(null)}
+                          className={`flex items-start gap-3 p-2.5 rounded-xl transition-all ${
+                            isActive
+                              ? 'bg-[var(--accent-light)] text-[var(--text-primary)] font-bold'
+                              : 'hover:bg-[var(--bg-surface-soft)] text-[var(--text-primary)]'
+                          }`}
+                        >
+                          <div className="w-7 h-7 rounded-lg bg-[var(--bg-surface-soft)] flex items-center justify-center shrink-0 mt-0.5 text-[var(--brand-accent)]">
+                            <Icon className="w-4 h-4" />
+                          </div>
+                          <div className="flex-1 truncate">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-bold text-[var(--text-primary)]">
+                                {item.title}
+                              </span>
+                              {item.badge && (
+                                <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-[var(--bg-surface-soft)] text-[var(--text-secondary)]">
+                                  {item.badge}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[10px] text-[var(--text-secondary)] line-clamp-1 mt-0.5">
+                              {item.desc}
+                            </p>
+                          </div>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Submenu Dropdown 2: Reports & Knowledge */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setOpenDropdown(openDropdown === 'reports' ? null : 'reports')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                  isResourcesActive || openDropdown === 'reports'
+                    ? 'bg-[var(--accent-light)] text-[var(--text-primary)] border border-[var(--border-color)] shadow-xs'
+                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-soft)]'
+                }`}
+              >
+                <BookOpen className={`w-3.5 h-3.5 ${isResourcesActive ? 'text-[var(--brand-accent)]' : 'opacity-70'}`} />
+                <span>{t('nav_resources')}</span>
+                <ChevronDown className={`w-3 h-3 transition-transform ${openDropdown === 'reports' ? 'rotate-180 text-[var(--brand-accent)]' : 'opacity-60'}`} />
+              </button>
+
+              {/* Reports Popover Menu */}
+              {openDropdown === 'reports' && (
+                <div className="absolute left-0 mt-2 w-72 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-surface)] p-2 shadow-xl ring-1 ring-black/5 animate-in fade-in-50 slide-in-from-top-1 z-50">
+                  <div className="px-3 py-1.5 border-b border-[var(--border-color)]/60 text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-wider">
+                    {language === 'bn' ? 'নথি ও কারিগরি নির্দেশিকা' : 'Reports & Governance'}
+                  </div>
+                  <div className="space-y-1 mt-1">
+                    {resourcesSubmenu.map((item) => {
+                      const Icon = item.icon;
+                      const isActive = pathname.startsWith(item.href);
+                      return (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          onClick={() => setOpenDropdown(null)}
+                          className={`flex items-start gap-3 p-2.5 rounded-xl transition-all ${
+                            isActive
+                              ? 'bg-[var(--accent-light)] text-[var(--text-primary)] font-bold'
+                              : 'hover:bg-[var(--bg-surface-soft)] text-[var(--text-primary)]'
+                          }`}
+                        >
+                          <div className="w-7 h-7 rounded-lg bg-[var(--bg-surface-soft)] flex items-center justify-center shrink-0 mt-0.5 text-[var(--brand-accent)]">
+                            <Icon className="w-4 h-4" />
+                          </div>
+                          <div className="flex-1 truncate">
+                            <span className="text-xs font-bold text-[var(--text-primary)] block">
+                              {item.title}
+                            </span>
+                            <p className="text-[10px] text-[var(--text-secondary)] line-clamp-1 mt-0.5">
+                              {item.desc}
+                            </p>
+                          </div>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
           </nav>
 
-          {/* Actions & Utilities */}
+          {/* 3. Actions & Utilities */}
           <div className="hidden sm:flex items-center gap-2.5 shrink-0">
-            {/* New Investigation Primary Action CTA */}
+            {/* Primary Action CTA: New Investigation */}
             <Link
               href="/documents/new"
               className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-[var(--cta-text)] transition-all shadow-sm hover:shadow active:scale-95"
@@ -165,7 +358,7 @@ export const Navbar: React.FC = () => {
             )}
           </div>
 
-          {/* Mobile menu trigger button */}
+          {/* 4. Mobile menu trigger button */}
           <div className="flex sm:hidden items-center gap-1.5">
             <button
               suppressHydrationWarning
@@ -189,8 +382,8 @@ export const Navbar: React.FC = () => {
 
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-1.5 rounded-lg text-[var(--text-primary)] hover:bg-[var(--bg-surface-soft)] border border-[var(--border-color)]"
-              aria-label="Open menu"
+              className="p-2 border border-[var(--border-color)] bg-[var(--bg-surface-soft)] rounded-xl text-[var(--text-primary)]"
+              aria-label="Open mobile menu"
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
@@ -198,90 +391,123 @@ export const Navbar: React.FC = () => {
         </div>
       </div>
 
-      {/* Mobile Drawer Panel */}
+      {/* 5. Clean Mobile Drawer Panel */}
       {mobileMenuOpen && (
-        <div className="sm:hidden border-b border-[var(--border-color)] bg-[var(--bg-surface)] px-4 pt-3 pb-6 space-y-2.5 shadow-xl animate-in slide-in-from-top-2">
+        <div className="sm:hidden border-b border-[var(--border-color)] bg-[var(--bg-surface)] px-4 pt-3 pb-6 space-y-3 shadow-xl animate-in slide-in-from-top-2 max-h-[85vh] overflow-y-auto">
           {/* Mobile Primary CTA */}
           <Link
             href="/documents/new"
             onClick={() => setMobileMenuOpen(false)}
-            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl font-bold bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-[var(--cta-text)] shadow-sm mb-3"
+            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl font-bold bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-[var(--cta-text)] shadow-sm"
           >
             <PlusCircle className="w-4 h-4 stroke-[2.5]" />
             <span>{t('cta_verify')}</span>
           </Link>
 
-          {/* Navigation items */}
-          <div className="space-y-1">
-            {navLinks.map((link) => {
-              const Icon = link.icon;
-              const isActive = pathname === link.href || (link.href !== '/' && pathname.startsWith(link.href));
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
-                    isActive
-                      ? 'bg-[var(--accent-light)] text-[var(--text-primary)] font-bold border border-[var(--border-color)]'
-                      : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-soft)]'
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <Icon className={`w-4 h-4 ${isActive ? 'text-[var(--brand-accent)]' : 'opacity-70'}`} />
-                    <span>{link.label}</span>
-                  </div>
-                  <ChevronRight className="w-3.5 h-3.5 opacity-40" />
-                </Link>
-              );
-            })}
+          {/* Top Links */}
+          <div className="grid grid-cols-2 gap-2 pt-1">
+            <Link
+              href="/dashboard"
+              onClick={() => setMobileMenuOpen(false)}
+              className={`flex items-center justify-center gap-1.5 p-2 rounded-xl text-xs font-bold border ${
+                pathname === '/dashboard'
+                  ? 'border-[var(--brand-accent)] bg-[var(--accent-light)] text-[var(--text-primary)]'
+                  : 'border-[var(--border-color)] bg-[var(--bg-surface-soft)] text-[var(--text-primary)]'
+              }`}
+            >
+              <Layers className="w-3.5 h-3.5 text-[var(--brand-accent)]" />
+              <span>{t('nav_overview')}</span>
+            </Link>
+
+            <Link
+              href="/demo"
+              onClick={() => setMobileMenuOpen(false)}
+              className={`flex items-center justify-center gap-1.5 p-2 rounded-xl text-xs font-bold border ${
+                pathname === '/demo'
+                  ? 'border-[var(--brand-accent)] bg-[var(--accent-light)] text-[var(--text-primary)]'
+                  : 'border-[var(--border-color)] bg-[var(--bg-surface-soft)] text-[var(--text-primary)]'
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5 text-[var(--brand-accent)]" />
+              <span>{t('nav_demo')}</span>
+            </Link>
           </div>
 
-          <Link
-            href="/settings"
-            onClick={() => setMobileMenuOpen(false)}
-            className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
-              pathname === '/settings'
-                ? 'bg-[var(--accent-light)] text-[var(--text-primary)] font-bold border border-[var(--border-color)]'
-                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-soft)]'
-            }`}
-          >
-            <div className="flex items-center gap-2.5">
-              <Settings className="w-4 h-4 opacity-70" />
-              <span>{language === 'bn' ? 'সেটিংস ও প্রোফাইল' : 'Settings & Profile'}</span>
+          {/* Group 1: Investigations */}
+          <div className="pt-2">
+            <span className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-wider block px-1 mb-1.5">
+              {t('nav_investigations')}
+            </span>
+            <div className="space-y-1">
+              {investigationSubmenu.map((item) => {
+                const Icon = item.icon;
+                const isActive = pathname.startsWith(item.href);
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`flex items-center justify-between p-2.5 rounded-xl text-xs font-semibold ${
+                      isActive
+                        ? 'bg-[var(--accent-light)] text-[var(--text-primary)] font-bold border border-[var(--border-color)]'
+                        : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-soft)]'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <Icon className="w-4 h-4 text-[var(--brand-accent)]" />
+                      <span>{item.title}</span>
+                    </div>
+                    <ChevronRight className="w-3.5 h-3.5 opacity-40" />
+                  </Link>
+                );
+              })}
             </div>
-            <ChevronRight className="w-3.5 h-3.5 opacity-40" />
-          </Link>
+          </div>
 
-          {/* Mobile Footer Auth Section */}
-          <div className="pt-3 border-t border-[var(--border-color)]">
-            {currentUser ? (
-              <div className="flex items-center justify-between px-1">
-                <div>
-                  <span className="text-xs font-bold text-[var(--text-primary)] block">
-                    {currentUser.profile?.full_name_bn || currentUser.username}
-                  </span>
-                  <span className="text-[10px] text-[var(--text-secondary)]">
-                    {currentUser.profile?.role || 'Land Reviewer'}
-                  </span>
-                </div>
-                <button
-                  onClick={() => { api.logout(); setCurrentUser(null); setMobileMenuOpen(false); }}
-                  className="text-xs font-bold text-red-600 hover:text-red-700 px-2.5 py-1 rounded-lg border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/30"
-                >
-                  {t('nav_logout')}
-                </button>
+          {/* Group 2: Reports & Knowledge */}
+          <div className="pt-2 border-t border-[var(--border-color)]">
+            <span className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-wider block px-1 mb-1.5">
+              {t('nav_resources')}
+            </span>
+            <div className="space-y-1">
+              {resourcesSubmenu.map((item) => {
+                const Icon = item.icon;
+                const isActive = pathname.startsWith(item.href);
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`flex items-center justify-between p-2.5 rounded-xl text-xs font-semibold ${
+                      isActive
+                        ? 'bg-[var(--accent-light)] text-[var(--text-primary)] font-bold border border-[var(--border-color)]'
+                        : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-soft)]'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <Icon className="w-4 h-4 text-[var(--brand-accent)]" />
+                      <span>{item.title}</span>
+                    </div>
+                    <ChevronRight className="w-3.5 h-3.5 opacity-40" />
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Bottom user section */}
+          <div className="pt-2 border-t border-[var(--border-color)]">
+            <Link
+              href="/settings"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center justify-between p-2.5 rounded-xl text-xs font-semibold text-[var(--text-secondary)] hover:bg-[var(--bg-surface-soft)]"
+            >
+              <div className="flex items-center gap-2.5">
+                <Settings className="w-4 h-4 opacity-70" />
+                <span>{t('nav_settings')}</span>
               </div>
-            ) : (
-              <Link
-                href="/login"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center justify-center gap-2 w-full py-2 rounded-xl text-xs font-bold border border-[var(--border-color)] text-[var(--text-primary)] hover:bg-[var(--bg-surface-soft)]"
-              >
-                <LogIn className="w-3.5 h-3.5" />
-                <span>{t('nav_login')}</span>
-              </Link>
-            )}
+              <ChevronRight className="w-3.5 h-3.5 opacity-40" />
+            </Link>
           </div>
         </div>
       )}

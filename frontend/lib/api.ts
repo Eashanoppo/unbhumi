@@ -233,11 +233,14 @@ function getAuthHeader(): Record<string, string> {
 
 export async function fetchApi<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const url = `${API_BASE}${endpoint}`;
-  const headers = {
-    'Content-Type': 'application/json',
+  const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
+  const headers: Record<string, string> = {
     ...getAuthHeader(),
-    ...options.headers,
+    ...(options.headers as Record<string, string>),
   };
+  if (!isFormData && !headers['Content-Type']) {
+    headers['Content-Type'] = 'application/json';
+  }
 
   try {
     const res = await fetch(url, { ...options, headers });
@@ -253,9 +256,11 @@ export async function fetchApi<T>(endpoint: string, options: RequestInit = {}): 
 
           // Retry once without the stale Authorization header
           const retryHeaders: Record<string, string> = {
-            'Content-Type': 'application/json',
             ...(options.headers as Record<string, string>),
           };
+          if (!isFormData && !retryHeaders['Content-Type']) {
+            retryHeaders['Content-Type'] = 'application/json';
+          }
           delete retryHeaders['Authorization'];
           delete retryHeaders['authorization'];
 
@@ -457,6 +462,37 @@ export const api = {
 
   async getDocumentDetail(docId: number): Promise<DocumentItem> {
     return await fetchApi<DocumentItem>(`/documents/${docId}/`);
+  },
+
+  async uploadCaseDocument(caseId: string, data: { title: string; document_type: string; file?: File; file_hash?: string; file_size_bytes?: number }): Promise<DocumentItem> {
+    if (data.file) {
+      const formData = new FormData();
+      formData.append('document_type', data.document_type);
+      formData.append('title', data.title);
+      formData.append('file', data.file);
+      if (data.file_hash) formData.append('file_hash', data.file_hash);
+      if (data.file_size_bytes) formData.append('file_size_bytes', String(data.file_size_bytes));
+      return await fetchApi<DocumentItem>(`/cases/${caseId}/documents/`, {
+        method: 'POST',
+        body: formData
+      });
+    } else {
+      return await fetchApi<DocumentItem>(`/cases/${caseId}/documents/`, {
+        method: 'POST',
+        body: JSON.stringify({
+          document_type: data.document_type,
+          title: data.title,
+          file_hash: data.file_hash || '',
+          file_size_bytes: data.file_size_bytes || 0
+        })
+      });
+    }
+  },
+
+  async deleteDocument(docId: number): Promise<{ success: boolean; message: string }> {
+    return await fetchApi<{ success: boolean; message: string }>(`/documents/${docId}/`, {
+      method: 'DELETE'
+    });
   },
 
   async correctField(docId: number, fieldKey: string, correctedValue: string) {
