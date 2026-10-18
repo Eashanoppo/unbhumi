@@ -62,15 +62,18 @@ function ReportContent() {
   const anomalies = reportData?.anomalies || [];
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6">
       {/* Control Bar (Hidden when printing) */}
-      <div className="no-print p-4 rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)] flex flex-wrap items-center justify-between gap-3 shadow-sm">
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold text-[var(--text-secondary)]">{t('report_case_switch')}</span>
+      <div className="no-print p-4 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-surface)] flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+          <label htmlFor="case-select-report" className="text-xs font-bold text-[var(--text-secondary)] whitespace-nowrap">
+            {t('report_case_switch')}
+          </label>
           <select
+            id="case-select-report"
             value={selectedCaseNumber}
             onChange={(e) => setSelectedCaseNumber(e.target.value)}
-            className="px-3 py-1.5 text-xs font-bold rounded-lg border border-[var(--border-color)] bg-[var(--bg-surface)]"
+            className="w-full sm:w-auto px-3.5 py-2 text-xs font-bold rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)] text-[var(--text-primary)] focus:ring-2 focus:ring-[var(--brand-accent)] min-h-[44px] touch-target cursor-pointer"
           >
             {cases.map((c) => (
               <option key={c.id} value={c.case_number}>
@@ -80,21 +83,21 @@ function ReportContent() {
           </select>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2.5">
           {/* Report Language Selector */}
-          <div className="flex rounded-lg border border-[var(--border-color)] p-0.5 bg-[var(--bg-surface-soft)]">
+          <div className="flex rounded-xl border border-[var(--border-color)] p-0.5 bg-[var(--bg-surface-soft)] text-xs">
             <button
               onClick={() => setReportLang('bn')}
-              className={`px-2 py-1 text-xs font-bold rounded ${
-                reportLang === 'bn' ? 'bg-[var(--accent-deep)] text-white' : 'text-[var(--text-secondary)]'
+              className={`px-3 py-2 text-xs font-bold rounded-lg min-h-[40px] touch-target transition-all cursor-pointer ${
+                reportLang === 'bn' ? 'bg-[var(--brand-accent)] text-white shadow-2xs' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
               }`}
             >
               বাংলা রিপোর্ট
             </button>
             <button
               onClick={() => setReportLang('en')}
-              className={`px-2 py-1 text-xs font-bold rounded ${
-                reportLang === 'en' ? 'bg-[var(--accent-deep)] text-white' : 'text-[var(--text-secondary)]'
+              className={`px-3 py-2 text-xs font-bold rounded-lg min-h-[40px] touch-target transition-all cursor-pointer ${
+                reportLang === 'en' ? 'bg-[var(--brand-accent)] text-white shadow-2xs' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
               }`}
             >
               English Report
@@ -103,16 +106,16 @@ function ReportContent() {
 
           <button
             onClick={handleDownloadJson}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-[var(--border-color)] bg-[var(--bg-surface-soft)] hover:bg-[var(--border-color)]"
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold border border-[var(--border-color)] bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-soft)] text-[var(--text-primary)] min-h-[44px] touch-target transition-colors cursor-pointer"
           >
-            <Download className="w-3.5 h-3.5" />
+            <Download className="w-4 h-4 text-[var(--text-secondary)]" />
             <span>{t('export_json')}</span>
           </button>
           <button
             onClick={handlePrint}
-            className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold bg-[var(--accent-deep)] text-[#FFF8E7] hover:bg-[var(--accent-deep)]/90 shadow-sm"
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl text-xs font-bold bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-[var(--cta-text)] shadow-sm hover:shadow-md min-h-[44px] touch-target transition-all cursor-pointer active:scale-95"
           >
-            <Printer className="w-3.5 h-3.5 text-[#7ED957]" />
+            <Printer className="w-4 h-4 stroke-[2.2]" />
             <span>{t('report_print_btn')}</span>
           </button>
         </div>
@@ -208,24 +211,26 @@ function ReportContent() {
           <h2 className="text-xs font-bold uppercase tracking-wider text-[#286B35]">
             {reportLang === 'bn' ? '৩. বিশ্লেষিত নথিপত্র ও ক্রিপ্টোগ্রাফিক হ্যাশ (Enrolled Documents)' : '3. Enrolled Documents & Cryptographic Hashes'}
           </h2>
-          <table className="w-full text-xs text-left border border-gray-200 border-collapse">
-            <thead>
-              <tr className="bg-gray-100 text-gray-700">
-                <th className="p-2 border border-gray-200">{reportLang === 'bn' ? 'নথির শিরোনাম' : 'Document Title'}</th>
-                <th className="p-2 border border-gray-200">{reportLang === 'bn' ? 'শ্রেণি' : 'Category'}</th>
-                <th className="p-2 border border-gray-200">{reportLang === 'bn' ? 'SHA-256 ক্রিপ্টোগ্রাফিক ফিঙ্গারপ্রিন্ট' : 'SHA-256 Cryptographic Hash'}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {documents.map((d: any, idx: number) => (
-                <tr key={idx} className="border-b border-gray-200">
-                  <td className="p-2 font-medium">{d.title}</td>
-                  <td className="p-2">{d.type}</td>
-                  <td className="p-2 font-mono text-[11px] text-gray-600">{d.sha256}</td>
+          <div className="overflow-x-auto -mx-2 sm:mx-0">
+            <table className="w-full text-xs text-left border border-gray-200 border-collapse min-w-[320px]">
+              <thead>
+                <tr className="bg-gray-100 text-gray-700">
+                  <th className="p-2 border border-gray-200">{reportLang === 'bn' ? 'নথির শিরোনাম' : 'Document Title'}</th>
+                  <th className="p-2 border border-gray-200">{reportLang === 'bn' ? 'শ্রেণি' : 'Category'}</th>
+                  <th className="p-2 border border-gray-200">{reportLang === 'bn' ? 'SHA-256 ক্রিপ্টোগ্রাফিক ফিঙ্গারপ্রিন্ট' : 'SHA-256 Cryptographic Hash'}</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {documents.map((d: any, idx: number) => (
+                  <tr key={idx} className="border-b border-gray-200">
+                    <td className="p-2 font-medium">{d.title}</td>
+                    <td className="p-2 whitespace-nowrap">{d.type}</td>
+                    <td className="p-2 font-mono text-[10px] text-gray-600 break-all">{d.sha256}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         {/* Findings and Traceable Evidence */}

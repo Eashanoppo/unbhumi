@@ -2279,21 +2279,21 @@ export default function InteractiveDemoPage() {
             </p>
           </div>
 
-          <div className="flex items-center gap-2.5 shrink-0">
+          <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 shrink-0 w-full sm:w-auto">
             <button
               onClick={handleResetDemo}
               disabled={isResetting || isPipelineRunning}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold border border-[var(--border-color)] bg-[var(--bg-surface-soft)] text-[var(--text-primary)] hover:border-[var(--brand-accent)] transition-all cursor-pointer disabled:opacity-50"
+              className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold border border-[var(--border-color)] bg-[var(--bg-surface-soft)] text-[var(--text-primary)] hover:border-[var(--brand-accent)] transition-all min-h-[44px] touch-target cursor-pointer disabled:opacity-50"
             >
               <RotateCcw className={`w-3.5 h-3.5 ${isResetting ? 'animate-spin' : ''}`} />
-              <span>{isResetting ? 'রিসেট হচ্ছে...' : t('demo_reset_case')}</span>
+              <span>{isResetting ? (language === 'bn' ? 'রিসেট হচ্ছে...' : 'Resetting...') : t('demo_reset_case')}</span>
             </button>
 
             <Link
               href="/documents/new"
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-[var(--cta-text)] transition-all shadow-xs"
+              className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-[var(--cta-text)] transition-all shadow-xs min-h-[44px] touch-target"
             >
-              <UploadCloud className="w-3.5 h-3.5 stroke-[2.4]" />
+              <UploadCloud className="w-4 h-4 stroke-[2.4]" />
               <span>{language === 'bn' ? 'লাইভ মোডে আপলোড' : 'Live Mode Upload'}</span>
             </Link>
           </div>

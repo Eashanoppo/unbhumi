@@ -2,13 +2,12 @@
 
 import React from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useLanguage } from '@/lib/i18n';
 import { ImageArea } from '@/components/ImageArea';
 import { RiskBadge } from '@/components/RiskBadge';
 import {
   ShieldCheck, AlertTriangle, GitFork, FileText, CheckCircle2,
-  ArrowRight, Search, Lock, Layers, Eye, HelpCircle, FileCheck, Sparkles
+  ArrowRight, Sparkles, HelpCircle, FileCheck, Layers
 } from 'lucide-react';
 
 export default function LandingPage() {
@@ -92,13 +91,13 @@ export default function LandingPage() {
   ];
 
   return (
-    <div className="space-y-16 sm:space-y-24 py-8 sm:py-12">
+    <div className="space-y-12 sm:space-y-20 py-6 sm:py-12">
       {/* 1. Hero Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-          <div className="lg:col-span-7 space-y-6 text-left">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-[var(--bg-surface-soft)] text-[var(--accent-deep)] dark:text-[#A3B4A6] border border-[var(--border-color)]">
-              <span className="w-2 h-2 rounded-full bg-[var(--accent-deep)]"></span>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+          <div className="lg:col-span-7 space-y-5 text-left">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-[var(--bg-surface-soft)] text-[var(--brand-accent)] border border-[var(--border-color)]">
+              <span className="w-2 h-2 rounded-full bg-[var(--brand-accent)] animate-pulse" />
               <span>{t('hero_badge')}</span>
             </div>
 
@@ -106,61 +105,62 @@ export default function LandingPage() {
               {language === 'bn' ? (
                 <>
                   একটি দাগ। একাধিক দলিল। <br className="hidden sm:inline" />
-                  <span className="text-emerald-700 dark:text-[var(--brand-accent)]">একটি প্রমাণ পথ।</span>
+                  <span className="text-[var(--brand-accent)]">একটি প্রমাণ পথ।</span>
                 </>
               ) : (
                 <>
                   One plot. Multiple deeds. <br className="hidden sm:inline" />
-                  <span className="text-emerald-700 dark:text-[var(--brand-accent)]">One evidence trail.</span>
+                  <span className="text-[var(--brand-accent)]">One evidence trail.</span>
                 </>
               )}
             </h1>
 
-            <p className="text-base sm:text-lg text-[var(--text-secondary)] max-w-2xl leading-relaxed">
+            <p className="text-sm sm:text-base lg:text-lg text-[var(--text-secondary)] max-w-2xl leading-relaxed">
               {t('hero_description')}
             </p>
 
-            <div className="flex flex-wrap items-center gap-3 pt-2">
+            {/* Mobile-First Action Buttons (44px min touch height) */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
               <Link
                 href="/documents/new"
-                className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-[var(--cta-text)] transition-all shadow-sm hover:shadow"
+                className="flex items-center justify-center gap-2 px-6 py-3.5 min-h-[44px] rounded-xl text-sm font-bold bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-[var(--cta-text)] transition-all shadow-sm hover:shadow active:scale-98"
               >
                 <span>{t('cta_verify')}</span>
                 <ArrowRight className="w-4 h-4 stroke-[2.5]" />
               </Link>
               <Link
                 href="/demo"
-                className="flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-bold border border-[var(--brand-accent)]/60 bg-[var(--accent-light)] text-[var(--accent-deep)] dark:text-[#7ED957] hover:bg-[var(--brand-accent)] hover:text-[var(--cta-text)] transition-all shadow-xs"
+                className="flex items-center justify-center gap-2 px-5 py-3.5 min-h-[44px] rounded-xl text-sm font-bold border border-[var(--brand-accent)]/60 bg-[var(--accent-light)] text-[var(--text-primary)] hover:bg-[var(--brand-accent)] hover:text-[var(--cta-text)] transition-all shadow-xs"
               >
-                <Sparkles className="w-4 h-4" />
+                <Sparkles className="w-4 h-4 text-[var(--brand-accent)]" />
                 <span>{language === 'bn' ? 'ইন্টারেক্টিভ ডেমো চালান' : 'Try Interactive Demo'}</span>
               </Link>
             </div>
 
-            {/* Trust points */}
-            <div className="pt-4 grid grid-cols-3 gap-3 border-t border-[var(--border-color)]">
-              <div>
+            {/* Responsive Trust Points */}
+            <div className="pt-4 grid grid-cols-1 sm:grid-cols-3 gap-3 border-t border-[var(--border-color)]">
+              <div className="p-2 sm:p-0">
                 <p className="text-xs text-[var(--text-secondary)] font-medium">{t('trust_p1_label')}</p>
-                <p className="text-sm font-bold text-[var(--accent-deep)]">{t('trust_p1_val')}</p>
+                <p className="text-sm sm:text-base font-bold text-[var(--brand-accent)]">{t('trust_p1_val')}</p>
               </div>
-              <div>
+              <div className="p-2 sm:p-0 border-t sm:border-t-0 sm:border-l border-[var(--border-color)] sm:pl-3">
                 <p className="text-xs text-[var(--text-secondary)] font-medium">{t('trust_p2_label')}</p>
-                <p className="text-sm font-bold text-[var(--accent-deep)]">{t('trust_p2_val')}</p>
+                <p className="text-sm sm:text-base font-bold text-[var(--brand-accent)]">{t('trust_p2_val')}</p>
               </div>
-              <div>
+              <div className="p-2 sm:p-0 border-t sm:border-t-0 sm:border-l border-[var(--border-color)] sm:pl-3">
                 <p className="text-xs text-[var(--text-secondary)] font-medium">{t('trust_p3_label')}</p>
-                <p className="text-sm font-bold text-[var(--accent-deep)]">{t('trust_p3_val')}</p>
+                <p className="text-sm sm:text-base font-bold text-[var(--brand-accent)]">{t('trust_p3_val')}</p>
               </div>
             </div>
           </div>
 
           {/* Hero Visual Image */}
-          <div className="lg:col-span-5">
+          <div className="lg:col-span-5 order-first lg:order-last">
             <ImageArea
               src="/images/landing/hero-landscape.svg"
               alt={t('hero_img_alt')}
               aspectRatio="video"
-              className="shadow-lg"
+              className="shadow-md rounded-2xl overflow-hidden"
               caption={t('hero_img_caption')}
               priority
             />
@@ -169,23 +169,23 @@ export default function LandingPage() {
       </section>
 
       {/* 2. The Duplicate-Sale Problem & Inconsistencies */}
-      <section className="bg-[var(--bg-surface-soft)]/50 border-y border-[var(--border-color)] py-14">
+      <section className="bg-[var(--bg-surface-soft)]/60 border-y border-[var(--border-color)] py-12 sm:py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-3xl mx-auto space-y-3 mb-10">
-            <h2 className="text-xs font-bold uppercase tracking-wider text-[var(--accent-deep)] dark:text-[#7ED957]">
+          <div className="text-center max-w-3xl mx-auto space-y-2.5 mb-10">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-[var(--brand-accent)]">
               {t('prob_badge')}
             </h2>
             <h3 className="text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)]">
               {t('prob_title')}
             </h3>
-            <p className="text-sm text-[var(--text-secondary)]">
+            <p className="text-xs sm:text-sm text-[var(--text-secondary)] max-w-2xl mx-auto">
               {t('prob_subtitle')}
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="p-6 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-color)] space-y-3 shadow-sm">
-              <div className="w-10 h-10 rounded-lg bg-red-100 dark:bg-red-950/60 flex items-center justify-center text-red-600">
+            <div className="p-6 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-color)] space-y-3 shadow-xs hover:border-red-300 transition-colors">
+              <div className="w-10 h-10 rounded-xl bg-red-100 dark:bg-red-950/60 flex items-center justify-center text-red-600">
                 <AlertTriangle className="w-5 h-5" />
               </div>
               <h4 className="text-base font-bold text-[var(--text-primary)]">{t('prob_card1_title')}</h4>
@@ -194,8 +194,8 @@ export default function LandingPage() {
               </p>
             </div>
 
-            <div className="p-6 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-color)] space-y-3 shadow-sm">
-              <div className="w-10 h-10 rounded-lg bg-amber-100 dark:bg-amber-950/60 flex items-center justify-center text-amber-700">
+            <div className="p-6 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-color)] space-y-3 shadow-xs hover:border-amber-300 transition-colors">
+              <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-950/60 flex items-center justify-center text-amber-700">
                 <GitFork className="w-5 h-5" />
               </div>
               <h4 className="text-base font-bold text-[var(--text-primary)]">{t('prob_card2_title')}</h4>
@@ -204,8 +204,8 @@ export default function LandingPage() {
               </p>
             </div>
 
-            <div className="p-6 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-color)] space-y-3 shadow-sm">
-              <div className="w-10 h-10 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 flex items-center justify-center text-emerald-700">
+            <div className="p-6 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-color)] space-y-3 shadow-xs hover:border-emerald-300 transition-colors">
+              <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 flex items-center justify-center text-[var(--brand-accent)]">
                 <FileText className="w-5 h-5" />
               </div>
               <h4 className="text-base font-bold text-[var(--text-primary)]">{t('prob_card3_title')}</h4>
@@ -219,25 +219,28 @@ export default function LandingPage() {
 
       {/* 3. Workflow Steps */}
       <section id="how-it-works" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center max-w-3xl mx-auto space-y-3 mb-12">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-[var(--accent-deep)] dark:text-[#7ED957]">
+        <div className="text-center max-w-3xl mx-auto space-y-2.5 mb-10 sm:mb-12">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-[var(--brand-accent)]">
             {t('flow_badge')}
           </h2>
           <h3 className="text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)]">
             {t('flow_title')}
           </h3>
-          <p className="text-sm text-[var(--text-secondary)]">
+          <p className="text-xs sm:text-sm text-[var(--text-secondary)]">
             {t('flow_subtitle')}
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {workflowSteps.map((ws, i) => (
-            <div key={i} className="p-5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)] space-y-3 relative group hover:border-[var(--accent-deep)] transition-colors">
-              <span className="text-3xl font-black text-[var(--accent-deep)]/20 dark:text-[#7ED957]/20 block">
+            <div
+              key={i}
+              className="p-5 sm:p-6 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-surface)] space-y-3 relative group hover:border-[var(--brand-accent)]/60 transition-colors shadow-xs"
+            >
+              <span className="text-3xl font-black text-[var(--brand-accent)]/20 block font-mono">
                 {ws.step}
               </span>
-              <h4 className="text-base font-bold text-[var(--text-primary)]">
+              <h4 className="text-sm sm:text-base font-bold text-[var(--text-primary)]">
                 {ws.title}
               </h4>
               <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
@@ -250,22 +253,22 @@ export default function LandingPage() {
 
       {/* 4. Synthetic Scenarios Showcase */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="p-8 sm:p-10 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-surface)] space-y-6">
+        <div className="p-6 sm:p-10 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-surface)] space-y-6 shadow-sm">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[var(--border-color)] pb-6">
             <div>
-              <span className="text-xs font-bold uppercase text-[var(--accent-deep)] dark:text-[#7ED957] block mb-1">
+              <span className="text-xs font-bold uppercase text-[var(--brand-accent)] block mb-1">
                 {t('demo_badge')}
               </span>
-              <h3 className="text-2xl font-extrabold text-[var(--text-primary)]">
+              <h3 className="text-xl sm:text-2xl font-extrabold text-[var(--text-primary)]">
                 {t('demo_title')}
               </h3>
-              <p className="text-xs text-[var(--text-secondary)]">
+              <p className="text-xs sm:text-sm text-[var(--text-secondary)]">
                 {t('demo_subtitle')}
               </p>
             </div>
             <Link
               href="/cases"
-              className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold bg-[var(--bg-surface-soft)] text-[var(--accent-deep)] dark:text-[#7ED957] border border-[var(--border-color)] hover:bg-[var(--border-color)] transition-colors"
+              className="flex items-center gap-1.5 px-4 py-2 min-h-[40px] rounded-xl text-xs font-bold bg-[var(--bg-surface-soft)] text-[var(--text-primary)] border border-[var(--border-color)] hover:border-[var(--brand-accent)] transition-colors"
             >
               <span>{t('demo_view_all')}</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -277,25 +280,25 @@ export default function LandingPage() {
               <Link
                 key={demo.id}
                 href={`/cases/${demo.id}`}
-                className="p-4 rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface-soft)]/40 hover:bg-[var(--bg-surface-soft)] transition-colors flex flex-col justify-between space-y-3 group"
+                className="p-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-surface-soft)]/40 hover:bg-[var(--bg-surface-soft)] transition-all flex flex-col justify-between space-y-3 group hover:border-[var(--brand-accent)]/50"
               >
                 <div className="flex items-center justify-between">
-                  <span className="font-mono text-xs font-bold text-[var(--accent-deep)] dark:text-[#7ED957]">
+                  <span className="font-mono text-xs font-bold text-[var(--brand-accent)]">
                     {demo.id}
                   </span>
-                  <RiskBadge level={demo.risk} showScore={false} />
+                  <RiskBadge level={demo.risk} showScore={false} size="sm" />
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-[var(--text-primary)] group-hover:text-[var(--accent-deep)] transition-colors">
+                  <h4 className="text-sm font-bold text-[var(--text-primary)] group-hover:text-[var(--brand-accent)] transition-colors">
                     {language === 'bn' ? demo.title_bn : demo.title_en}
                   </h4>
-                  <p className="text-xs text-[var(--text-secondary)] mt-1">
+                  <p className="text-xs text-[var(--text-secondary)] mt-1 leading-relaxed">
                     {language === 'bn' ? demo.desc_bn : demo.desc_en}
                   </p>
                 </div>
-                <div className="pt-2 border-t border-[var(--border-color)]/60 flex items-center justify-between text-[11px] text-[var(--text-secondary)]">
-                  <span>{t('demo_view_results')}</span>
-                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                <div className="pt-2 border-t border-[var(--border-color)]/60 flex items-center justify-between text-xs text-[var(--text-secondary)]">
+                  <span className="font-medium">{t('demo_view_results')}</span>
+                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform text-[var(--brand-accent)]" />
                 </div>
               </Link>
             ))}
@@ -306,7 +309,7 @@ export default function LandingPage() {
       {/* 5. FAQ Section */}
       <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         <div className="text-center space-y-2">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-[var(--accent-deep)] dark:text-[#7ED957]">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-[var(--brand-accent)]">
             {t('faq_badge')}
           </h2>
           <h3 className="text-2xl font-bold text-[var(--text-primary)]">
@@ -314,14 +317,14 @@ export default function LandingPage() {
           </h3>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-3">
           {faqs.map((faq, i) => (
-            <div key={i} className="p-5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)] space-y-2">
-              <h4 className="text-sm font-bold text-[var(--text-primary)] flex items-center gap-2">
-                <HelpCircle className="w-4 h-4 text-[var(--accent-deep)] dark:text-[#7ED957] shrink-0" />
+            <div key={i} className="p-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-surface)] space-y-2 shadow-xs">
+              <h4 className="text-sm font-bold text-[var(--text-primary)] flex items-start gap-2.5">
+                <HelpCircle className="w-4 h-4 text-[var(--brand-accent)] shrink-0 mt-0.5" />
                 <span>{faq.q}</span>
               </h4>
-              <p className="text-xs text-[var(--text-secondary)] leading-relaxed pl-6">
+              <p className="text-xs sm:text-sm text-[var(--text-secondary)] leading-relaxed pl-6">
                 {faq.a}
               </p>
             </div>
@@ -331,19 +334,19 @@ export default function LandingPage() {
 
       {/* 6. Responsible AI Callout */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="p-6 sm:p-8 rounded-2xl bg-[var(--bg-surface-soft)] border border-[var(--border-color)] flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="space-y-2">
+        <div className="p-6 sm:p-8 rounded-3xl bg-[var(--bg-surface-soft)] border border-[var(--border-color)] flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div className="space-y-2 max-w-2xl">
             <h4 className="text-base font-bold text-[var(--text-primary)] flex items-center gap-2">
-              <ShieldCheck className="w-5 h-5 text-[var(--accent-deep)] dark:text-[#7ED957]" />
+              <ShieldCheck className="w-5 h-5 text-[var(--brand-accent)]" />
               <span>{t('responsible_title')}</span>
             </h4>
-            <p className="text-xs text-[var(--text-secondary)] max-w-2xl leading-relaxed">
+            <p className="text-xs sm:text-sm text-[var(--text-secondary)] leading-relaxed">
               {t('responsible_desc')}
             </p>
           </div>
           <Link
             href="/methodology"
-            className="px-5 py-2.5 rounded-xl text-xs font-bold bg-[var(--bg-surface)] border border-[var(--border-color)] text-[var(--text-primary)] hover:bg-[var(--border-color)] transition-colors shrink-0"
+            className="px-5 py-3 min-h-[44px] flex items-center justify-center rounded-xl text-xs font-bold bg-[var(--bg-surface)] border border-[var(--border-color)] text-[var(--text-primary)] hover:border-[var(--brand-accent)] transition-colors shrink-0 shadow-xs"
           >
             {t('responsible_btn')}
           </Link>

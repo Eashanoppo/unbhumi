@@ -44,29 +44,29 @@ export const Footer: React.FC = () => {
             <h4 className="text-xs font-bold uppercase tracking-wider text-[var(--text-primary)] mb-3">
               {language === 'bn' ? 'প্ল্যাটফর্ম নেভিগেশন' : 'Navigation'}
             </h4>
-            <ul className="space-y-2 text-xs">
+            <ul className="space-y-1 text-xs">
               <li>
-                <Link href="/dashboard" className="hover:text-[var(--text-primary)] transition-colors">
+                <Link href="/dashboard" className="hover:text-[var(--text-primary)] transition-colors py-1.5 inline-block">
                   {t('nav_dashboard')}
                 </Link>
               </li>
               <li>
-                <Link href="/documents/new" className="hover:text-[var(--text-primary)] transition-colors">
+                <Link href="/documents/new" className="hover:text-[var(--text-primary)] transition-colors py-1.5 inline-block">
                   {t('nav_new_case')}
                 </Link>
               </li>
               <li>
-                <Link href="/cases" className="hover:text-[var(--text-primary)] transition-colors">
+                <Link href="/cases" className="hover:text-[var(--text-primary)] transition-colors py-1.5 inline-block">
                   {t('nav_cases')}
                 </Link>
               </li>
               <li>
-                <Link href="/review-queue" className="hover:text-[var(--text-primary)] transition-colors">
+                <Link href="/review-queue" className="hover:text-[var(--text-primary)] transition-colors py-1.5 inline-block">
                   {t('nav_queue')}
                 </Link>
               </li>
               <li>
-                <Link href="/ownership-graph" className="hover:text-[var(--text-primary)] transition-colors">
+                <Link href="/ownership-graph" className="hover:text-[var(--text-primary)] transition-colors py-1.5 inline-block">
                   {t('nav_graph')}
                 </Link>
               </li>
@@ -78,29 +78,29 @@ export const Footer: React.FC = () => {
             <h4 className="text-xs font-bold uppercase tracking-wider text-[var(--text-primary)] mb-3">
               {language === 'bn' ? 'পদ্ধতি ও গবেষণা' : 'Methodology & Research'}
             </h4>
-            <ul className="space-y-2 text-xs">
+            <ul className="space-y-1 text-xs">
               <li>
-                <Link href="/methodology" className="hover:text-[var(--text-primary)] transition-colors">
+                <Link href="/methodology" className="hover:text-[var(--text-primary)] transition-colors py-1.5 inline-block">
                   {language === 'bn' ? 'ওসিআর ও ডিটেকশন নিয়মাবলী' : 'OCR & Detection Rules'}
                 </Link>
               </li>
               <li>
-                <Link href="/methodology#safeguards" className="hover:text-[var(--text-primary)] transition-colors">
+                <Link href="/methodology#safeguards" className="hover:text-[var(--text-primary)] transition-colors py-1.5 inline-block">
                   {language === 'bn' ? 'দায়িত্বশীল এআই নীতি' : 'Responsible AI Guardrails'}
                 </Link>
               </li>
               <li>
-                <Link href="/about" className="hover:text-[var(--text-primary)] transition-colors">
+                <Link href="/about" className="hover:text-[var(--text-primary)] transition-colors py-1.5 inline-block">
                   {language === 'bn' ? 'আনলেফট (UNLEFT) পরিচিতি' : 'About UNLEFT Team'}
                 </Link>
               </li>
               <li>
-                <Link href="/privacy" className="hover:text-[var(--text-primary)] transition-colors">
+                <Link href="/privacy" className="hover:text-[var(--text-primary)] transition-colors py-1.5 inline-block">
                   {language === 'bn' ? 'গোপনীয়তা নীতি' : 'Privacy Notice'}
                 </Link>
               </li>
               <li>
-                <Link href="/terms" className="hover:text-[var(--text-primary)] transition-colors">
+                <Link href="/terms" className="hover:text-[var(--text-primary)] transition-colors py-1.5 inline-block">
                   {language === 'bn' ? 'ব্যবহারের শর্তাবলী' : 'Terms of Use'}
                 </Link>
               </li>
@@ -112,10 +112,10 @@ export const Footer: React.FC = () => {
             <h4 className="text-xs font-bold uppercase tracking-wider text-[var(--text-primary)] mb-3">
               {language === 'bn' ? 'গুরুত্বপূর্ণ সতর্কতা' : 'Notice & Disclaimer'}
             </h4>
-            <div className="p-3 rounded-lg bg-[var(--bg-surface-soft)] border border-[var(--border-color)] text-[11px] leading-relaxed">
-              <p className="flex items-start gap-1.5 mb-1.5 font-medium text-[var(--text-primary)]">
+            <div className="p-3.5 rounded-xl bg-[var(--bg-surface-soft)] border border-[var(--border-color)] text-[11px] leading-relaxed">
+              <p className="flex items-start gap-1.5 mb-1.5 font-bold text-[var(--text-primary)]">
                 <Info className="w-3.5 h-3.5 text-[var(--accent-deep)] dark:text-[#7ED957] shrink-0 mt-0.5" />
-                <span>{language === 'bn' ? 'স্বাধীন সফটওয়্যার টুল' : 'Independent Tool'}</span>
+                <span>{language === 'bn' ? 'স্বাধীন সফটওয়্যার টুল' : 'Independent Analytical Tool'}</span>
               </p>
               <p>
                 {t('disclaimer_short')}
@@ -125,14 +125,14 @@ export const Footer: React.FC = () => {
         </div>
 
         {/* Bottom bar */}
-        <div className="pt-6 border-t border-[var(--border-color)] flex flex-col sm:flex-row items-center justify-between gap-4 text-xs">
+        <div className="pt-6 border-t border-[var(--border-color)] flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-center sm:text-left">
           <p>
-            © {currentYear} UNBUmi Detector. Developed by <strong>UNLEFT</strong> for LandTech Innovation Hackathon 2026.
+            © {currentYear} UNBhumi Detector. Developed by <strong>UNLEFT</strong> for LandTech Innovation Hackathon 2026.
           </p>
           <div className="flex items-center gap-4 text-[11px]">
-            <span>সংস্করণ: 1.0.0 (MVP)</span>
+            <span>{language === 'bn' ? 'সংস্করণ: ১.০.০ (MVP)' : 'Version: 1.0.0 (MVP)'}</span>
             <span>•</span>
-            <span>ডেটা পলিসি: সিন্থেটিক রেকর্ড</span>
+            <span>{language === 'bn' ? 'ডেটা পলিসি: সিন্থেটিক রেকর্ড' : 'Data Policy: Synthetic Records'}</span>
           </div>
         </div>
       </div>

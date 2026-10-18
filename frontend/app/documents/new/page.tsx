@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLanguage } from '@/lib/i18n';
 import { api } from '@/lib/api';
@@ -84,7 +84,9 @@ export default function NewAnalysisPage() {
     }
     setErrorMsg('');
     setCurrentStep(2);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   const handleNextFromStep2 = () => {
@@ -94,7 +96,9 @@ export default function NewAnalysisPage() {
     }
     setErrorMsg('');
     setCurrentStep(3);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -116,13 +120,11 @@ export default function NewAnalysisPage() {
     setSubmissionStage(1);
 
     try {
-      // Step A: Stage 1 progress
-      const p1 = setTimeout(() => {
+      setTimeout(() => {
         setSubmissionProgress(40);
         setSubmissionStage(2);
       }, 700);
 
-      // Step B: Create Case
       const createdCase = await api.createCase({
         title,
         description,
@@ -132,11 +134,9 @@ export default function NewAnalysisPage() {
         area: parseFloat(area) || 20.0
       });
 
-      // Step C: Stage 3 progress
       setSubmissionProgress(75);
       setSubmissionStage(3);
 
-      // Step D: Stage 4 - Run Detection Checks
       await api.runChecks(createdCase.case_number);
       setSubmissionProgress(100);
       setSubmissionStage(4);
@@ -144,42 +144,42 @@ export default function NewAnalysisPage() {
       setTimeout(() => {
         router.push(`/cases/${createdCase.case_number}`);
       }, 600);
-    } catch (err: any) {
-      setErrorMsg(err.message || (language === 'bn' ? 'কেস তৈরিতে সমস্যা হয়েছে। পুনরায় চেষ্টা করুন।' : 'Failed to create case. Please try again.'));
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : '';
+      setErrorMsg(message || (language === 'bn' ? 'কেস তৈরিতে সমস্যা হয়েছে। পুনরায় চেষ্টা করুন।' : 'Failed to create case. Please try again.'));
       setIsSubmitting(false);
       setSubmissionProgress(0);
     }
   };
 
-  // Progress metrics
   const progressPercent = currentStep === 1 ? 33 : currentStep === 2 ? 66 : 100;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8 sm:py-12 space-y-8">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12 space-y-6 sm:space-y-8 animate-in fade-in-50">
       {/* Header */}
       <div className="border-b border-[var(--border-color)] pb-4 space-y-1">
-        <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[var(--bg-surface-soft)] text-[var(--accent-deep)] dark:text-[#7ED957] border border-[var(--border-color)]">
+        <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[var(--bg-surface-soft)] text-[var(--brand-accent)] border border-[var(--border-color)]">
           <FileUp className="w-3.5 h-3.5" />
           <span>{t('new_doc_badge')}</span>
         </div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)]">
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)] tracking-tight">
           {t('new_doc_title')}
         </h1>
-        <p className="text-xs sm:text-sm text-[var(--text-secondary)]">
+        <p className="text-xs sm:text-sm text-[var(--text-secondary)] leading-relaxed">
           {t('new_doc_subtitle')}
         </p>
       </div>
 
       {/* STEP-BY-STEP PROGRESS BAR */}
-      <div className="bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-2xl p-4 sm:p-6 shadow-sm space-y-4">
+      <div className="bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-2xl p-4 sm:p-6 shadow-xs space-y-4">
         {/* Progress bar metadata */}
         <div className="flex items-center justify-between text-xs">
-          <span className="font-bold text-[var(--accent-deep)] dark:text-[#7ED957] uppercase tracking-wider">
+          <span className="font-bold text-[var(--brand-accent)] uppercase tracking-wider truncate mr-2">
             {currentStep === 3
               ? t('step_progress_ready', { current: formatNumber(currentStep), total: formatNumber(3) })
               : t('step_progress_label', { current: formatNumber(currentStep), total: formatNumber(3), pct: formatNumber(progressPercent) })}
           </span>
-          <span className="font-mono text-xs font-semibold text-[var(--text-secondary)]">
+          <span className="font-mono text-xs font-bold text-[var(--text-secondary)] shrink-0">
             {formatNumber(progressPercent)}%
           </span>
         </div>
@@ -187,7 +187,7 @@ export default function NewAnalysisPage() {
         {/* Dynamic Progress Bar Fill Track */}
         <div className="w-full h-2.5 bg-[var(--bg-surface-soft)] rounded-full overflow-hidden border border-[var(--border-color)] relative">
           <div
-            className="h-full bg-gradient-to-r from-[var(--brand-accent)] to-[#10B981] transition-all duration-500 ease-out rounded-full"
+            className="h-full bg-[var(--brand-accent)] transition-all duration-500 ease-out rounded-full"
             style={{ width: `${progressPercent}%` }}
           />
         </div>
@@ -198,7 +198,7 @@ export default function NewAnalysisPage() {
           <button
             type="button"
             onClick={() => setCurrentStep(1)}
-            className={`flex items-start gap-2.5 p-2 rounded-xl text-left transition-all cursor-pointer ${
+            className={`flex items-start gap-2 sm:gap-2.5 p-2 rounded-xl text-left transition-all cursor-pointer min-h-[44px] ${
               currentStep === 1
                 ? 'bg-[var(--bg-surface-soft)] ring-1 ring-[var(--brand-accent)]'
                 : 'hover:bg-[var(--bg-surface-soft)]/50 opacity-80'
@@ -207,9 +207,9 @@ export default function NewAnalysisPage() {
             <div
               className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 transition-colors ${
                 currentStep > 1
-                  ? 'bg-[#10B981] text-white'
+                  ? 'bg-[var(--brand-accent)] text-white'
                   : currentStep === 1
-                  ? 'bg-[var(--brand-accent)] text-[var(--cta-text)] ring-4 ring-[var(--brand-accent)]/25'
+                  ? 'bg-[var(--brand-accent)] text-[var(--cta-text)] ring-4 ring-[var(--brand-accent)]/20'
                   : 'bg-[var(--bg-surface-soft)] text-[var(--text-secondary)] border border-[var(--border-color)]'
               }`}
             >
@@ -232,7 +232,7 @@ export default function NewAnalysisPage() {
               if (title.trim()) setCurrentStep(2);
               else setErrorMsg(t('title_required_error'));
             }}
-            className={`flex items-start gap-2.5 p-2 rounded-xl text-left transition-all cursor-pointer ${
+            className={`flex items-start gap-2 sm:gap-2.5 p-2 rounded-xl text-left transition-all cursor-pointer min-h-[44px] ${
               currentStep === 2
                 ? 'bg-[var(--bg-surface-soft)] ring-1 ring-[var(--brand-accent)]'
                 : 'hover:bg-[var(--bg-surface-soft)]/50 opacity-80'
@@ -241,9 +241,9 @@ export default function NewAnalysisPage() {
             <div
               className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 transition-colors ${
                 currentStep > 2
-                  ? 'bg-[#10B981] text-white'
+                  ? 'bg-[var(--brand-accent)] text-white'
                   : currentStep === 2
-                  ? 'bg-[var(--brand-accent)] text-[var(--cta-text)] ring-4 ring-[var(--brand-accent)]/25'
+                  ? 'bg-[var(--brand-accent)] text-[var(--cta-text)] ring-4 ring-[var(--brand-accent)]/20'
                   : 'bg-[var(--bg-surface-soft)] text-[var(--text-secondary)] border border-[var(--border-color)]'
               }`}
             >
@@ -273,7 +273,7 @@ export default function NewAnalysisPage() {
               }
               setCurrentStep(3);
             }}
-            className={`flex items-start gap-2.5 p-2 rounded-xl text-left transition-all cursor-pointer ${
+            className={`flex items-start gap-2 sm:gap-2.5 p-2 rounded-xl text-left transition-all cursor-pointer min-h-[44px] ${
               currentStep === 3
                 ? 'bg-[var(--bg-surface-soft)] ring-1 ring-[var(--brand-accent)]'
                 : 'hover:bg-[var(--bg-surface-soft)]/50 opacity-80'
@@ -282,7 +282,7 @@ export default function NewAnalysisPage() {
             <div
               className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 transition-colors ${
                 currentStep === 3
-                  ? 'bg-[var(--brand-accent)] text-[var(--cta-text)] ring-4 ring-[var(--brand-accent)]/25'
+                  ? 'bg-[var(--brand-accent)] text-[var(--cta-text)] ring-4 ring-[var(--brand-accent)]/20'
                   : 'bg-[var(--bg-surface-soft)] text-[var(--text-secondary)] border border-[var(--border-color)]'
               }`}
             >
@@ -314,7 +314,7 @@ export default function NewAnalysisPage() {
         {/* ======================================================== */}
         {currentStep === 1 && (
           <div className="space-y-6">
-            <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-surface)] p-5 sm:p-7 space-y-5 shadow-sm">
+            <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-surface)] p-5 sm:p-7 space-y-5 shadow-xs">
               <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-3">
                 <h2 className="text-sm font-bold uppercase tracking-wider text-[var(--text-primary)] flex items-center gap-2">
                   <span className="w-6 h-6 rounded-full bg-[var(--brand-accent)] text-[var(--cta-text)] font-bold flex items-center justify-center text-xs">
@@ -322,7 +322,7 @@ export default function NewAnalysisPage() {
                   </span>
                   <span>{t('step1_title')}</span>
                 </h2>
-                <span className="text-xs text-[var(--text-secondary)] font-medium">
+                <span className="text-xs text-[var(--text-secondary)] font-medium hidden sm:inline">
                   {t('step_parcel_desc')}
                 </span>
               </div>
@@ -339,7 +339,7 @@ export default function NewAnalysisPage() {
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     placeholder={t('placeholder_case_title')}
-                    className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)] focus:ring-2 focus:ring-[var(--accent-deep)]/20 focus:border-[var(--accent-deep)] focus:outline-none"
+                    className="w-full px-3.5 py-3 min-h-[44px] text-xs rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)] focus:ring-2 focus:ring-[var(--brand-accent)]/20 focus:border-[var(--brand-accent)] focus:outline-none"
                   />
                 </div>
 
@@ -351,7 +351,7 @@ export default function NewAnalysisPage() {
                     type="text"
                     value={mouza}
                     onChange={(e) => setMouza(e.target.value)}
-                    className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)]"
+                    className="w-full px-3.5 py-3 min-h-[44px] text-xs rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)] focus:ring-2 focus:ring-[var(--brand-accent)]/20 focus:border-[var(--brand-accent)] focus:outline-none"
                   />
                 </div>
 
@@ -361,9 +361,10 @@ export default function NewAnalysisPage() {
                   </label>
                   <input
                     type="text"
+                    inputMode="numeric"
                     value={dagNumber}
                     onChange={(e) => setDagNumber(e.target.value)}
-                    className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)] font-mono"
+                    className="w-full px-3.5 py-3 min-h-[44px] text-xs rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)] font-mono focus:ring-2 focus:ring-[var(--brand-accent)]/20 focus:border-[var(--brand-accent)] focus:outline-none"
                   />
                 </div>
 
@@ -374,7 +375,7 @@ export default function NewAnalysisPage() {
                   <select
                     value={surveyType}
                     onChange={(e) => setSurveyType(e.target.value)}
-                    className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)] font-medium"
+                    className="w-full px-3.5 py-3 min-h-[44px] text-xs rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)] font-medium focus:ring-2 focus:ring-[var(--brand-accent)]/20 focus:border-[var(--brand-accent)] focus:outline-none"
                   >
                     <option value="RS">{t('survey_rs')}</option>
                     <option value="BS">{t('survey_bs')}</option>
@@ -391,9 +392,10 @@ export default function NewAnalysisPage() {
                   <input
                     type="number"
                     step="0.1"
+                    inputMode="decimal"
                     value={area}
                     onChange={(e) => setArea(e.target.value)}
-                    className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)]"
+                    className="w-full px-3.5 py-3 min-h-[44px] text-xs rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)] focus:ring-2 focus:ring-[var(--brand-accent)]/20 focus:border-[var(--brand-accent)] focus:outline-none"
                   />
                 </div>
 
@@ -406,18 +408,18 @@ export default function NewAnalysisPage() {
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     placeholder={t('placeholder_desc')}
-                    className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)]"
+                    className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)] focus:ring-2 focus:ring-[var(--brand-accent)]/20 focus:border-[var(--brand-accent)] focus:outline-none"
                   />
                 </div>
               </div>
             </div>
 
             {/* Step 1 Actions */}
-            <div className="flex items-center justify-between pt-2">
+            <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2">
               <button
                 type="button"
                 onClick={() => router.back()}
-                className="px-5 py-2.5 text-xs font-semibold border border-[var(--border-color)] rounded-xl hover:bg-[var(--bg-surface-soft)] transition-colors"
+                className="px-5 py-3 min-h-[44px] text-xs font-semibold border border-[var(--border-color)] rounded-xl hover:bg-[var(--bg-surface-soft)] transition-colors flex items-center justify-center cursor-pointer"
               >
                 {t('cancel')}
               </button>
@@ -425,7 +427,7 @@ export default function NewAnalysisPage() {
               <button
                 type="button"
                 onClick={handleNextFromStep1}
-                className="px-6 py-2.5 text-xs font-bold rounded-xl bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-[var(--cta-text)] transition-all flex items-center gap-2 shadow-sm cursor-pointer"
+                className="px-6 py-3 min-h-[44px] text-xs font-bold rounded-xl bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-[var(--cta-text)] transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer active:scale-95"
               >
                 <span>{t('btn_next_docs')}</span>
                 <ArrowRight className="w-4 h-4 stroke-[2.5]" />
@@ -439,7 +441,7 @@ export default function NewAnalysisPage() {
         {/* ======================================================== */}
         {currentStep === 2 && (
           <div className="space-y-6">
-            <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-surface)] p-5 sm:p-7 space-y-5 shadow-sm">
+            <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-surface)] p-5 sm:p-7 space-y-5 shadow-xs">
               <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-3">
                 <h2 className="text-sm font-bold uppercase tracking-wider text-[var(--text-primary)] flex items-center gap-2">
                   <span className="w-6 h-6 rounded-full bg-[var(--brand-accent)] text-[var(--cta-text)] font-bold flex items-center justify-center text-xs">
@@ -447,15 +449,15 @@ export default function NewAnalysisPage() {
                   </span>
                   <span>{t('doc_pack_title')}</span>
                 </h2>
-                <span className="text-xs text-[var(--text-secondary)] font-medium">
+                <span className="text-xs text-[var(--text-secondary)] font-medium hidden sm:inline">
                   {t('doc_pack_sub')}
                 </span>
               </div>
 
               {/* Upload Dropzone */}
-              <div className="p-8 border-2 border-dashed border-[var(--border-color)] rounded-2xl bg-[var(--bg-surface-soft)]/40 flex flex-col items-center justify-center text-center space-y-3">
-                <div className="w-14 h-14 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-color)] flex items-center justify-center text-[var(--accent-deep)] shadow-sm">
-                  <UploadCloud className="w-7 h-7" />
+              <div className="p-6 sm:p-8 border-2 border-dashed border-[var(--border-color)] rounded-2xl bg-[var(--bg-surface-soft)]/40 flex flex-col items-center justify-center text-center space-y-3">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-color)] flex items-center justify-center text-[var(--brand-accent)] shadow-xs">
+                  <UploadCloud className="w-6 h-6 sm:w-7 sm:h-7" />
                 </div>
                 <div className="max-w-md">
                   <p className="text-xs sm:text-sm font-bold text-[var(--text-primary)]">
@@ -466,11 +468,11 @@ export default function NewAnalysisPage() {
                   </p>
                 </div>
 
-                <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
+                <div className="w-full sm:w-auto flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2.5 pt-2">
                   <select
                     value={newDocType}
                     onChange={(e) => setNewDocType(e.target.value)}
-                    className="px-3 py-2 text-xs rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)] font-medium"
+                    className="px-3.5 py-2.5 min-h-[44px] text-xs rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)] font-medium focus:ring-2 focus:ring-[var(--brand-accent)]/20 focus:border-[var(--brand-accent)] focus:outline-none"
                   >
                     {docTypeKeys.map((key) => (
                       <option key={key} value={key}>{t(`doctype_${key}`)}</option>
@@ -480,9 +482,9 @@ export default function NewAnalysisPage() {
                   <button
                     type="button"
                     onClick={handleAddSyntheticFile}
-                    className="px-4 py-2 rounded-xl text-xs font-bold bg-[var(--accent-deep)] text-[#FFF8E7] hover:bg-[var(--accent-deep)]/90 transition-colors flex items-center gap-1.5 shadow-sm"
+                    className="px-4 py-2.5 min-h-[44px] rounded-xl text-xs font-bold bg-[var(--brand-accent)] text-[var(--cta-text)] hover:bg-[var(--brand-accent-hover)] transition-colors flex items-center justify-center gap-1.5 shadow-xs cursor-pointer active:scale-95"
                   >
-                    <Plus className="w-4 h-4 text-[#7ED957]" />
+                    <Plus className="w-4 h-4" />
                     <span>{t('add_doc')}</span>
                   </button>
                 </div>
@@ -492,7 +494,7 @@ export default function NewAnalysisPage() {
               <div className="space-y-2.5 pt-2">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-[var(--text-primary)] flex items-center gap-1.5">
-                    <FileText className="w-4 h-4 text-[var(--accent-deep)]" />
+                    <FileText className="w-4 h-4 text-[var(--brand-accent)]" />
                     <span>{t('attached_docs', { count: formatNumber(documents.length) })}</span>
                   </span>
                   <span className="text-[11px] text-[var(--text-secondary)]">
@@ -504,14 +506,14 @@ export default function NewAnalysisPage() {
                   {documents.map((doc) => (
                     <div key={doc.id} className="p-3.5 flex items-center justify-between gap-3 text-xs hover:bg-[var(--bg-surface-soft)]/40 transition-colors">
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-8 h-8 rounded-lg bg-[var(--bg-surface-soft)] border border-[var(--border-color)] flex items-center justify-center text-[var(--accent-deep)] shrink-0">
+                        <div className="w-8 h-8 rounded-lg bg-[var(--bg-surface-soft)] border border-[var(--border-color)] flex items-center justify-center text-[var(--brand-accent)] shrink-0">
                           <FileText className="w-4 h-4" />
                         </div>
                         <div className="min-w-0">
                           <p className="font-semibold text-[var(--text-primary)] truncate">{doc.name}</p>
-                          <p className="text-[10px] text-[var(--text-secondary)] font-mono truncate">
-                            SHA-256: {doc.hash.slice(0, 24)}... • {formatNumber((doc.size / 1024).toFixed(0))} KB •{' '}
-                            <span className="font-sans font-medium text-[var(--accent-deep)]">
+                          <p className="text-[10px] text-[var(--text-secondary)] font-mono break-all truncate sm:break-normal">
+                            SHA-256: {doc.hash.slice(0, 16)}... • {formatNumber((doc.size / 1024).toFixed(0))} KB •{' '}
+                            <span className="font-sans font-medium text-[var(--brand-accent)]">
                               {t(`doctype_${doc.type}`)}
                             </span>
                           </p>
@@ -521,8 +523,9 @@ export default function NewAnalysisPage() {
                       <button
                         type="button"
                         onClick={() => handleRemoveDoc(doc.id)}
-                        className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition-colors"
+                        className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition-colors cursor-pointer"
                         title={t('cancel')}
+                        aria-label="Remove document"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -533,11 +536,11 @@ export default function NewAnalysisPage() {
             </div>
 
             {/* Step 2 Actions */}
-            <div className="flex items-center justify-between pt-2">
+            <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2">
               <button
                 type="button"
                 onClick={() => setCurrentStep(1)}
-                className="px-5 py-2.5 text-xs font-semibold border border-[var(--border-color)] rounded-xl hover:bg-[var(--bg-surface-soft)] transition-colors flex items-center gap-1.5"
+                className="px-5 py-3 min-h-[44px] text-xs font-semibold border border-[var(--border-color)] rounded-xl hover:bg-[var(--bg-surface-soft)] transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
                 <span>{t('btn_prev_step')}</span>
@@ -546,7 +549,7 @@ export default function NewAnalysisPage() {
               <button
                 type="button"
                 onClick={handleNextFromStep2}
-                className="px-6 py-2.5 text-xs font-bold rounded-xl bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-[var(--cta-text)] transition-all flex items-center gap-2 shadow-sm cursor-pointer"
+                className="px-6 py-3 min-h-[44px] text-xs font-bold rounded-xl bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-[var(--cta-text)] transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer active:scale-95"
               >
                 <span>{t('btn_next_review')}</span>
                 <ArrowRight className="w-4 h-4 stroke-[2.5]" />
@@ -560,7 +563,7 @@ export default function NewAnalysisPage() {
         {/* ======================================================== */}
         {currentStep === 3 && (
           <div className="space-y-6">
-            <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-surface)] p-5 sm:p-7 space-y-6 shadow-sm">
+            <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-surface)] p-5 sm:p-7 space-y-6 shadow-xs">
               <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-3">
                 <h2 className="text-sm font-bold uppercase tracking-wider text-[var(--text-primary)] flex items-center gap-2">
                   <span className="w-6 h-6 rounded-full bg-[var(--brand-accent)] text-[var(--cta-text)] font-bold flex items-center justify-center text-xs">
@@ -568,7 +571,7 @@ export default function NewAnalysisPage() {
                   </span>
                   <span>{t('step3_summary_title')}</span>
                 </h2>
-                <span className="text-xs text-emerald-700 dark:text-[var(--brand-accent)] font-semibold flex items-center gap-1">
+                <span className="text-xs text-[var(--brand-accent)] font-semibold flex items-center gap-1">
                   <CheckCircle2 className="w-4 h-4" />
                   <span>{language === 'bn' ? 'যাচাইয়ের জন্য প্রস্তুত' : 'Ready for Verification'}</span>
                 </span>
@@ -580,13 +583,13 @@ export default function NewAnalysisPage() {
                 <div className="p-4 rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface-soft)]/40 space-y-2.5">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-[var(--text-primary)] flex items-center gap-1.5">
-                      <Layers className="w-4 h-4 text-[var(--accent-deep)]" />
+                      <Layers className="w-4 h-4 text-[var(--brand-accent)]" />
                       <span>{t('summary_case_details')}</span>
                     </span>
                     <button
                       type="button"
                       onClick={() => setCurrentStep(1)}
-                      className="text-[11px] font-semibold text-[var(--accent-deep)] hover:underline flex items-center gap-1"
+                      className="text-[11px] font-semibold text-[var(--brand-accent)] hover:underline flex items-center gap-1 cursor-pointer p-1"
                     >
                       <Edit3 className="w-3 h-3" />
                       <span>{language === 'bn' ? 'সম্পাদনা' : 'Edit'}</span>
@@ -620,13 +623,13 @@ export default function NewAnalysisPage() {
                 <div className="p-4 rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface-soft)]/40 space-y-2.5">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-[var(--text-primary)] flex items-center gap-1.5">
-                      <FileText className="w-4 h-4 text-[var(--accent-deep)]" />
+                      <FileText className="w-4 h-4 text-[var(--brand-accent)]" />
                       <span>{t('summary_doc_package')}</span>
                     </span>
                     <button
                       type="button"
                       onClick={() => setCurrentStep(2)}
-                      className="text-[11px] font-semibold text-[var(--accent-deep)] hover:underline flex items-center gap-1"
+                      className="text-[11px] font-semibold text-[var(--brand-accent)] hover:underline flex items-center gap-1 cursor-pointer p-1"
                     >
                       <Edit3 className="w-3 h-3" />
                       <span>{language === 'bn' ? 'সম্পাদনা' : 'Edit'}</span>
@@ -652,29 +655,29 @@ export default function NewAnalysisPage() {
               </div>
 
               {/* Digital Integrity Notice */}
-              <div className="p-4 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 flex items-start gap-3 text-xs text-emerald-900 dark:text-emerald-200">
-                <ShieldCheck className="w-5 h-5 text-emerald-600 dark:text-[#7ED957] shrink-0 mt-0.5" />
+              <div className="p-4 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 flex items-start gap-3 text-xs text-emerald-900 dark:text-emerald-200">
+                <ShieldCheck className="w-5 h-5 text-[var(--brand-accent)] shrink-0 mt-0.5" />
                 <div className="space-y-0.5">
                   <p className="font-bold">{t('summary_integrity')}</p>
-                  <p className="text-[11px] opacity-90">{t('summary_integrity_desc')}</p>
+                  <p className="text-[11px] opacity-90 leading-relaxed">{t('summary_integrity_desc')}</p>
                 </div>
               </div>
 
               {/* Privacy Guardrails */}
               <div className="p-4 rounded-xl bg-[var(--bg-surface-soft)] border border-[var(--border-color)] flex items-start gap-3 text-xs text-[var(--text-secondary)]">
-                <Info className="w-4 h-4 text-[var(--accent-deep)] shrink-0 mt-0.5" />
-                <p>
+                <Info className="w-4 h-4 text-[var(--brand-accent)] shrink-0 mt-0.5" />
+                <p className="leading-relaxed">
                   <strong>{t('privacy_title')}: </strong> {t('privacy_desc')}
                 </p>
               </div>
             </div>
 
             {/* Step 3 Actions */}
-            <div className="flex items-center justify-between pt-2">
+            <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2">
               <button
                 type="button"
                 onClick={() => setCurrentStep(2)}
-                className="px-5 py-2.5 text-xs font-semibold border border-[var(--border-color)] rounded-xl hover:bg-[var(--bg-surface-soft)] transition-colors flex items-center gap-1.5"
+                className="px-5 py-3 min-h-[44px] text-xs font-semibold border border-[var(--border-color)] rounded-xl hover:bg-[var(--bg-surface-soft)] transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
                 <span>{t('btn_prev_step')}</span>
@@ -683,7 +686,7 @@ export default function NewAnalysisPage() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="px-7 py-3 text-xs sm:text-sm font-bold rounded-xl bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-[var(--cta-text)] transition-all flex items-center gap-2 shadow-md hover:shadow-lg cursor-pointer active:scale-95"
+                className="px-7 py-3.5 min-h-[44px] text-xs sm:text-sm font-bold rounded-xl bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-[var(--cta-text)] transition-all flex items-center justify-center gap-2 shadow-sm hover:shadow cursor-pointer active:scale-95 disabled:opacity-50"
               >
                 <Sparkles className="w-4 h-4 stroke-[2.5]" />
                 <span>{isSubmitting ? t('submitting_investigation') : t('create_and_verify_btn')}</span>
@@ -698,11 +701,15 @@ export default function NewAnalysisPage() {
       {/* LIVE SUBMISSION MULTI-STAGE PROGRESS MODAL */}
       {/* ======================================================== */}
       {isSubmitting && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in-50"
+        >
           <div className="bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-2xl max-w-lg w-full p-6 sm:p-8 space-y-6 shadow-2xl">
             <div className="flex items-center gap-3 border-b border-[var(--border-color)] pb-4">
-              <div className="w-10 h-10 rounded-xl bg-[var(--accent-deep)] text-[#FFF8E7] flex items-center justify-center">
-                <Loader2 className="w-5 h-5 animate-spin text-[#7ED957]" />
+              <div className="w-10 h-10 rounded-xl bg-[var(--brand-accent)] text-[var(--cta-text)] flex items-center justify-center">
+                <Loader2 className="w-5 h-5 animate-spin" />
               </div>
               <div>
                 <h3 className="text-sm sm:text-base font-bold text-[var(--text-primary)]">
@@ -717,7 +724,7 @@ export default function NewAnalysisPage() {
             {/* Modal Progress Bar */}
             <div className="w-full h-3 bg-[var(--bg-surface-soft)] rounded-full overflow-hidden border border-[var(--border-color)]">
               <div
-                className="h-full bg-gradient-to-r from-[var(--accent-deep)] via-emerald-600 to-[#7ED957] transition-all duration-300 rounded-full"
+                className="h-full bg-[var(--brand-accent)] transition-all duration-300 rounded-full"
                 style={{ width: `${submissionProgress}%` }}
               />
             </div>
@@ -725,8 +732,8 @@ export default function NewAnalysisPage() {
             {/* Stages Checklist */}
             <div className="space-y-3 text-xs">
               {/* Stage 1 */}
-              <div className={`flex items-start gap-3 p-2.5 rounded-lg transition-colors ${submissionStage >= 1 ? 'bg-[var(--bg-surface-soft)]' : 'opacity-40'}`}>
-                <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5 ${submissionStage > 1 ? 'bg-emerald-600 text-white' : submissionStage === 1 ? 'bg-[var(--accent-deep)] text-white animate-pulse' : 'bg-gray-200 text-gray-600'}`}>
+              <div className={`flex items-start gap-3 p-3 rounded-xl transition-colors ${submissionStage >= 1 ? 'bg-[var(--bg-surface-soft)]' : 'opacity-40'}`}>
+                <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5 ${submissionStage > 1 ? 'bg-[var(--brand-accent)] text-white' : submissionStage === 1 ? 'bg-[var(--brand-accent)] text-white animate-pulse' : 'bg-gray-200 text-gray-600'}`}>
                   {submissionStage > 1 ? <Check className="w-3 h-3" /> : '1'}
                 </div>
                 <div className="min-w-0">
@@ -735,8 +742,8 @@ export default function NewAnalysisPage() {
               </div>
 
               {/* Stage 2 */}
-              <div className={`flex items-start gap-3 p-2.5 rounded-lg transition-colors ${submissionStage >= 2 ? 'bg-[var(--bg-surface-soft)]' : 'opacity-40'}`}>
-                <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5 ${submissionStage > 2 ? 'bg-emerald-600 text-white' : submissionStage === 2 ? 'bg-[var(--accent-deep)] text-white animate-pulse' : 'bg-gray-200 text-gray-600'}`}>
+              <div className={`flex items-start gap-3 p-3 rounded-xl transition-colors ${submissionStage >= 2 ? 'bg-[var(--bg-surface-soft)]' : 'opacity-40'}`}>
+                <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5 ${submissionStage > 2 ? 'bg-[var(--brand-accent)] text-white' : submissionStage === 2 ? 'bg-[var(--brand-accent)] text-white animate-pulse' : 'bg-gray-200 text-gray-600'}`}>
                   {submissionStage > 2 ? <Check className="w-3 h-3" /> : '2'}
                 </div>
                 <div className="min-w-0">
@@ -745,8 +752,8 @@ export default function NewAnalysisPage() {
               </div>
 
               {/* Stage 3 */}
-              <div className={`flex items-start gap-3 p-2.5 rounded-lg transition-colors ${submissionStage >= 3 ? 'bg-[var(--bg-surface-soft)]' : 'opacity-40'}`}>
-                <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5 ${submissionStage > 3 ? 'bg-emerald-600 text-white' : submissionStage === 3 ? 'bg-[var(--accent-deep)] text-white animate-pulse' : 'bg-gray-200 text-gray-600'}`}>
+              <div className={`flex items-start gap-3 p-3 rounded-xl transition-colors ${submissionStage >= 3 ? 'bg-[var(--bg-surface-soft)]' : 'opacity-40'}`}>
+                <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5 ${submissionStage > 3 ? 'bg-[var(--brand-accent)] text-white' : submissionStage === 3 ? 'bg-[var(--brand-accent)] text-white animate-pulse' : 'bg-gray-200 text-gray-600'}`}>
                   {submissionStage > 3 ? <Check className="w-3 h-3" /> : '3'}
                 </div>
                 <div className="min-w-0">
@@ -755,8 +762,8 @@ export default function NewAnalysisPage() {
               </div>
 
               {/* Stage 4 */}
-              <div className={`flex items-start gap-3 p-2.5 rounded-lg transition-colors ${submissionStage >= 4 ? 'bg-[var(--bg-surface-soft)]' : 'opacity-40'}`}>
-                <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5 ${submissionStage === 4 ? 'bg-emerald-600 text-white' : 'bg-gray-200 text-gray-600'}`}>
+              <div className={`flex items-start gap-3 p-3 rounded-xl transition-colors ${submissionStage >= 4 ? 'bg-[var(--bg-surface-soft)]' : 'opacity-40'}`}>
+                <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5 ${submissionStage === 4 ? 'bg-[var(--brand-accent)] text-white' : 'bg-gray-200 text-gray-600'}`}>
                   {submissionStage === 4 ? <Check className="w-3 h-3" /> : '4'}
                 </div>
                 <div className="min-w-0">

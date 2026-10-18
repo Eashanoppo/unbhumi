@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState, use } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useLanguage } from '@/lib/i18n';
 import { api, CaseItem, GraphData, AnomalyFinding } from '@/lib/api';
 import { RiskBadge } from '@/components/RiskBadge';
@@ -10,7 +9,7 @@ import { OwnershipGraphVisualizer } from '@/components/OwnershipGraphVisualizer'
 import { DocumentViewer } from '@/components/DocumentViewer';
 import {
   ShieldCheck, AlertTriangle, FileText, GitFork, Printer,
-  RefreshCw, CheckCircle2, Info, ArrowLeft, Clock, History, AlertCircle
+  RefreshCw, CheckCircle2, Info, ArrowLeft, History, AlertCircle
 } from 'lucide-react';
 
 interface CaseDetailPageProps {
@@ -22,7 +21,6 @@ export const dynamic = 'force-dynamic';
 export default function CaseDetailPage({ params }: CaseDetailPageProps) {
   const resolvedParams = use(params);
   const caseId = resolvedParams.id;
-  const router = useRouter();
   const { language, t, formatNumber, formatDate, getStatusLabel } = useLanguage();
 
   const [caseItem, setCaseItem] = useState<CaseItem | null>(null);
@@ -60,7 +58,7 @@ export default function CaseDetailPage({ params }: CaseDetailPageProps) {
     try {
       await api.updateCaseStatus(caseId, selectedStatus);
       await loadCaseData();
-      setStatusMessage(t('decision_saved_msg'));
+      setStatusMessage(t('decision_saved_msg') || (language === 'bn' ? 'পর্যালোচকের সিদ্ধান্ত সফলভাবে সংরক্ষিত হয়েছে।' : 'Decision saved successfully.'));
       setTimeout(() => setStatusMessage(null), 4000);
     } catch (err) {
       console.error('Failed to update status:', err);
@@ -83,8 +81,8 @@ export default function CaseDetailPage({ params }: CaseDetailPageProps) {
 
   if (loading) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-20 flex flex-col items-center justify-center space-y-3">
-        <RefreshCw className="w-8 h-8 text-[var(--accent-deep)] animate-spin" />
+      <div className="max-w-7xl mx-auto px-4 py-24 flex flex-col items-center justify-center space-y-3">
+        <RefreshCw className="w-8 h-8 text-[var(--brand-accent)] animate-spin" />
         <p className="text-sm text-[var(--text-secondary)]">{t('loading_data')}</p>
       </div>
     );
@@ -94,7 +92,7 @@ export default function CaseDetailPage({ params }: CaseDetailPageProps) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-16 text-center space-y-4">
         <p className="text-base text-red-600 font-semibold">{t('case_not_found')}</p>
-        <Link href="/cases" className="text-xs text-[var(--accent-deep)] underline">
+        <Link href="/cases" className="text-xs text-[var(--brand-accent)] underline">
           {t('back_to_cases')}
         </Link>
       </div>
@@ -106,12 +104,12 @@ export default function CaseDetailPage({ params }: CaseDetailPageProps) {
   const auditEvents = caseItem.audit_events || [];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-      {/* Breadcrumb & Navigation */}
-      <div className="flex items-center justify-between">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-6 animate-in fade-in-50">
+      {/* Breadcrumb & Quick Actions Bar */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
         <Link
           href="/cases"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors min-h-[44px] py-2"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>{t('back_to_cases')}</span>
@@ -121,15 +119,16 @@ export default function CaseDetailPage({ params }: CaseDetailPageProps) {
           <button
             onClick={handleRunChecks}
             disabled={runningChecks}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-[var(--border-color)] bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-soft)] text-[var(--text-primary)] transition-colors shadow-sm"
+            aria-label={t('rerun_checks_btn')}
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2.5 min-h-[44px] rounded-xl text-xs font-semibold border border-[var(--border-color)] bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-soft)] text-[var(--text-primary)] transition-colors shadow-xs cursor-pointer disabled:opacity-50"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${runningChecks ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 ${runningChecks ? 'animate-spin text-[var(--brand-accent)]' : ''}`} />
             <span>{runningChecks ? t('running_checks') : t('rerun_checks_btn')}</span>
           </button>
 
           <Link
             href={`/reports?case=${caseItem.case_number}`}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold bg-[var(--accent-deep)] text-[#FAF9F6] hover:opacity-90 transition-all shadow-sm"
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-2.5 min-h-[44px] rounded-xl text-xs font-bold bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-[var(--cta-text)] transition-all shadow-xs active:scale-95"
           >
             <Printer className="w-3.5 h-3.5" />
             <span>{t('print_pdf')}</span>
@@ -138,19 +137,19 @@ export default function CaseDetailPage({ params }: CaseDetailPageProps) {
       </div>
 
       {/* Case Header Card */}
-      <div className="p-6 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-surface)] space-y-4 shadow-sm">
+      <div className="p-5 sm:p-7 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-surface)] space-y-5 shadow-xs">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[var(--border-color)] pb-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-mono text-sm font-bold text-[var(--accent-deep)]">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-mono text-sm font-bold text-[var(--brand-accent)]">
                 {caseItem.case_number}
               </span>
-              <RiskBadge level={caseItem.risk_level} score={caseItem.risk_score} />
-              <span className="text-xs px-2.5 py-0.5 rounded bg-[var(--bg-surface-soft)] text-[var(--text-secondary)] font-medium border border-[var(--border-color)]">
+              <RiskBadge level={caseItem.risk_level} score={caseItem.risk_score} size="sm" />
+              <span className="text-xs px-2.5 py-0.5 rounded-full bg-[var(--bg-surface-soft)] text-[var(--text-secondary)] font-semibold border border-[var(--border-color)]">
                 {getStatusLabel(caseItem.status)}
               </span>
             </div>
-            <h1 className="text-xl sm:text-2xl font-extrabold text-[var(--text-primary)] mt-1">
+            <h1 className="text-xl sm:text-2xl font-extrabold text-[var(--text-primary)] tracking-tight">
               {caseItem.title}
             </h1>
           </div>
@@ -161,27 +160,27 @@ export default function CaseDetailPage({ params }: CaseDetailPageProps) {
           </div>
         </div>
 
-        {/* Parcel Info Pills */}
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs">
-          <div className="p-3 rounded-xl bg-[var(--bg-surface-soft)]/60 border border-[var(--border-color)]">
-            <span className="text-[var(--text-secondary)] block">{t('mouza_area_label')}</span>
-            <span className="font-semibold text-sm text-[var(--text-primary)]">{caseItem.mouza || 'সাভার'}</span>
+        {/* Parcel Info Pills (Responsive 2 cols on mobile, 4 cols on desktop) */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 text-xs">
+          <div className="p-3 sm:p-3.5 rounded-xl bg-[var(--bg-surface-soft)]/60 border border-[var(--border-color)]">
+            <span className="text-[var(--text-secondary)] text-[11px] block">{t('mouza_area_label')}</span>
+            <span className="font-bold text-sm text-[var(--text-primary)] truncate block mt-0.5">{caseItem.mouza || 'সাভার'}</span>
           </div>
-          <div className="p-3 rounded-xl bg-[var(--bg-surface-soft)]/60 border border-[var(--border-color)]">
-            <span className="text-[var(--text-secondary)] block">{t('dag_survey_label')}</span>
-            <span className="font-semibold text-sm text-[var(--text-primary)]">
+          <div className="p-3 sm:p-3.5 rounded-xl bg-[var(--bg-surface-soft)]/60 border border-[var(--border-color)]">
+            <span className="text-[var(--text-secondary)] text-[11px] block">{t('dag_survey_label')}</span>
+            <span className="font-bold text-sm text-[var(--text-primary)] truncate block mt-0.5 font-mono">
               {t('dag_survey_val', { dag: formatNumber(caseItem.dag_number || '৪১২'), survey: caseItem.parcel?.survey_type || 'RS' })}
             </span>
           </div>
-          <div className="p-3 rounded-xl bg-[var(--bg-surface-soft)]/60 border border-[var(--border-color)]">
-            <span className="text-[var(--text-secondary)] block">{t('recorded_area_label')}</span>
-            <span className="font-semibold text-sm text-[var(--text-primary)]">
+          <div className="p-3 sm:p-3.5 rounded-xl bg-[var(--bg-surface-soft)]/60 border border-[var(--border-color)]">
+            <span className="text-[var(--text-secondary)] text-[11px] block">{t('recorded_area_label')}</span>
+            <span className="font-bold text-sm text-[var(--text-primary)] truncate block mt-0.5 font-mono">
               {t('recorded_area_val', { area: formatNumber(caseItem.recorded_area || 25) })}
             </span>
           </div>
-          <div className="p-3 rounded-xl bg-[var(--bg-surface-soft)]/60 border border-[var(--border-color)]">
-            <span className="text-[var(--text-secondary)] block">{t('attached_docs_label')}</span>
-            <span className="font-semibold text-sm text-[var(--text-primary)]">
+          <div className="p-3 sm:p-3.5 rounded-xl bg-[var(--bg-surface-soft)]/60 border border-[var(--border-color)]">
+            <span className="text-[var(--text-secondary)] text-[11px] block">{t('attached_docs_label')}</span>
+            <span className="font-bold text-sm text-[var(--text-primary)] truncate block mt-0.5 font-mono">
               {t('attached_docs_val', { count: formatNumber(documents.length) })}
             </span>
           </div>
@@ -190,14 +189,14 @@ export default function CaseDetailPage({ params }: CaseDetailPageProps) {
         {/* Risk Explanation Banner */}
         <div className={`p-4 rounded-xl border flex items-start gap-3 text-xs leading-relaxed ${
           caseItem.risk_level === 'critical'
-            ? 'bg-red-50 dark:bg-red-950/40 border-red-300 text-red-800 dark:text-red-300'
+            ? 'bg-rose-50/80 dark:bg-rose-950/30 border-rose-200 dark:border-rose-900/60 text-rose-900 dark:text-rose-200'
             : caseItem.risk_level === 'high'
-            ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-300 text-amber-900 dark:text-amber-300'
-            : 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 text-emerald-800 dark:text-emerald-300'
+            ? 'bg-amber-50/80 dark:bg-amber-950/30 border-amber-200 dark:border-amber-900/60 text-amber-900 dark:text-amber-200'
+            : 'bg-emerald-50/80 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-900/60 text-emerald-900 dark:text-emerald-200'
         }`}>
           <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-          <div>
-            <p className="font-bold text-sm mb-0.5">{t('risk_reason_title')}</p>
+          <div className="space-y-0.5">
+            <p className="font-bold text-sm">{t('risk_reason_title')}</p>
             <p>
               {language === 'bn'
                 ? (caseItem.risk_summary_bn || t('risk_clean_summary'))
@@ -207,11 +206,11 @@ export default function CaseDetailPage({ params }: CaseDetailPageProps) {
         </div>
       </div>
 
-      {/* Human Reviewer Decision & Disposition Panel (Phase 5 Step 7) */}
-      <div className="p-4 sm:p-5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)] space-y-3 shadow-sm">
+      {/* Human Reviewer Decision & Disposition Panel */}
+      <div className="p-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-surface)] space-y-3 shadow-xs">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[var(--border-color)] pb-3">
           <div className="flex items-center gap-2">
-            <ShieldCheck className="w-5 h-5 text-[var(--accent-deep)]" />
+            <ShieldCheck className="w-5 h-5 text-[var(--brand-accent)]" />
             <div>
               <h3 className="text-sm font-bold text-[var(--text-primary)]">
                 {t('review_panel_title')}
@@ -223,7 +222,7 @@ export default function CaseDetailPage({ params }: CaseDetailPageProps) {
           </div>
           <div className="flex items-center gap-2">
             <span className="text-xs text-[var(--text-secondary)]">{t('current_status_label')}</span>
-            <span className="text-xs px-2.5 py-1 rounded-md font-semibold bg-[var(--accent-light)] text-[var(--accent-deep)] border border-[var(--border-color)]">
+            <span className="text-xs px-2.5 py-1 rounded-lg font-semibold bg-[var(--accent-light)] text-[var(--brand-accent)] border border-[var(--border-color)]">
               {getStatusLabel(caseItem.status)}
             </span>
           </div>
@@ -238,7 +237,7 @@ export default function CaseDetailPage({ params }: CaseDetailPageProps) {
               id="review-status"
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value)}
-              className="w-full text-xs font-medium p-2 rounded-lg border border-[var(--border-color)] bg-[var(--bg-surface-soft)] text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-deep)]"
+              className="w-full text-xs font-medium p-2.5 min-h-[44px] rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface-soft)] text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-accent)]/20 focus:border-[var(--brand-accent)] cursor-pointer"
             >
               <option value="flagged_review">{t('opt_flagged_review')}</option>
               <option value="verified_clean">{t('opt_verified_clean')}</option>
@@ -251,10 +250,10 @@ export default function CaseDetailPage({ params }: CaseDetailPageProps) {
             <button
               onClick={handleUpdateStatus}
               disabled={savingStatus || selectedStatus === caseItem.status}
-              className={`w-full sm:w-auto px-4 py-2 rounded-lg text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1.5 ${
+              className={`w-full sm:w-auto px-5 py-2.5 min-h-[44px] rounded-xl text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 ${
                 selectedStatus === caseItem.status
-                  ? 'bg-[var(--bg-surface-soft)] text-[var(--text-secondary)] border border-[var(--border-color)] cursor-not-allowed'
-                  : 'bg-[var(--accent-deep)] text-[#FAF9F6] hover:opacity-90'
+                  ? 'bg-[var(--bg-surface-soft)] text-[var(--text-secondary)] border border-[var(--border-color)] cursor-not-allowed opacity-60'
+                  : 'bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-[var(--cta-text)]'
               }`}
             >
               {savingStatus && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
@@ -264,20 +263,21 @@ export default function CaseDetailPage({ params }: CaseDetailPageProps) {
         </div>
 
         {statusMessage && (
-          <div className="p-2.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-xs text-emerald-900 dark:text-emerald-200 flex items-center gap-2">
+          <div className="p-3 rounded-xl bg-emerald-50 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-800 text-xs flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
             <span>{statusMessage}</span>
           </div>
         )}
       </div>
 
-      {/* Navigation Tabs */}
-      <div className="flex border-b border-[var(--border-color)] gap-2 text-xs font-semibold overflow-x-auto">
+      {/* Navigation Tabs (Accessible, touch-friendly min 44px) */}
+      <div className="flex border-b border-[var(--border-color)] gap-1 sm:gap-2 text-xs font-semibold overflow-x-auto pb-px">
         <button
+          type="button"
           onClick={() => setActiveTab('findings')}
-          className={`pb-3 px-3 flex items-center gap-1.5 border-b-2 transition-colors shrink-0 ${
+          className={`px-3.5 py-3 min-h-[44px] flex items-center gap-1.5 border-b-2 transition-colors shrink-0 cursor-pointer ${
             activeTab === 'findings'
-              ? 'border-[var(--accent-deep)] text-[var(--accent-deep)] font-bold'
+              ? 'border-[var(--brand-accent)] text-[var(--brand-accent)] font-bold'
               : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
           }`}
         >
@@ -286,10 +286,11 @@ export default function CaseDetailPage({ params }: CaseDetailPageProps) {
         </button>
 
         <button
+          type="button"
           onClick={() => setActiveTab('graph')}
-          className={`pb-3 px-3 flex items-center gap-1.5 border-b-2 transition-colors shrink-0 ${
+          className={`px-3.5 py-3 min-h-[44px] flex items-center gap-1.5 border-b-2 transition-colors shrink-0 cursor-pointer ${
             activeTab === 'graph'
-              ? 'border-[var(--accent-deep)] text-[var(--accent-deep)] font-bold'
+              ? 'border-[var(--brand-accent)] text-[var(--brand-accent)] font-bold'
               : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
           }`}
         >
@@ -298,10 +299,11 @@ export default function CaseDetailPage({ params }: CaseDetailPageProps) {
         </button>
 
         <button
+          type="button"
           onClick={() => setActiveTab('documents')}
-          className={`pb-3 px-3 flex items-center gap-1.5 border-b-2 transition-colors shrink-0 ${
+          className={`px-3.5 py-3 min-h-[44px] flex items-center gap-1.5 border-b-2 transition-colors shrink-0 cursor-pointer ${
             activeTab === 'documents'
-              ? 'border-[var(--accent-deep)] text-[var(--accent-deep)] font-bold'
+              ? 'border-[var(--brand-accent)] text-[var(--brand-accent)] font-bold'
               : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
           }`}
         >
@@ -310,10 +312,11 @@ export default function CaseDetailPage({ params }: CaseDetailPageProps) {
         </button>
 
         <button
+          type="button"
           onClick={() => setActiveTab('audit')}
-          className={`pb-3 px-3 flex items-center gap-1.5 border-b-2 transition-colors shrink-0 ${
+          className={`px-3.5 py-3 min-h-[44px] flex items-center gap-1.5 border-b-2 transition-colors shrink-0 cursor-pointer ${
             activeTab === 'audit'
-              ? 'border-[var(--accent-deep)] text-[var(--accent-deep)] font-bold'
+              ? 'border-[var(--brand-accent)] text-[var(--brand-accent)] font-bold'
               : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
           }`}
         >
@@ -329,49 +332,49 @@ export default function CaseDetailPage({ params }: CaseDetailPageProps) {
             anomalies.map((f: AnomalyFinding) => (
               <div
                 key={f.id}
-                className="p-5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)] space-y-3.5 shadow-sm"
+                className="p-5 sm:p-6 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-surface)] space-y-4 shadow-xs"
               >
                 {/* Finding Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[var(--border-color)] pb-3">
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-[var(--bg-surface-soft)] text-[var(--accent-deep)] border border-[var(--border-color)]">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-[var(--bg-surface-soft)] text-[var(--brand-accent)] border border-[var(--border-color)]">
                       {t('finding_rule_badge', { code: f.rule_code_snapshot })}
                     </span>
                     <h3 className="text-sm font-bold text-[var(--text-primary)]">
                       {language === 'bn' ? f.title_bn : (f.title_en || f.title_bn)}
                     </h3>
                   </div>
-                  <RiskBadge level={f.severity} showScore={false} />
+                  <RiskBadge level={f.severity} showScore={false} size="sm" />
                 </div>
 
                 {/* Finding Description */}
                 <div className="text-xs text-[var(--text-secondary)] leading-relaxed space-y-1">
-                  <p className="font-medium text-[var(--text-primary)]">{t('finding_details_label')}</p>
+                  <p className="font-semibold text-[var(--text-primary)]">{t('finding_details_label')}</p>
                   <p>{language === 'bn' ? f.description_bn : (f.description_en || f.description_bn)}</p>
                 </div>
 
-                {/* Conflicting Records Table */}
+                {/* Conflicting Records Table (Mobile-safe break-all) */}
                 {f.conflicting_records && f.conflicting_records.length > 0 && (
-                  <div className="p-3.5 rounded-lg bg-[var(--bg-surface-soft)] border border-[var(--border-color)] space-y-2">
+                  <div className="p-3.5 sm:p-4 rounded-xl bg-[var(--bg-surface-soft)] border border-[var(--border-color)] space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] font-bold text-[var(--text-primary)]">
                         {t('discrepancy_title')}
                       </span>
                       <button
                         onClick={() => setActiveTab('documents')}
-                        className="text-[11px] font-bold text-[var(--accent-deep)] hover:underline flex items-center gap-1"
+                        className="text-[11px] font-bold text-[var(--brand-accent)] hover:underline flex items-center gap-1 cursor-pointer"
                       >
                         <FileText className="w-3 h-3" />
                         <span>{t('goto_docs_btn')}</span>
                       </button>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                      {f.conflicting_records.map((rec: any, idx: number) => (
-                        <div key={idx} className="p-2.5 rounded bg-[var(--bg-surface)] border border-[var(--border-color)] font-mono text-[11px] space-y-1">
+                      {f.conflicting_records.map((rec: Record<string, unknown>, idx: number) => (
+                        <div key={idx} className="p-3 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-color)] font-mono text-[11px] space-y-1">
                           {Object.entries(rec).map(([k, v]) => (
-                            <div key={k} className="flex justify-between border-b border-[var(--border-color)]/30 pb-0.5">
-                              <span className="text-[var(--text-secondary)] font-sans">{k}:</span>
-                              <span className="font-semibold text-[var(--text-primary)]">{String(v)}</span>
+                            <div key={k} className="flex justify-between border-b border-[var(--border-color)]/30 pb-0.5 gap-2">
+                              <span className="text-[var(--text-secondary)] font-sans truncate">{k}:</span>
+                              <span className="font-semibold text-[var(--text-primary)] break-all text-right">{String(v)}</span>
                             </div>
                           ))}
                         </div>
@@ -382,10 +385,10 @@ export default function CaseDetailPage({ params }: CaseDetailPageProps) {
 
                 {/* Human Reviewer Recommended Action */}
                 {f.human_action_recommended_bn && (
-                  <div className="p-3 rounded-lg bg-[var(--accent-light)] border border-[var(--border-color)] text-xs text-[var(--text-primary)] flex items-start gap-2">
-                    <Info className="w-4 h-4 text-[var(--accent-deep)] shrink-0 mt-0.5" />
-                    <div>
-                      <span className="font-bold text-[var(--accent-deep)]">{t('reviewer_action_label')} </span>
+                  <div className="p-3.5 rounded-xl bg-[var(--accent-light)] border border-[var(--border-color)] text-xs text-[var(--text-primary)] flex items-start gap-2.5">
+                    <Info className="w-4 h-4 text-[var(--brand-accent)] shrink-0 mt-0.5" />
+                    <div className="leading-relaxed">
+                      <span className="font-bold text-[var(--brand-accent)]">{t('reviewer_action_label')} </span>
                       <span>{f.human_action_recommended_bn}</span>
                     </div>
                   </div>
@@ -393,7 +396,7 @@ export default function CaseDetailPage({ params }: CaseDetailPageProps) {
               </div>
             ))
           ) : (
-            <div className="p-12 text-center rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)] space-y-2 shadow-sm">
+            <div className="p-12 text-center rounded-2xl border border-[var(--border-color)] bg-[var(--bg-surface)] space-y-2 shadow-xs">
               <CheckCircle2 className="w-10 h-10 text-emerald-600 mx-auto" />
               <h4 className="text-base font-bold text-[var(--text-primary)]">{t('no_findings_title')}</h4>
               <p className="text-xs text-[var(--text-secondary)] max-w-md mx-auto">
@@ -426,22 +429,22 @@ export default function CaseDetailPage({ params }: CaseDetailPageProps) {
 
       {/* Tab 4: Audit History */}
       {activeTab === 'audit' && (
-        <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)] overflow-hidden shadow-sm">
-          <div className="p-4 border-b border-[var(--border-color)] font-bold text-xs bg-[var(--bg-surface-soft)]/50">
+        <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-surface)] overflow-hidden shadow-xs">
+          <div className="p-4 border-b border-[var(--border-color)] font-bold text-xs bg-[var(--bg-surface-soft)]/60">
             {t('report_sec4_title')}
           </div>
           <div className="divide-y divide-[var(--border-color)]">
-            {auditEvents.map((a: any) => (
-              <div key={a.id} className="p-4 flex items-center justify-between text-xs">
+            {auditEvents.map((a: { id: number; action_display: string; details: unknown; user_email?: string; created_at: string }) => (
+              <div key={a.id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
                 <div className="space-y-1">
                   <p className="font-semibold text-[var(--text-primary)]">{a.action_display}</p>
-                  <p className="font-mono text-[11px] text-[var(--text-secondary)]">
+                  <p className="font-mono text-[11px] text-[var(--text-secondary)] break-all">
                     {JSON.stringify(a.details)}
                   </p>
                 </div>
-                <div className="text-right text-[var(--text-secondary)] shrink-0 font-mono">
+                <div className="text-left sm:text-right text-[var(--text-secondary)] shrink-0 font-mono text-[11px]">
                   <p>{a.user_email || 'System'}</p>
-                  <p className="text-[11px]">{formatDate(a.created_at)}</p>
+                  <p>{formatDate(a.created_at)}</p>
                 </div>
               </div>
             ))}

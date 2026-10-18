@@ -481,6 +481,8 @@ export const DICTIONARY: Translations = {
   disp_step2: { bn: '২. অফিসিয়াল নোট', en: '2. Official Notes' },
   disp_step3: { bn: '৩. নিশ্চিতকরণ', en: '3. Final Confirmation' },
   disp_confirm_desc: { bn: 'পর্যালোচনা সিদ্ধান্ত জমা দিলে অ্যালার্টটির স্ট্যাটাস পরিবর্তিত হবে এবং অডিট ট্রেইলে অফিসিয়াল এন্ট্রি তৈরি হবে।', en: 'Submitting this disposition will update alert status and create a permanent official audit trail record.' },
+  btn_next_notes: { bn: 'পরবর্তী: অফিসিয়াল নোট', en: 'Next: Official Notes' },
+  btn_next_confirm: { bn: 'পরবর্তী: নিশ্চিতকরণ', en: 'Next: Confirmation' },
 
   // Disclaimer
   disclaimer_short: {

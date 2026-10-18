@@ -78,11 +78,17 @@
 
   --background: var(--bg-primary);
   --foreground: var(--text-primary);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 :root {
   --font-bangla: "Hind Siliguri", "Noto Sans Bengali", "Tiro Bangla", "Kalpurush", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-english: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+html, body {
+  max-width: 100vw;
+  overflow-x: clip;
 }
 
 body {
@@ -110,6 +116,23 @@ html[lang="en"] body {
 .mixed-script {
   unicode-bidi: plaintext;
   direction: ltr;
+}
+
+/* Accessible touch target (WCAG 2.2 AA minimum 44x44px) */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Focus styles for keyboard accessibility */
+:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+}
+
+/* Safe area padding for mobile bottom bar */
+.pb-safe {
+  padding-bottom: calc(4.5rem + var(--safe-bottom));
 }
 
 /* Custom scrollbars for document panels */
@@ -140,7 +163,7 @@ html[lang="en"] body {
   .print-only {
     display: block !important;
   }
-  header, nav, footer {
+  header, nav, footer, .mobile-bottom-nav {
     display: none !important;
   }
   .card, .panel {

@@ -81,15 +81,15 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-cream-50 text-cream-900 transition-colors duration-200">
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] transition-colors duration-200">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 sm:space-y-8">
         {/* Header */}
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold flex items-center gap-3">
-            <Settings className="w-8 h-8 text-parrot-600" />
-            {language === 'bn' ? 'সিস্টেম ও ব্যবহারকারী সেটিংস' : 'System & User Settings'}
+        <div className="border-b border-[var(--border-color)] pb-4">
+          <h1 className="text-2xl sm:text-3xl font-extrabold flex items-center gap-3 text-[var(--text-primary)]">
+            <Settings className="w-7 h-7 sm:w-8 sm:h-8 text-[var(--brand-accent)]" />
+            <span>{language === 'bn' ? 'সিস্টেম ও ব্যবহারকারী সেটিংস' : 'System & User Settings'}</span>
           </h1>
-          <p className="text-cream-600 text-sm mt-1">
+          <p className="text-[var(--text-secondary)] text-xs sm:text-sm mt-1">
             {language === 'bn'
               ? 'ইউজার প্রোফাইল, ডেমো ভূমিকা, ইন্টারফেস থিম এবং সিস্টেমের ডায়াগনস্টিক তথ্য পরিচালনা করুন।'
               : 'Manage user profiles, demo roles, UI preferences, and platform diagnostics.'}
@@ -98,41 +98,41 @@ export default function SettingsPage() {
 
         {/* Feedback Toast */}
         {toastMsg && (
-          <div className="p-4 rounded-xl bg-parrot-100 border border-parrot-300 text-parrot-900 flex items-center gap-2 animate-in fade-in">
-            <CheckCircle2 className="w-5 h-5 text-parrot-700 shrink-0" />
-            <span className="font-medium text-sm">{toastMsg}</span>
+          <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-800 dark:text-emerald-200 flex items-center gap-2 animate-in fade-in">
+            <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            <span className="font-medium text-xs sm:text-sm">{toastMsg}</span>
           </div>
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Section 1: User Profile & Role Switcher */}
-          <div className="bg-white rounded-2xl p-6 border border-cream-200 shadow-sm space-y-4">
-            <h2 className="text-lg font-bold flex items-center gap-2 text-cream-900">
-              <UserIcon className="w-5 h-5 text-parrot-600" />
-              {language === 'bn' ? 'বর্তমান ব্যবহারকারী প্রোফাইল' : 'Active User Profile'}
+          <div className="bg-[var(--bg-surface)] rounded-2xl p-5 sm:p-6 border border-[var(--border-color)] shadow-xs space-y-4">
+            <h2 className="text-base sm:text-lg font-bold flex items-center gap-2 text-[var(--text-primary)]">
+              <UserIcon className="w-5 h-5 text-[var(--brand-accent)]" />
+              <span>{language === 'bn' ? 'বর্তমান ব্যবহারকারী প্রোফাইল' : 'Active User Profile'}</span>
             </h2>
-            <div className="p-4 rounded-xl bg-cream-50 border border-cream-200 space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-cream-600">{language === 'bn' ? 'পূর্ণ নাম:' : 'Full Name:'}</span>
-                <span className="font-semibold text-cream-900">
+            <div className="p-4 rounded-xl bg-[var(--bg-surface-soft)] border border-[var(--border-color)] space-y-2">
+              <div className="flex justify-between text-xs sm:text-sm">
+                <span className="text-[var(--text-secondary)]">{language === 'bn' ? 'পূর্ণ নাম:' : 'Full Name:'}</span>
+                <span className="font-semibold text-[var(--text-primary)]">
                   {user?.profile?.full_name_bn || (language === 'bn' ? 'আব্দুল করিম (পরীক্ষক)' : 'Abdul Karim (Reviewer)')}
                 </span>
               </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-cream-600">{language === 'bn' ? 'ইমেইল:' : 'Email:'}</span>
-                <span className="font-mono text-xs text-cream-800">{user?.email || 'reviewer@unleft.org'}</span>
+              <div className="flex justify-between text-xs sm:text-sm">
+                <span className="text-[var(--text-secondary)]">{language === 'bn' ? 'ইমেইল:' : 'Email:'}</span>
+                <span className="font-mono text-xs text-[var(--text-primary)]">{user?.email || 'reviewer@unleft.org'}</span>
               </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-cream-600">{language === 'bn' ? 'সংস্থা:' : 'Organization:'}</span>
-                <span className="text-cream-800">{user?.profile?.organization || 'ভূমি মন্ত্রণালয় (ডেমো)'}</span>
+              <div className="flex justify-between text-xs sm:text-sm">
+                <span className="text-[var(--text-secondary)]">{language === 'bn' ? 'সংস্থা:' : 'Organization:'}</span>
+                <span className="text-[var(--text-primary)]">{user?.profile?.organization || (language === 'bn' ? 'ভূমি মন্ত্রণালয় (ডেমো)' : 'Ministry of Land (Demo)')}</span>
               </div>
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-cream-800 block">
+              <label className="text-xs sm:text-sm font-bold text-[var(--text-primary)] block">
                 {language === 'bn' ? 'ডেমো ভূমিকা পরিবর্তন করুন:' : 'Switch Demo Role:'}
               </label>
-              <div className="grid grid-cols-1 gap-2">
+              <div className="grid grid-cols-1 gap-2.5">
                 {[
                   {
                     id: 'demo_reviewer',
@@ -158,21 +158,21 @@ export default function SettingsPage() {
                     type="button"
                     onClick={() => handleRoleChange(r.id)}
                     disabled={isSwitchingRole}
-                    className={`text-left p-3 rounded-xl border text-sm transition-all ${
+                    className={`text-left p-3.5 sm:p-4 rounded-xl border text-xs sm:text-sm transition-all min-h-[52px] touch-target cursor-pointer ${
                       selectedRole === r.id
-                        ? 'border-parrot-500 bg-parrot-50 font-bold text-parrot-900'
-                        : 'border-cream-200 hover:bg-cream-100/50 text-cream-700'
+                        ? 'border-[var(--brand-accent)] bg-[var(--accent-light)] font-bold text-[var(--text-primary)] ring-1 ring-[var(--brand-accent)]/30 shadow-xs'
+                        : 'border-[var(--border-color)] hover:bg-[var(--bg-surface-soft)] text-[var(--text-primary)]'
                     }`}
                   >
-                    <div className="flex items-center justify-between">
-                      <span>{language === 'bn' ? r.bn : r.en}</span>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-bold">{language === 'bn' ? r.bn : r.en}</span>
                       {selectedRole === r.id && (
-                        <span className="text-xs bg-parrot-600 text-white px-2 py-0.5 rounded-full">
+                        <span className="text-[10px] bg-[var(--brand-accent)] text-white px-2 py-0.5 rounded-full font-bold shrink-0">
                           {language === 'bn' ? 'সক্রিয়' : 'Active'}
                         </span>
                       )}
                     </div>
-                    <p className="text-xs font-normal text-cream-500 mt-1">{r.desc_bn}</p>
+                    <p className="text-[11px] font-normal text-[var(--text-secondary)] mt-1">{r.desc_bn}</p>
                   </button>
                 ))}
               </div>
@@ -180,31 +180,31 @@ export default function SettingsPage() {
           </div>
 
           {/* Section 2: UI Preferences & Localization */}
-          <div className="bg-white rounded-2xl p-6 border border-cream-200 shadow-sm space-y-4">
-            <h2 className="text-lg font-bold flex items-center gap-2 text-cream-900">
-              <Sliders className="w-5 h-5 text-parrot-600" />
-              {language === 'bn' ? 'ইন্টারফেস পছন্দসমূহ' : 'Interface Preferences'}
+          <div className="bg-[var(--bg-surface)] rounded-2xl p-5 sm:p-6 border border-[var(--border-color)] shadow-xs space-y-4">
+            <h2 className="text-base sm:text-lg font-bold flex items-center gap-2 text-[var(--text-primary)]">
+              <Sliders className="w-5 h-5 text-[var(--brand-accent)]" />
+              <span>{language === 'bn' ? 'ইন্টারফেস পছন্দসমূহ' : 'Interface Preferences'}</span>
             </h2>
 
             {/* Language Switcher */}
-            <div className="p-4 rounded-xl bg-cream-50 border border-cream-200 flex items-center justify-between">
+            <div className="p-4 rounded-xl bg-[var(--bg-surface-soft)] border border-[var(--border-color)] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center gap-3">
-                <Globe className="w-5 h-5 text-cream-600" />
+                <Globe className="w-5 h-5 text-[var(--text-secondary)] shrink-0" />
                 <div>
-                  <span className="font-semibold text-sm block text-cream-900">
+                  <span className="font-bold text-xs sm:text-sm block text-[var(--text-primary)]">
                     {language === 'bn' ? 'পণ্য ইন্টারফেস ভাষা' : 'Interface Language'}
                   </span>
-                  <span className="text-xs text-cream-500">
+                  <span className="text-[11px] text-[var(--text-secondary)]">
                     {language === 'bn' ? 'বাংলা ডিফল্ট (প্রথম ভাষা)' : 'Bangla is default primary language'}
                   </span>
                 </div>
               </div>
-              <div className="flex rounded-lg border border-cream-300 p-0.5 bg-cream-100">
+              <div className="flex rounded-xl border border-[var(--border-color)] p-0.5 bg-[var(--bg-surface)]">
                 <button
                   type="button"
                   onClick={() => setLanguage('bn')}
-                  className={`px-3 py-1 rounded text-xs font-bold transition-colors ${
-                    language === 'bn' ? 'bg-parrot-600 text-white' : 'text-cream-700 hover:bg-cream-200'
+                  className={`px-3 py-2 rounded-lg text-xs font-bold transition-colors min-h-[40px] touch-target cursor-pointer ${
+                    language === 'bn' ? 'bg-[var(--brand-accent)] text-white shadow-2xs' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                   }`}
                 >
                   বাংলা
@@ -212,8 +212,8 @@ export default function SettingsPage() {
                 <button
                   type="button"
                   onClick={() => setLanguage('en')}
-                  className={`px-3 py-1 rounded text-xs font-bold transition-colors ${
-                    language === 'en' ? 'bg-parrot-600 text-white' : 'text-cream-700 hover:bg-cream-200'
+                  className={`px-3 py-2 rounded-lg text-xs font-bold transition-colors min-h-[40px] touch-target cursor-pointer ${
+                    language === 'en' ? 'bg-[var(--brand-accent)] text-white shadow-2xs' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                   }`}
                 >
                   English
@@ -222,35 +222,35 @@ export default function SettingsPage() {
             </div>
 
             {/* Theme Toggle */}
-            <div className="p-4 rounded-xl bg-cream-50 border border-cream-200 flex items-center justify-between">
+            <div className="p-4 rounded-xl bg-[var(--bg-surface-soft)] border border-[var(--border-color)] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 {theme === 'dark' ? (
-                  <Moon className="w-5 h-5 text-parrot-600" />
+                  <Moon className="w-5 h-5 text-[var(--brand-accent)] shrink-0" />
                 ) : (
-                  <Sun className="w-5 h-5 text-amber-500" />
+                  <Sun className="w-5 h-5 text-amber-500 shrink-0" />
                 )}
                 <div>
-                  <span className="font-semibold text-sm block text-cream-900">
+                  <span className="font-bold text-xs sm:text-sm block text-[var(--text-primary)]">
                     {language === 'bn' ? 'ভিজ্যুয়াল থিম' : 'Color Theme'}
                   </span>
-                  <span className="text-xs text-cream-500">
-                    {language === 'bn' ? 'ক্রিম-হোয়াইট (ডিফল্ট) বনাম ডার্ক মোড' : 'Warm cream light mode vs Dark mode'}
+                  <span className="text-[11px] text-[var(--text-secondary)]">
+                    {language === 'bn' ? 'লাইট মোড (ডিফল্ট) বনাম ডার্ক মোড' : 'Light mode (default) vs Dark mode'}
                   </span>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={toggleTheme}
-                className="px-3 py-1.5 rounded-lg border border-cream-300 text-xs font-bold hover:bg-cream-200 flex items-center gap-1.5 text-cream-800"
+                className="px-4 py-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)] text-xs font-bold hover:bg-[var(--bg-surface-soft)] flex items-center justify-center gap-2 text-[var(--text-primary)] min-h-[44px] touch-target cursor-pointer transition-colors"
               >
                 {theme === 'dark' ? (
                   <>
-                    <Sun className="w-3.5 h-3.5 text-amber-500" />
+                    <Sun className="w-4 h-4 text-amber-500" />
                     <span>{language === 'bn' ? 'লাইট মোড' : 'Light Mode'}</span>
                   </>
                 ) : (
                   <>
-                    <Moon className="w-3.5 h-3.5 text-cream-600" />
+                    <Moon className="w-4 h-4 text-[var(--text-secondary)]" />
                     <span>{language === 'bn' ? 'ডার্ক মোড' : 'Dark Mode'}</span>
                   </>
                 )}
@@ -258,66 +258,66 @@ export default function SettingsPage() {
             </div>
 
             {/* Palette Specs */}
-            <div className="p-4 rounded-xl bg-cream-100/60 border border-cream-200 space-y-1 text-xs text-cream-700">
-              <div className="font-bold text-cream-800">
+            <div className="p-4 rounded-xl bg-[var(--bg-surface-soft)]/60 border border-[var(--border-color)] space-y-1 text-xs text-[var(--text-secondary)]">
+              <div className="font-bold text-[var(--text-primary)]">
                 {language === 'bn' ? 'ব্র্যান্ড রঙ স্পেসিফিকেশন:' : 'Brand Palette Standards:'}
               </div>
-              <div>• Parrot Green: <span className="font-mono">#7ED957</span> (Primary Accent)</div>
-              <div>• Deep Leaf: <span className="font-mono">#286B35</span> (Deep Contrast)</div>
-              <div>• Warm Cream: <span className="font-mono">#FFF8E7</span> (Surface Foundation)</div>
+              <div>• Emerald Primary: <span className="font-mono text-[var(--text-primary)]">#15803D / #286B35</span></div>
+              <div>• Lime Secondary: <span className="font-mono text-[var(--text-primary)]">#7ED957</span></div>
+              <div>• Surface Neutral: <span className="font-mono text-[var(--text-primary)]">#F8FAFC / #0A0F15</span></div>
             </div>
           </div>
         </div>
 
         {/* Section 3: Architecture & System Diagnostics */}
-        <div className="bg-white rounded-2xl p-6 border border-cream-200 shadow-sm space-y-4">
-          <h2 className="text-lg font-bold flex items-center gap-2 text-cream-900">
-            <Database className="w-5 h-5 text-parrot-600" />
-            {language === 'bn' ? 'সিস্টেম আর্কিটেকচার ও ডেটা সংযোগ' : 'System Architecture & Data Connection'}
+        <div className="bg-[var(--bg-surface)] rounded-2xl p-5 sm:p-6 border border-[var(--border-color)] shadow-xs space-y-4">
+          <h2 className="text-base sm:text-lg font-bold flex items-center gap-2 text-[var(--text-primary)]">
+            <Database className="w-5 h-5 text-[var(--brand-accent)]" />
+            <span>{language === 'bn' ? 'সিস্টেম আর্কিটেকচার ও ডেটা সংযোগ' : 'System Architecture & Data Connection'}</span>
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="p-4 rounded-xl bg-cream-50 border border-cream-200 space-y-1">
-              <span className="text-xs text-cream-500 uppercase tracking-wide">
+            <div className="p-4 rounded-xl bg-[var(--bg-surface-soft)] border border-[var(--border-color)] space-y-1">
+              <span className="text-[11px] text-[var(--text-secondary)] uppercase tracking-wide font-semibold block">
                 {language === 'bn' ? 'ডাটাবেজ ইঞ্জিন' : 'Database Engine'}
               </span>
-              <p className="font-bold text-sm text-cream-900">PostgreSQL / SQLite Dual-Mode</p>
-              <p className="text-xs text-emerald-700 flex items-center gap-1">
+              <p className="font-bold text-xs sm:text-sm text-[var(--text-primary)]">PostgreSQL / SQLite Dual-Mode</p>
+              <p className="text-xs text-emerald-600 dark:text-emerald-400 flex items-center gap-1 font-medium">
                 <CheckCircle2 className="w-3.5 h-3.5" />
-                {language === 'bn' ? 'স্থানীয় ডেটা সংযোগ সক্রিয়' : 'Connected (Healthy)'}
+                <span>{language === 'bn' ? 'স্থানীয় ডেটা সংযোগ সক্রিয়' : 'Connected (Healthy)'}</span>
               </p>
             </div>
-            <div className="p-4 rounded-xl bg-cream-50 border border-cream-200 space-y-1">
-              <span className="text-xs text-cream-500 uppercase tracking-wide">
+            <div className="p-4 rounded-xl bg-[var(--bg-surface-soft)] border border-[var(--border-color)] space-y-1">
+              <span className="text-[11px] text-[var(--text-secondary)] uppercase tracking-wide font-semibold block">
                 {language === 'bn' ? 'রুল ইঞ্জিন ক্যাটালগ' : 'Rule Engine Catalog'}
               </span>
-              <p className="font-bold text-sm text-cream-900">12 Deterministic Rules (D001-X001)</p>
-              <p className="text-xs text-emerald-700 flex items-center gap-1">
+              <p className="font-bold text-xs sm:text-sm text-[var(--text-primary)]">12 Deterministic Rules (D001-X001)</p>
+              <p className="text-xs text-emerald-600 dark:text-emerald-400 flex items-center gap-1 font-medium">
                 <CheckCircle2 className="w-3.5 h-3.5" />
-                {language === 'bn' ? 'ক্যাটালগ এনরোল্ড' : 'All Rules Active'}
+                <span>{language === 'bn' ? 'ক্যাটালগ এনরোল্ড' : 'All Rules Active'}</span>
               </p>
             </div>
-            <div className="p-4 rounded-xl bg-cream-50 border border-cream-200 space-y-1">
-              <span className="text-xs text-cream-500 uppercase tracking-wide">
+            <div className="p-4 rounded-xl bg-[var(--bg-surface-soft)] border border-[var(--border-color)] space-y-1">
+              <span className="text-[11px] text-[var(--text-secondary)] uppercase tracking-wide font-semibold block">
                 {language === 'bn' ? 'মালিকানা গ্রাফ বিশ্লেষক' : 'Ownership Graph Analyzer'}
               </span>
-              <p className="font-bold text-sm text-cream-900">NetworkX Directed Multigraph</p>
-              <p className="text-xs text-emerald-700 flex items-center gap-1">
+              <p className="font-bold text-xs sm:text-sm text-[var(--text-primary)]">NetworkX Directed Multigraph</p>
+              <p className="text-xs text-emerald-600 dark:text-emerald-400 flex items-center gap-1 font-medium">
                 <CheckCircle2 className="w-3.5 h-3.5" />
-                {language === 'bn' ? 'দ্বৈত বিক্রি ট্র্যাকিং প্রস্তুত' : 'Cycle & Conflict Ready'}
+                <span>{language === 'bn' ? 'দ্বৈত বিক্রি ট্র্যাকিং প্রস্তুত' : 'Cycle & Conflict Ready'}</span>
               </p>
             </div>
           </div>
         </div>
 
         {/* Section 4: Maintenance & Demo Reset */}
-        <div className="bg-white rounded-2xl p-6 border border-amber-200 shadow-sm space-y-4">
-          <div className="flex items-start justify-between">
+        <div className="bg-[var(--bg-surface)] rounded-2xl p-5 sm:p-6 border border-amber-500/30 dark:border-amber-500/20 shadow-xs space-y-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="space-y-1">
-              <h2 className="text-lg font-bold flex items-center gap-2 text-amber-900">
-                <AlertTriangle className="w-5 h-5 text-amber-600" />
-                {language === 'bn' ? 'ডেমো ডেটা রিসেট ও রক্ষণাবেক্ষণ' : 'Demo Data Maintenance'}
+              <h2 className="text-base sm:text-lg font-bold flex items-center gap-2 text-amber-800 dark:text-amber-300">
+                <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0" />
+                <span>{language === 'bn' ? 'ডেমো ডেটা রিসেট ও রক্ষণাবেক্ষণ' : 'Demo Data Maintenance'}</span>
               </h2>
-              <p className="text-xs text-cream-600 max-w-xl">
+              <p className="text-xs text-[var(--text-secondary)] max-w-xl leading-relaxed">
                 {language === 'bn'
                   ? 'হ্যাকার্থন বা ডেমো উপস্থাপনার সুবিধার্থে সমস্ত কেস, অসঙ্গতি সংকেত এবং ফিল্ড এডিটকে প্রারম্ভিক সিন্থেটিক ৮টি কেসে ফিরিয়ে আনুন।'
                   : 'Re-seed database to clean baseline with 8 pre-configured scenarios including clean transfer, broken chain, double-sale, and altered copy.'}
@@ -327,10 +327,10 @@ export default function SettingsPage() {
               type="button"
               onClick={handleReseed}
               disabled={reseedLoading}
-              className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs rounded-xl flex items-center gap-2 shadow-sm transition-colors disabled:opacity-50"
+              className="w-full sm:w-auto px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 shadow-sm transition-all min-h-[44px] touch-target cursor-pointer active:scale-95 disabled:opacity-50"
             >
               <RefreshCw className={`w-4 h-4 ${reseedLoading ? 'animate-spin' : ''}`} />
-              {language === 'bn' ? 'ডেমো ডেটা রিসেট করুন' : 'Reset Demo Data'}
+              <span>{language === 'bn' ? 'ডেমো ডেটা রিসেট করুন' : 'Reset Demo Data'}</span>
             </button>
           </div>
         </div>

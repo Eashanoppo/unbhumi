@@ -66,7 +66,7 @@ export default function ReviewQueuePage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[var(--border-color)] pb-4">
         <div>
@@ -80,103 +80,158 @@ export default function ReviewQueuePage() {
 
         <button
           onClick={loadAlerts}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-[var(--border-color)] bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-soft)] transition-colors"
+          className="flex items-center justify-center gap-2 px-4 py-2.5 sm:py-1.5 rounded-xl text-xs font-semibold border border-[var(--border-color)] bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-soft)] transition-colors min-h-[44px] sm:min-h-0 touch-target cursor-pointer"
         >
-          <RefreshCw className="w-3.5 h-3.5" />
+          <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-[var(--accent-deep)]' : ''}`} />
           <span>{t('refresh')}</span>
         </button>
       </div>
 
       {successMessage && (
-        <div className="p-3.5 rounded-xl bg-emerald-50 text-emerald-800 text-xs font-semibold flex items-center gap-2 border border-emerald-200">
-          <CheckCircle className="w-4 h-4 text-emerald-600" />
+        <div className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 text-emerald-800 dark:text-emerald-200 text-xs font-semibold flex items-center gap-2 border border-emerald-200 dark:border-emerald-800 animate-in fade-in">
+          <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
           <span>{successMessage}</span>
         </div>
       )}
 
-      {/* Alerts Table */}
+      {/* Alerts View: Desktop Table + Mobile Stacked Cards */}
       <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)] overflow-hidden shadow-sm">
         {loading ? (
-          <div className="p-12 text-center text-xs text-[var(--text-secondary)] flex items-center justify-center gap-2">
-            <RefreshCw className="w-4 h-4 animate-spin text-[var(--accent-deep)]" />
-            <span>{t('queue_loading')}</span>
+          <div className="p-12 text-center text-xs text-[var(--text-secondary)] flex flex-col sm:flex-row items-center justify-center gap-2">
+            <RefreshCw className="w-5 h-5 animate-spin text-[var(--accent-deep)]" />
+            <span className="font-medium">{t('queue_loading')}</span>
           </div>
         ) : alerts.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs text-left border-collapse">
-              <thead>
-                <tr className="border-b border-[var(--border-color)] text-[var(--text-secondary)] bg-[var(--bg-surface-soft)]/40 font-semibold">
-                  <th className="py-3 px-4">{t('col_rule_code')}</th>
-                  <th className="py-3 px-4">{t('col_case_reference')}</th>
-                  <th className="py-3 px-4">{t('col_detected_inconsistency')}</th>
-                  <th className="py-3 px-4">{t('col_risk_level')}</th>
-                  <th className="py-3 px-4">{t('col_current_status_label')}</th>
-                  <th className="py-3 px-4 text-right">{t('col_reviewer_action')}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[var(--border-color)]">
-                {alerts.map((alert) => (
-                  <tr key={alert.id} className="hover:bg-[var(--bg-surface-soft)]/40 transition-colors">
-                    <td className="py-3 px-4 font-mono font-bold text-[var(--accent-deep)]">
+          <>
+            {/* Mobile Stacked Cards (Visible < sm) */}
+            <div className="divide-y divide-[var(--border-color)] block sm:hidden">
+              {alerts.map((alert) => (
+                <div key={alert.id} className="p-4 space-y-3 hover:bg-[var(--bg-surface-soft)]/40 transition-colors">
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="font-mono text-xs font-extrabold text-[var(--accent-deep)] dark:text-[#7ED957] bg-[var(--bg-surface-soft)] px-2 py-0.5 rounded border border-[var(--border-color)]">
                       {alert.rule_code_snapshot}
-                    </td>
-                    <td className="py-3 px-4 font-semibold text-[var(--text-primary)]">
-                      <Link href={`/cases/${alert.case_number || alert.case_id}`} className="hover:underline text-[var(--accent-deep)] flex items-center gap-1 font-mono">
-                        <span>{alert.case_number || `Case #${alert.case_id}`}</span>
-                        <ArrowRight className="w-3 h-3" />
+                    </span>
+                    <RiskBadge level={alert.severity} showScore={false} />
+                  </div>
+
+                  <div>
+                    <Link
+                      href={`/cases/${alert.case_number || alert.case_id}`}
+                      className="text-xs font-bold text-[var(--accent-deep)] hover:underline flex items-center gap-1 font-mono mb-1"
+                    >
+                      <span>{alert.case_number || `Case #${alert.case_id}`}</span>
+                      <ArrowRight className="w-3 h-3" />
+                    </Link>
+                    <p className="font-bold text-sm text-[var(--text-primary)]">
+                      {language === 'bn' ? alert.title_bn : alert.title_en}
+                    </p>
+                    <p className="text-xs text-[var(--text-secondary)] mt-1 line-clamp-3">
+                      {language === 'bn' ? alert.description_bn : alert.description_en}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2 border-t border-[var(--border-color)]">
+                    <span className="text-[11px] font-medium px-2 py-0.5 rounded bg-[var(--bg-surface-soft)] text-[var(--text-secondary)] border border-[var(--border-color)]">
+                      {getStatusLabel(alert.status || 'flagged_review')}
+                    </span>
+
+                    <div className="flex items-center gap-2">
+                      <Link
+                        href={`/cases/${alert.case_number || alert.case_id}`}
+                        className="p-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-soft)] text-[var(--text-secondary)] min-h-[44px] min-w-[44px] flex items-center justify-center touch-target"
+                        title={t('view_case_tooltip')}
+                      >
+                        <Eye className="w-4 h-4" />
                       </Link>
-                    </td>
-                    <td className="py-3 px-4 max-w-sm">
-                      <p className="font-semibold text-[var(--text-primary)]">
-                        {language === 'bn' ? alert.title_bn : alert.title_en}
-                      </p>
-                      <p className="text-[11px] text-[var(--text-secondary)] truncate mt-0.5">
-                        {language === 'bn' ? alert.description_bn : alert.description_en}
-                      </p>
-                    </td>
-                    <td className="py-3 px-4">
-                      <RiskBadge level={alert.severity} showScore={false} />
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className="text-[11px] font-medium px-2 py-0.5 rounded bg-[var(--bg-surface-soft)] text-[var(--text-secondary)] border border-[var(--border-color)]">
-                        {getStatusLabel(alert.status || 'flagged_review')}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 text-right">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <Link
-                          href={`/cases/${alert.case_number || alert.case_id}`}
-                          className="px-2.5 py-1 rounded text-xs font-medium border border-[var(--border-color)] bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-soft)] text-[var(--text-secondary)]"
-                          title={t('view_case_tooltip')}
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                        </Link>
-                        <button
-                          onClick={() => handleOpenDisposition(alert)}
-                          className="px-3 py-1 rounded bg-[var(--accent-deep)] text-[#FAF9F6] hover:opacity-90 text-xs font-semibold"
-                        >
-                          {t('give_decision_btn')}
-                        </button>
-                      </div>
-                    </td>
+                      <button
+                        onClick={() => handleOpenDisposition(alert)}
+                        className="px-4 py-2.5 rounded-xl bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-[var(--cta-text)] text-xs font-bold shadow-sm min-h-[44px] touch-target flex items-center gap-1.5 cursor-pointer active:scale-95"
+                      >
+                        <span>{t('give_decision_btn')}</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop Table (Hidden on mobile < sm) */}
+            <div className="overflow-x-auto hidden sm:block">
+              <table className="w-full text-xs text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-[var(--border-color)] text-[var(--text-secondary)] bg-[var(--bg-surface-soft)]/40 font-semibold">
+                    <th className="py-3 px-4">{t('col_rule_code')}</th>
+                    <th className="py-3 px-4">{t('col_case_reference')}</th>
+                    <th className="py-3 px-4">{t('col_detected_inconsistency')}</th>
+                    <th className="py-3 px-4">{t('col_risk_level')}</th>
+                    <th className="py-3 px-4">{t('col_current_status_label')}</th>
+                    <th className="py-3 px-4 text-right">{t('col_reviewer_action')}</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-[var(--border-color)]">
+                  {alerts.map((alert) => (
+                    <tr key={alert.id} className="hover:bg-[var(--bg-surface-soft)]/40 transition-colors">
+                      <td className="py-3 px-4 font-mono font-bold text-[var(--accent-deep)] dark:text-[#7ED957]">
+                        {alert.rule_code_snapshot}
+                      </td>
+                      <td className="py-3 px-4 font-semibold text-[var(--text-primary)]">
+                        <Link href={`/cases/${alert.case_number || alert.case_id}`} className="hover:underline text-[var(--accent-deep)] flex items-center gap-1 font-mono">
+                          <span>{alert.case_number || `Case #${alert.case_id}`}</span>
+                          <ArrowRight className="w-3 h-3" />
+                        </Link>
+                      </td>
+                      <td className="py-3 px-4 max-w-sm">
+                        <p className="font-semibold text-[var(--text-primary)]">
+                          {language === 'bn' ? alert.title_bn : alert.title_en}
+                        </p>
+                        <p className="text-[11px] text-[var(--text-secondary)] truncate mt-0.5">
+                          {language === 'bn' ? alert.description_bn : alert.description_en}
+                        </p>
+                      </td>
+                      <td className="py-3 px-4">
+                        <RiskBadge level={alert.severity} showScore={false} />
+                      </td>
+                      <td className="py-3 px-4">
+                        <span className="text-[11px] font-medium px-2 py-0.5 rounded bg-[var(--bg-surface-soft)] text-[var(--text-secondary)] border border-[var(--border-color)]">
+                          {getStatusLabel(alert.status || 'flagged_review')}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <Link
+                            href={`/cases/${alert.case_number || alert.case_id}`}
+                            className="p-2 rounded-lg text-xs font-medium border border-[var(--border-color)] bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-soft)] text-[var(--text-secondary)] min-h-[36px] min-w-[36px] flex items-center justify-center"
+                            title={t('view_case_tooltip')}
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                          </Link>
+                          <button
+                            onClick={() => handleOpenDisposition(alert)}
+                            className="px-3.5 py-1.5 rounded-lg bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-[var(--cta-text)] text-xs font-bold cursor-pointer transition-colors shadow-xs"
+                          >
+                            {t('give_decision_btn')}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         ) : (
-          <div className="p-12 text-center text-xs text-[var(--text-secondary)] space-y-1">
-            <CheckCircle className="w-8 h-8 text-emerald-600 mx-auto mb-2" />
-            <p className="font-bold text-sm text-[var(--text-primary)]">{t('empty_queue_title')}</p>
-            <p>{t('empty_queue_desc')}</p>
+          <div className="p-12 text-center text-xs text-[var(--text-secondary)] space-y-2">
+            <CheckCircle className="w-10 h-10 text-emerald-600 mx-auto mb-2" />
+            <p className="font-bold text-base text-[var(--text-primary)]">{t('empty_queue_title')}</p>
+            <p className="max-w-md mx-auto text-xs">{t('empty_queue_desc')}</p>
           </div>
         )}
       </div>
 
       {/* Human Disposition Decision Modal with Step-by-Step Progress Bar */}
       {selectedAlert && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in">
-          <div className="max-w-lg w-full bg-[var(--bg-surface)] rounded-2xl border border-[var(--border-color)] p-6 space-y-5 shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-3 sm:p-4 animate-in fade-in">
+          <div className="max-w-lg w-full max-h-[90vh] overflow-y-auto bg-[var(--bg-surface)] rounded-2xl border border-[var(--border-color)] p-4 sm:p-6 space-y-4 sm:space-y-5 shadow-2xl">
             {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-3">
               <div>
@@ -189,9 +244,10 @@ export default function ReviewQueuePage() {
               </div>
               <button
                 onClick={() => setSelectedAlert(null)}
-                className="text-[var(--text-secondary)] hover:text-black dark:hover:text-white p-1 rounded-lg hover:bg-[var(--bg-surface-soft)] transition-colors"
+                className="text-[var(--text-secondary)] hover:text-black dark:hover:text-white p-2 rounded-xl hover:bg-[var(--bg-surface-soft)] transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center touch-target cursor-pointer"
+                aria-label={t('cancel')}
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
             </div>
 
@@ -211,7 +267,7 @@ export default function ReviewQueuePage() {
               {/* Progress Track */}
               <div className="w-full h-1.5 bg-[var(--border-color)] rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-[var(--accent-deep)] to-[#7ED957] transition-all duration-300 rounded-full"
+                  className="h-full bg-gradient-to-r from-[var(--brand-accent)] to-[#7ED957] transition-all duration-300 rounded-full"
                   style={{ width: `${modalStep === 1 ? 33 : modalStep === 2 ? 66 : 100}%` }}
                 />
               </div>
@@ -221,9 +277,9 @@ export default function ReviewQueuePage() {
                 <button
                   type="button"
                   onClick={() => setModalStep(1)}
-                  className={`flex items-center gap-1 font-semibold ${modalStep === 1 ? 'text-[var(--accent-deep)] dark:text-[#7ED957]' : 'text-[var(--text-secondary)]'}`}
+                  className={`flex items-center gap-1 font-semibold min-h-[32px] touch-target cursor-pointer ${modalStep === 1 ? 'text-[var(--accent-deep)] dark:text-[#7ED957]' : 'text-[var(--text-secondary)]'}`}
                 >
-                  <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] ${modalStep > 1 ? 'bg-emerald-600 text-white' : modalStep === 1 ? 'bg-[var(--accent-deep)] text-white' : 'bg-gray-200 text-gray-700'}`}>
+                  <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] ${modalStep > 1 ? 'bg-emerald-600 text-white' : modalStep === 1 ? 'bg-[var(--brand-accent)] text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'}`}>
                     {modalStep > 1 ? <Check className="w-2.5 h-2.5" /> : formatNumber(1)}
                   </span>
                   <span>{t('disp_step1')}</span>
@@ -232,9 +288,9 @@ export default function ReviewQueuePage() {
                 <button
                   type="button"
                   onClick={() => setModalStep(2)}
-                  className={`flex items-center gap-1 font-semibold ${modalStep === 2 ? 'text-[var(--accent-deep)] dark:text-[#7ED957]' : 'text-[var(--text-secondary)]'}`}
+                  className={`flex items-center gap-1 font-semibold min-h-[32px] touch-target cursor-pointer ${modalStep === 2 ? 'text-[var(--accent-deep)] dark:text-[#7ED957]' : 'text-[var(--text-secondary)]'}`}
                 >
-                  <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] ${modalStep > 2 ? 'bg-emerald-600 text-white' : modalStep === 2 ? 'bg-[var(--accent-deep)] text-white' : 'bg-gray-200 text-gray-700'}`}>
+                  <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] ${modalStep > 2 ? 'bg-emerald-600 text-white' : modalStep === 2 ? 'bg-[var(--brand-accent)] text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'}`}>
                     {modalStep > 2 ? <Check className="w-2.5 h-2.5" /> : formatNumber(2)}
                   </span>
                   <span>{t('disp_step2')}</span>
@@ -245,9 +301,9 @@ export default function ReviewQueuePage() {
                   onClick={() => {
                     if (reasonBn.trim()) setModalStep(3);
                   }}
-                  className={`flex items-center gap-1 font-semibold ${modalStep === 3 ? 'text-[var(--accent-deep)] dark:text-[#7ED957]' : 'text-[var(--text-secondary)]'}`}
+                  className={`flex items-center gap-1 font-semibold min-h-[32px] touch-target cursor-pointer ${modalStep === 3 ? 'text-[var(--accent-deep)] dark:text-[#7ED957]' : 'text-[var(--text-secondary)]'}`}
                 >
-                  <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] ${modalStep === 3 ? 'bg-[var(--accent-deep)] text-white' : 'bg-gray-200 text-gray-700'}`}>
+                  <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] ${modalStep === 3 ? 'bg-[var(--brand-accent)] text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'}`}>
                     {formatNumber(3)}
                   </span>
                   <span>{t('disp_step3')}</span>
@@ -256,7 +312,7 @@ export default function ReviewQueuePage() {
             </div>
 
             {/* Alert Context Banner */}
-            <div className="p-3 rounded-lg bg-[var(--bg-surface-soft)] text-xs text-[var(--text-secondary)] space-y-1">
+            <div className="p-3 rounded-xl bg-[var(--bg-surface-soft)] text-xs text-[var(--text-secondary)] space-y-1 border border-[var(--border-color)]">
               <p className="font-bold text-[var(--text-primary)]">
                 {language === 'bn' ? selectedAlert.title_bn : selectedAlert.title_en}
               </p>
@@ -273,65 +329,69 @@ export default function ReviewQueuePage() {
                     {t('select_disp_type')}
                   </label>
                   <div className="space-y-2">
-                    <label className="flex items-center gap-2.5 p-2.5 rounded-xl border border-[var(--border-color)] cursor-pointer text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-surface-soft)] transition-colors">
+                    <label className="flex items-center gap-3 p-3 rounded-xl border border-[var(--border-color)] cursor-pointer text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-surface-soft)] transition-colors min-h-[44px] touch-target">
                       <input
                         type="radio"
                         name="decision"
                         value="confirmed_inconsistency"
                         checked={decision === 'confirmed_inconsistency'}
                         onChange={(e) => setDecision(e.target.value)}
+                        className="accent-[var(--brand-accent)] w-4 h-4"
                       />
                       <span>{t('disp_opt_confirmed')}</span>
                     </label>
 
-                    <label className="flex items-center gap-2.5 p-2.5 rounded-xl border border-[var(--border-color)] cursor-pointer text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-surface-soft)] transition-colors">
+                    <label className="flex items-center gap-3 p-3 rounded-xl border border-[var(--border-color)] cursor-pointer text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-surface-soft)] transition-colors min-h-[44px] touch-target">
                       <input
                         type="radio"
                         name="decision"
                         value="resolved_legitimate"
                         checked={decision === 'resolved_legitimate'}
                         onChange={(e) => setDecision(e.target.value)}
+                        className="accent-[var(--brand-accent)] w-4 h-4"
                       />
                       <span>{t('disp_opt_resolved')}</span>
                     </label>
 
-                    <label className="flex items-center gap-2.5 p-2.5 rounded-xl border border-[var(--border-color)] cursor-pointer text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-surface-soft)] transition-colors">
+                    <label className="flex items-center gap-3 p-3 rounded-xl border border-[var(--border-color)] cursor-pointer text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-surface-soft)] transition-colors min-h-[44px] touch-target">
                       <input
                         type="radio"
                         name="decision"
                         value="inconclusive"
                         checked={decision === 'inconclusive'}
                         onChange={(e) => setDecision(e.target.value)}
+                        className="accent-[var(--brand-accent)] w-4 h-4"
                       />
                       <span>{t('disp_opt_inconclusive')}</span>
                     </label>
 
-                    <label className="flex items-center gap-2.5 p-2.5 rounded-xl border border-[var(--border-color)] cursor-pointer text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-surface-soft)] transition-colors">
+                    <label className="flex items-center gap-3 p-3 rounded-xl border border-[var(--border-color)] cursor-pointer text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-surface-soft)] transition-colors min-h-[44px] touch-target">
                       <input
                         type="radio"
                         name="decision"
                         value="false_positive"
                         checked={decision === 'false_positive'}
                         onChange={(e) => setDecision(e.target.value)}
+                        className="accent-[var(--brand-accent)] w-4 h-4"
                       />
                       <span>{t('disp_opt_false_positive')}</span>
                     </label>
                   </div>
 
-                  <div className="flex justify-between items-center pt-2 border-t border-[var(--border-color)]">
+                  <div className="flex justify-between items-center pt-3 border-t border-[var(--border-color)] gap-2">
                     <button
                       type="button"
                       onClick={() => setSelectedAlert(null)}
-                      className="px-4 py-2 text-xs font-semibold border border-[var(--border-color)] rounded-xl hover:bg-[var(--bg-surface-soft)]"
+                      className="px-4 py-2.5 text-xs font-semibold border border-[var(--border-color)] rounded-xl hover:bg-[var(--bg-surface-soft)] min-h-[44px] touch-target cursor-pointer"
                     >
                       {t('cancel')}
                     </button>
                     <button
                       type="button"
                       onClick={() => setModalStep(2)}
-                      className="px-5 py-2 text-xs font-bold rounded-xl bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-[var(--cta-text)] flex items-center gap-1.5 shadow-sm active:scale-95 cursor-pointer"
+                      className="px-5 py-2.5 text-xs font-bold rounded-xl bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-[var(--cta-text)] flex items-center gap-1.5 shadow-sm active:scale-95 cursor-pointer min-h-[44px] touch-target"
                     >
-                      <span>{language === 'bn' ? 'পরবর্তী: অফিসিয়াল নোট' : 'Next: Official Notes'}</span>
+                      <span>{t('btn_next_notes')}</span>
                       <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
                     </button>
                   </div>
@@ -341,7 +401,7 @@ export default function ReviewQueuePage() {
               {/* STEP 2: REVIEWER NOTES */}
               {modalStep === 2 && (
                 <div className="space-y-3">
-                  <div className="space-y-1">
+                  <div className="space-y-1.5">
                     <label className="text-xs font-bold text-[var(--text-primary)] block">
                       {t('disp_notes_label')}
                     </label>
@@ -350,16 +410,16 @@ export default function ReviewQueuePage() {
                       rows={4}
                       value={reasonBn}
                       onChange={(e) => setReasonBn(e.target.value)}
-                      className="w-full p-3 text-xs rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)] focus:ring-1 focus:ring-[var(--brand-accent)]"
+                      className="w-full p-3 text-xs rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)] focus:ring-1 focus:ring-[var(--brand-accent)] outline-none"
                       placeholder={t('disp_notes_placeholder')}
                     />
                   </div>
 
-                  <div className="flex justify-between items-center pt-2 border-t border-[var(--border-color)]">
+                  <div className="flex justify-between items-center pt-3 border-t border-[var(--border-color)] gap-2">
                     <button
                       type="button"
                       onClick={() => setModalStep(1)}
-                      className="px-4 py-2 text-xs font-semibold border border-[var(--border-color)] rounded-xl hover:bg-[var(--bg-surface-soft)] flex items-center gap-1"
+                      className="px-4 py-2.5 text-xs font-semibold border border-[var(--border-color)] rounded-xl hover:bg-[var(--bg-surface-soft)] flex items-center gap-1.5 min-h-[44px] touch-target cursor-pointer"
                     >
                       <ArrowLeft className="w-3.5 h-3.5" />
                       <span>{t('btn_prev_step')}</span>
@@ -370,9 +430,9 @@ export default function ReviewQueuePage() {
                         if (reasonBn.trim()) setModalStep(3);
                       }}
                       disabled={!reasonBn.trim()}
-                      className="px-5 py-2 text-xs font-bold rounded-xl bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-[var(--cta-text)] flex items-center gap-1.5 disabled:opacity-50 shadow-sm active:scale-95 cursor-pointer"
+                      className="px-5 py-2.5 text-xs font-bold rounded-xl bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-[var(--cta-text)] flex items-center gap-1.5 disabled:opacity-50 shadow-sm active:scale-95 cursor-pointer min-h-[44px] touch-target"
                     >
-                      <span>{language === 'bn' ? 'পরবর্তী: নিশ্চিতকরণ' : 'Next: Confirmation'}</span>
+                      <span>{t('btn_next_confirm')}</span>
                       <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
                     </button>
                   </div>
@@ -395,22 +455,22 @@ export default function ReviewQueuePage() {
 
                     <div className="border-t border-[var(--border-color)] pt-1.5 space-y-1">
                       <span className="text-[var(--text-secondary)] block">{t('disp_notes_label')}:</span>
-                      <p className="font-medium text-[var(--text-primary)] italic bg-[var(--bg-surface)] p-2 rounded-lg border border-[var(--border-color)]">
+                      <p className="font-medium text-[var(--text-primary)] italic bg-[var(--bg-surface)] p-2.5 rounded-lg border border-[var(--border-color)] break-words">
                         &quot;{reasonBn}&quot;
                       </p>
                     </div>
                   </div>
 
                   <div className="p-3 rounded-xl bg-amber-50/70 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 text-[11px] text-amber-900 dark:text-amber-200 flex items-start gap-2">
-                    <ShieldCheck className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                    <ShieldCheck className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
                     <p>{t('disp_confirm_desc')}</p>
                   </div>
 
-                  <div className="flex justify-between items-center pt-2 border-t border-[var(--border-color)]">
+                  <div className="flex justify-between items-center pt-3 border-t border-[var(--border-color)] gap-2">
                     <button
                       type="button"
                       onClick={() => setModalStep(2)}
-                      className="px-4 py-2 text-xs font-semibold border border-[var(--border-color)] rounded-xl hover:bg-[var(--bg-surface-soft)] flex items-center gap-1"
+                      className="px-4 py-2.5 text-xs font-semibold border border-[var(--border-color)] rounded-xl hover:bg-[var(--bg-surface-soft)] flex items-center gap-1.5 min-h-[44px] touch-target cursor-pointer"
                     >
                       <ArrowLeft className="w-3.5 h-3.5" />
                       <span>{t('btn_prev_step')}</span>
@@ -418,7 +478,7 @@ export default function ReviewQueuePage() {
                     <button
                       type="submit"
                       disabled={submitting}
-                      className="px-6 py-2.5 text-xs font-bold rounded-xl bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-[var(--cta-text)] shadow-md hover:shadow-lg active:scale-95 cursor-pointer"
+                      className="px-6 py-2.5 text-xs font-bold rounded-xl bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-[var(--cta-text)] shadow-md hover:shadow-lg active:scale-95 cursor-pointer min-h-[44px] touch-target"
                     >
                       {submitting ? t('submitting_disposition') : t('disp_submit_btn')}
                     </button>

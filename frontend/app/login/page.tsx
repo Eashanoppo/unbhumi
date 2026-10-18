@@ -89,22 +89,22 @@ export default function LoginPage() {
                 <div
                   key={role.id}
                   onClick={() => setSelectedRole(role.id as any)}
-                  className={`p-3.5 rounded-xl border cursor-pointer transition-all ${
+                  className={`p-3.5 sm:p-4 rounded-xl border cursor-pointer transition-all min-h-[56px] touch-target ${
                     isSelected
-                      ? 'border-[var(--accent-deep)] bg-[var(--bg-surface-soft)] shadow-sm'
-                      : 'border-[var(--border-color)] hover:border-gray-300 bg-[var(--bg-surface)]'
+                      ? 'border-[var(--brand-accent)] bg-[var(--accent-light)] ring-1 ring-[var(--brand-accent)]/30 shadow-xs'
+                      : 'border-[var(--border-color)] hover:border-[var(--brand-accent)]/50 bg-[var(--bg-surface)]'
                   }`}
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="font-semibold text-xs text-[var(--text-primary)]">
-                      {role.title_bn}
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-bold text-xs text-[var(--text-primary)]">
+                      {language === 'bn' ? role.title_bn : role.title_en}
                     </span>
-                    <span className="text-[10px] font-mono text-[var(--text-secondary)]">
+                    <span className="text-[10px] font-mono text-[var(--text-secondary)] shrink-0">
                       {role.email}
                     </span>
                   </div>
-                  <p className="text-[11px] text-[var(--text-secondary)] mt-1">
-                    {role.desc_bn}
+                  <p className="text-[11px] text-[var(--text-secondary)] mt-1 line-clamp-2">
+                    {language === 'bn' ? role.desc_bn : role.desc_bn}
                   </p>
                 </div>
               );
@@ -115,10 +115,10 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 rounded-xl font-bold text-sm bg-[var(--accent-deep)] text-[#FFF8E7] hover:bg-[var(--accent-deep)]/90 transition-all flex items-center justify-center gap-2 shadow-sm"
+              className="w-full py-3.5 rounded-xl font-bold text-xs sm:text-sm bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-[var(--cta-text)] transition-all flex items-center justify-center gap-2 shadow-sm hover:shadow-md min-h-[48px] touch-target cursor-pointer active:scale-95"
             >
-              <span>{loading ? 'প্রবেশ করা হচ্ছে...' : 'লগইন করে ড্যাশবোর্ডে প্রবেশ করুন'}</span>
-              <ArrowRight className="w-4 h-4 text-[#7ED957]" />
+              <span>{loading ? (language === 'bn' ? 'প্রবেশ করা হচ্ছে...' : 'Signing in...') : (language === 'bn' ? 'লগইন করে ড্যাশবোর্ডে প্রবেশ করুন' : 'Sign in to Dashboard')}</span>
+              <ArrowRight className="w-4 h-4 stroke-[2.2]" />
             </button>
           </div>
         </form>
@@ -127,10 +127,12 @@ export default function LoginPage() {
         <div className="p-3.5 rounded-xl bg-[var(--bg-surface-soft)] border border-[var(--border-color)] text-[11px] space-y-1 text-[var(--text-secondary)]">
           <div className="flex items-center gap-1.5 font-semibold text-[var(--text-primary)]">
             <Lock className="w-3.5 h-3.5 text-[var(--accent-deep)] dark:text-[#7ED957]" />
-            <span>নিরাপত্তা ও ভবিষ্যৎ ইন্টিগ্রেশন</span>
+            <span>{language === 'bn' ? 'নিরাপত্তা ও ভবিষ্যৎ ইন্টিগ্রেশন' : 'Security & Architecture'}</span>
           </div>
-          <p>
-            এমভিপি সংস্করণে ব্যাকএন্ডের সিকিউর টোকেন ভিত্তিক অথেনটিকেশন কার্যকর। পরবর্তী ধাপে প্রাতিষ্ঠানিক Google OAuth 2.0 / OpenID Connect সংযোগের আর্কিটেকচার সংরক্ষিত রয়েছে।
+          <p className="leading-relaxed">
+            {language === 'bn'
+              ? 'এমভিপি সংস্করণে ব্যাকএন্ডের সিকিউর টোকেন ভিত্তিক অথেনটিকেশন কার্যকর। পরবর্তী ধাপে প্রাতিষ্ঠানিক Google OAuth 2.0 / OpenID Connect সংযোগের আর্কিটেকচার সংরক্ষিত রয়েছে।'
+              : 'Production-ready token session management is active. Ready for direct Google OAuth 2.0 and enterprise OpenID Connect integration in future phases.'}
           </p>
         </div>
       </div>
