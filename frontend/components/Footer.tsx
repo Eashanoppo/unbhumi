@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useLanguage } from '@/lib/i18n';
 import { ShieldCheck, Info, FileCheck, ExternalLink } from 'lucide-react';
 
@@ -14,20 +15,26 @@ export const Footer: React.FC = () => {
   }, []);
 
   return (
-    <footer className="w-full border-t border-[var(--border-color)] bg-[var(--bg-surface)] text-[var(--text-secondary)] py-12 mt-auto">
+    <footer suppressHydrationWarning className="w-full border-t border-[var(--border-color)] bg-[var(--bg-surface)] text-[var(--text-secondary)] py-12 mt-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           {/* Brand & Purpose */}
           <div className="md:col-span-1 space-y-3">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-[var(--accent-deep)] flex items-center justify-center p-1 text-[#7ED957]">
-                <ShieldCheck className="w-5 h-5" />
+            <div suppressHydrationWarning className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg overflow-hidden border border-[var(--border-color)] bg-[var(--bg-surface-soft)] flex items-center justify-center p-0.5 shadow-xs">
+                <Image
+                  src="/images/brand/logo.png"
+                  alt="UNBHUMI Logo"
+                  width={28}
+                  height={28}
+                  className="w-full h-full object-contain"
+                />
               </div>
-              <span className="font-bold text-base text-[var(--text-primary)]">
+              <span suppressHydrationWarning className="font-bold text-base text-[var(--text-primary)]">
                 {language === 'bn' ? 'আনভূমি ডিটেক্টর' : 'UNBUmi Detector'}
               </span>
             </div>
-            <p className="text-xs leading-relaxed">
+            <p suppressHydrationWarning className="text-xs leading-relaxed">
               {language === 'bn'
                 ? 'আনলেফট (UNLEFT) কর্তৃক উদ্ভাবিত এআই-চালিত ভূমি দলিল ও স্বত্ব যাচাইকরণ প্ল্যাটফর্ম। দ্বৈত বিক্রি রোধ ও মালিকানা অখণ্ডতা রক্ষায় নিবেদিত।'
                 : 'AI-assisted land document & title verification platform by UNLEFT. Focused on duplicate sale detection and ownership integrity.'}
@@ -125,14 +132,14 @@ export const Footer: React.FC = () => {
         </div>
 
         {/* Bottom bar */}
-        <div className="pt-6 border-t border-[var(--border-color)] flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-center sm:text-left">
-          <p>
+        <div suppressHydrationWarning className="pt-6 border-t border-[var(--border-color)] flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-center sm:text-left">
+          <p suppressHydrationWarning>
             © {currentYear} UNBhumi Detector. Developed by <strong>UNLEFT</strong> for LandTech Innovation Hackathon 2026.
           </p>
-          <div className="flex items-center gap-4 text-[11px]">
-            <span>{language === 'bn' ? 'সংস্করণ: ১.০.০ (MVP)' : 'Version: 1.0.0 (MVP)'}</span>
+          <div suppressHydrationWarning className="flex items-center gap-4 text-[11px]">
+            <span suppressHydrationWarning>{language === 'bn' ? 'সংস্করণ: ১.০.০ (MVP)' : 'Version: 1.0.0 (MVP)'}</span>
             <span>•</span>
-            <span>{language === 'bn' ? 'ডেটা পলিসি: সিন্থেটিক রেকর্ড' : 'Data Policy: Synthetic Records'}</span>
+            <span suppressHydrationWarning>{language === 'bn' ? 'ডেটা পলিসি: সিন্থেটিক রেকর্ড' : 'Data Policy: Synthetic Records'}</span>
           </div>
         </div>
       </div>

@@ -5,6 +5,15 @@ import Link from 'next/link';
 import { useLanguage } from '@/lib/i18n';
 import { api, CaseItem, AnomalyFinding, GraphData } from '@/lib/api';
 import { OwnershipGraphVisualizer } from '@/components/OwnershipGraphVisualizer';
+import { DocumentGenuineViewer } from '@/components/DocumentGenuineViewer';
+import {
+  DEMO_SCENARIOS,
+  type DemoScenario,
+  type DemoDocumentFixture
+} from '@/lib/demoScenarios';
+
+export { DEMO_SCENARIOS };
+export type { DemoScenario, DemoDocumentFixture };
 import {
   Sparkles, ShieldCheck, FileText, CheckCircle2, AlertTriangle, AlertOctagon,
   ArrowRight, RotateCcw, Play, Download, Printer, Eye, Layers, Lock,
@@ -15,53 +24,7 @@ import {
   Network, Activity, Info, ChevronDown, ChevronUp, ShieldAlert, ExternalLink
 } from 'lucide-react';
 
-// --- TYPES ---
-export interface DemoDocumentFixture {
-  id: string;
-  name: string;
-  type: 'deed' | 'baya_deed' | 'khatian' | 'mutation' | 'tax_receipt' | 'mouza_map';
-  sizeBytes: number;
-  hash: string;
-  enrolledHash?: string;
-  pageCount: number;
-  summaryBn: string;
-  summaryEn: string;
-  parties: {
-    seller?: string;
-    buyer?: string;
-    owner?: string;
-    taxPayer?: string;
-  };
-  mouza: string;
-  dagNumber: string;
-  areaDecimals: number;
-  registrationDate?: string;
-  ocrConfidence: number;
-  extractedFields: {
-    fieldKey: string;
-    labelBn: string;
-    labelEn: string;
-    rawValue: string;
-    normalizedValue: string;
-    confidence: number;
-    bbox?: { x: number; y: number; w: number; h: number };
-  }[];
-}
-
-export interface DemoScenario {
-  id: string;
-  titleBn: string;
-  titleEn: string;
-  descBn: string;
-  descEn: string;
-  mouza: string;
-  dagNumber: string;
-  area: number;
-  expectedRiskLevel: 'low' | 'review' | 'high' | 'critical';
-  expectedRiskScore: number;
-  conflictType: 'clean' | 'double_sale' | 'broken_chain' | 'deed_khatian_mismatch';
-  documents: DemoDocumentFixture[];
-}
+// (Types DemoDocumentFixture and DemoScenario imported from @/lib/demoScenarios)
 
 export interface SubOperation {
   id: string;
@@ -141,294 +104,7 @@ export interface RuleEvaluationRecord {
   skipReasonEn?: string;
 }
 
-// --- DETERMINISTIC SYNTHETIC SCENARIO FIXTURES ---
-export const DEMO_SCENARIOS: DemoScenario[] = [
-  {
-    id: 'UB-2026-1001',
-    titleBn: 'মৌজা কাউন্দিয়া আরএস দাগ ৪১২ জমি হস্তান্তর যাচাই',
-    titleEn: 'Mouza Kaundia RS Dag 412 Clean Title Transfer',
-    descBn: 'স্বাভাবিক ও বৈধ হস্তান্তর। সাফ-কবলা দলিল, আরএস খতিয়ান, নামজারি ও ভূমি উন্নয়ন কর রসিদ সম্পূর্ণ সঙ্গতিপূর্ণ।',
-    descEn: 'Clean, verified transaction. Deed, khatian record, mutation, and tax receipts fully reconcile with zero conflicts.',
-    mouza: 'কাউন্দিয়া',
-    dagNumber: '৪১২',
-    area: 25.0,
-    expectedRiskLevel: 'low',
-    expectedRiskScore: 0,
-    conflictType: 'clean',
-    documents: [
-      {
-        id: 'doc-1001-1',
-        name: 'মূল_সাফ_কবলা_দলিল_৭৪৫২.pdf',
-        type: 'deed',
-        sizeBytes: 1428500,
-        hash: '7a9f4c3d8e12b6a901ffc562e104a39d84c391219b6732f90119c836a0f44391',
-        pageCount: 3,
-        summaryBn: 'সাফ-কবলা জমি বিক্রয় দলিল নং ৭৪৫২, তারিখ: ১৫/০৩/২০২৬। বিক্রেতা: মো: আব্দুর রহিম, ক্রেতা: মোছা: ফাতেমা বেগম।',
-        summaryEn: 'Outright Sale Deed No. 7452, Date: 15/03/2026. Seller: Md. Abdur Rahim, Buyer: Mst. Fatema Begum.',
-        parties: { seller: 'মো: আব্দুর রহিম', buyer: 'মোছা: ফাতেমা বেগম' },
-        mouza: 'কাউন্দিয়া',
-        dagNumber: '৪১২',
-        areaDecimals: 25.0,
-        registrationDate: '2026-03-15',
-        ocrConfidence: 0.98,
-        extractedFields: [
-          { fieldKey: 'deed_number', labelBn: 'দলিল নম্বর', labelEn: 'Deed Number', rawValue: '৭৪৫২', normalizedValue: '7452', confidence: 0.99, bbox: { x: 120, y: 80, w: 180, h: 35 } },
-          { fieldKey: 'deed_date', labelBn: 'রেজিস্ট্রেশনের তারিখ', labelEn: 'Registration Date', rawValue: '১৫/০৩/২০২৬', normalizedValue: '2026-03-15', confidence: 0.96, bbox: { x: 450, y: 80, w: 160, h: 35 } },
-          { fieldKey: 'seller_name', labelBn: 'বিক্রেতার নাম', labelEn: 'Seller Name', rawValue: 'মো: আব্দুর রহিম', normalizedValue: 'মো: আব্দুর রহিম', confidence: 0.97, bbox: { x: 120, y: 180, w: 280, h: 40 } },
-          { fieldKey: 'buyer_name', labelBn: 'ক্রেতার নাম', labelEn: 'Buyer Name', rawValue: 'মোছা: ফাতেমা বেগম', normalizedValue: 'মোছা: ফাতেমা বেগম', confidence: 0.97, bbox: { x: 120, y: 240, w: 280, h: 40 } },
-          { fieldKey: 'land_area', labelBn: 'জমির পরিমাণ', labelEn: 'Land Area', rawValue: '২৫ শতাংশ (০.২৫ একর)', normalizedValue: '25.0 শতাংশ', confidence: 0.95, bbox: { x: 120, y: 380, w: 240, h: 35 } }
-        ]
-      },
-      {
-        id: 'doc-1001-2',
-        name: 'আরএস_রেকর্ডীয়_খতিয়ান_৫৮৩.pdf',
-        type: 'khatian',
-        sizeBytes: 985200,
-        hash: '3e41b9d09a7218cf5092a40e6712ab098f430198de72a5b112998a6094b81093',
-        pageCount: 1,
-        summaryBn: 'আরএস খতিয়ান নং ৫৮৩, দাগ ৪১২। রেকর্ডীয় প্রজা: মো: আব্দুর রহিম। অনুমোদিত মোট জমি: ২৫ শতাংশ।',
-        summaryEn: 'RS Khatian No. 583, Plot 412. Recorded Tenant: Md. Abdur Rahim. Recorded Area: 25.0 decimals.',
-        parties: { owner: 'মো: আব্দুর রহিম' },
-        mouza: 'কাউন্দিয়া',
-        dagNumber: '৪১২',
-        areaDecimals: 25.0,
-        ocrConfidence: 0.97,
-        extractedFields: [
-          { fieldKey: 'khatian_number', labelBn: 'খতিয়ান নম্বর', labelEn: 'Khatian Number', rawValue: '৫৮৩', normalizedValue: '583', confidence: 0.98, bbox: { x: 100, y: 90, w: 150, h: 35 } },
-          { fieldKey: 'recorded_owner', labelBn: 'রেকর্ডীয় প্রজা/মালিক', labelEn: 'Recorded Owner', rawValue: 'মো: আব্দুর রহিম', normalizedValue: 'মো: আব্দুর রহিম', confidence: 0.97, bbox: { x: 100, y: 170, w: 300, h: 40 } },
-          { fieldKey: 'land_area', labelBn: 'রেকর্ডকৃত মোট জমি', labelEn: 'Recorded Total Area', rawValue: '২৫ শতাংশ', normalizedValue: '25.0 শতাংশ', confidence: 0.96, bbox: { x: 300, y: 240, w: 180, h: 35 } }
-        ]
-      },
-      {
-        id: 'doc-1001-3',
-        name: 'নামজারি_খতিয়ান_ও_ডিসিআর_৩১৮.pdf',
-        type: 'mutation',
-        sizeBytes: 820400,
-        hash: 'd5c192804bba462f8a556731110023ee451bc0399120894562ad47190beef012',
-        pageCount: 2,
-        summaryBn: 'মিউটেশন খতিয়ান নং ৩১৮/নাম/২০২৫-২৬, অনুমোদিত দাগ ৪১২, ডিসিআর নং ৪৭৮৯।',
-        summaryEn: 'Mutation Record No. 318/2025-26, Approved Plot 412, DCR No. 4789.',
-        parties: { owner: 'মো: আব্দুর রহিম' },
-        mouza: 'কাউন্দিয়া',
-        dagNumber: '৪১২',
-        areaDecimals: 25.0,
-        ocrConfidence: 0.96,
-        extractedFields: [
-          { fieldKey: 'mutation_case_no', labelBn: 'নামজারি কেস নং', labelEn: 'Mutation Case No', rawValue: '৩১৮/নাম/২০২৫-২৬', normalizedValue: '318/2025-26', confidence: 0.96 },
-          { fieldKey: 'mutated_owner', labelBn: 'নামজারি গ্রহীতা', labelEn: 'Mutated Owner', rawValue: 'মো: আব্দুর রহিম', normalizedValue: 'মো: আব্দুর রহিম', confidence: 0.96 }
-        ]
-      },
-      {
-        id: 'doc-1001-4',
-        name: 'ভূমি_উন্নয়ন_কর_দাখিলা_১৪৩২.pdf',
-        type: 'tax_receipt',
-        sizeBytes: 450100,
-        hash: '88912ef00192a4b89012356789abcdef0123456789abcdef0123456789abcdef',
-        pageCount: 1,
-        summaryBn: 'ভূমি উন্নয়ন কর পরিশোধ রসিদ (দাখিলা নং ৯৮০১), সাল: ১৪৩২ বঙ্গাব্দ, হোল্ডিং: ১২০/বি।',
-        summaryEn: 'Land Development Tax Dakhila No. 9801, Year: 1432 BS, Holding: 120/B.',
-        parties: { taxPayer: 'মো: আব্দুর রহিম' },
-        mouza: 'কাউন্দিয়া',
-        dagNumber: '৪১২',
-        areaDecimals: 25.0,
-        ocrConfidence: 0.95,
-        extractedFields: [
-          { fieldKey: 'holding_number', labelBn: 'হোল্ডিং নম্বর', labelEn: 'Holding Number', rawValue: '১২০/বি', normalizedValue: '120/B', confidence: 0.95 },
-          { fieldKey: 'tax_payer', labelBn: 'করদাতার নাম', labelEn: 'Tax Payer', rawValue: 'মো: আব্দুর রহিম', normalizedValue: 'মো: আব্দুর রহিম', confidence: 0.94 }
-        ]
-      }
-    ]
-  },
-  {
-    id: 'UB-2026-1002',
-    titleBn: 'মৌজা ধামরাই দাগ ৮৮ - দ্বৈত বিক্রির সন্দেহজনক কেস',
-    titleEn: 'Mouza Dhamrai Dag 88 - Suspected Double-Selling Conflict',
-    descBn: 'একই বিক্রেতা কর্তৃক একই দাগের জমি দুই ভিন্ন ব্যক্তির নিকট হস্তান্তরের গুরুতর অসঙ্গতি শনাক্ত।',
-    descEn: 'Critical fraud risk: same seller Kamal Hossain executed two separate sale deeds for the exact same parcel to two different buyers.',
-    mouza: 'ধামরাই',
-    dagNumber: '৮৮',
-    area: 40.0,
-    expectedRiskLevel: 'critical',
-    expectedRiskScore: 85,
-    conflictType: 'double_sale',
-    documents: [
-      {
-        id: 'doc-1002-1',
-        name: 'মূল_সাফ_কবলা_দলিল_৮৯১০.pdf',
-        type: 'deed',
-        sizeBytes: 1354000,
-        hash: '64a8b7c9120de3fa1104e5789123bc8910fedcba9876543210abcdef98765432',
-        pageCount: 3,
-        summaryBn: 'প্রস্তাবিত সাফ-কবলা দলিল নং ৮৯১০ (২০২৬)। বিক্রেতা: কামাল হোসেন, ক্রেতা: মো: জসিম উদ্দিন, জমি: ৪০ শতক।',
-        summaryEn: 'Proposed Sale Deed No. 8910 (2026). Seller: Kamal Hossain, Buyer: Md. Jasim Uddin, Area: 40.0 decimals.',
-        parties: { seller: 'কামাল হোসেন', buyer: 'মো: জসিম উদ্দিন' },
-        mouza: 'ধামরাই',
-        dagNumber: '৮৮',
-        areaDecimals: 40.0,
-        registrationDate: '2026-04-02',
-        ocrConfidence: 0.96,
-        extractedFields: [
-          { fieldKey: 'deed_number', labelBn: 'দলিল নম্বর', labelEn: 'Deed Number', rawValue: '৮৯১০', normalizedValue: '8910', confidence: 0.98, bbox: { x: 120, y: 80, w: 180, h: 35 } },
-          { fieldKey: 'seller_name', labelBn: 'বিক্রেতার নাম', labelEn: 'Seller Name', rawValue: 'কামাল হোসেন', normalizedValue: 'কামাল হোসেন', confidence: 0.97, bbox: { x: 120, y: 180, w: 280, h: 40 } },
-          { fieldKey: 'buyer_name', labelBn: 'ক্রেতার নাম', labelEn: 'Buyer Name', rawValue: 'মো: জসিম উদ্দিন', normalizedValue: 'মো: জসিম উদ্দিন', confidence: 0.96, bbox: { x: 120, y: 240, w: 280, h: 40 } },
-          { fieldKey: 'land_area', labelBn: 'জমির পরিমাণ', labelEn: 'Land Area', rawValue: '৪০ শতাংশ', normalizedValue: '40.0 শতাংশ', confidence: 0.95, bbox: { x: 120, y: 380, w: 240, h: 35 } }
-        ]
-      },
-      {
-        id: 'doc-1002-2',
-        name: 'পূর্ববর্তী_রেজিস্ট্রিকৃত_দলিল_৩২০১.pdf',
-        type: 'baya_deed',
-        sizeBytes: 1482000,
-        hash: '201e55fab19830198de72a5b112998a6094b810937a9f4c3d8e12b6a901ffc56',
-        pageCount: 4,
-        summaryBn: 'পূর্ববর্তী নিবন্ধিত দলিল নং ৩২০১ (২০২৪)। বিক্রেতা: কামাল হোসেন, ক্রেতা: মো: রফিকুল ইসলাম, জমি: ৪০ শতক। (দ্বৈত লেনদেনের মূল প্রমাণ)',
-        summaryEn: 'Prior Registered Deed No. 3201 (2024). Seller: Kamal Hossain, Buyer: Md. Rafiqul Islam. Same parcel previously transferred!',
-        parties: { seller: 'কামাল হোসেন', buyer: 'মো: রফিকুল ইসলাম' },
-        mouza: 'ধামরাই',
-        dagNumber: '৮৮',
-        areaDecimals: 40.0,
-        registrationDate: '2024-11-10',
-        ocrConfidence: 0.95,
-        extractedFields: [
-          { fieldKey: 'deed_number', labelBn: 'দলিল নম্বর', labelEn: 'Deed Number', rawValue: '৩২০১', normalizedValue: '3201', confidence: 0.98, bbox: { x: 120, y: 80, w: 180, h: 35 } },
-          { fieldKey: 'deed_date', labelBn: 'রেজিস্ট্রেশনের তারিখ', labelEn: 'Registration Date', rawValue: '১০/১১/২০২৪', normalizedValue: '2024-11-10', confidence: 0.97, bbox: { x: 450, y: 80, w: 160, h: 35 } },
-          { fieldKey: 'seller_name', labelBn: 'বিক্রেতার নাম', labelEn: 'Seller Name', rawValue: 'কামাল হোসেন', normalizedValue: 'কামাল হোসেন', confidence: 0.96, bbox: { x: 120, y: 180, w: 280, h: 40 } },
-          { fieldKey: 'buyer_name', labelBn: 'ক্রেতার নাম', labelEn: 'Buyer Name', rawValue: 'মো: রফিকুল ইসলাম', normalizedValue: 'মো: রফিকুল ইসলাম', confidence: 0.96, bbox: { x: 120, y: 240, w: 280, h: 40 } },
-          { fieldKey: 'dag_number', labelBn: 'দাগ নম্বর', labelEn: 'Dag Number', rawValue: '৮৮', normalizedValue: '88', confidence: 0.99, bbox: { x: 340, y: 320, w: 140, h: 35 } }
-        ]
-      },
-      {
-        id: 'doc-1002-3',
-        name: 'আরএস_রেকর্ডীয়_খতিয়ান_৮৮.pdf',
-        type: 'khatian',
-        sizeBytes: 950300,
-        hash: 'f123456789abcdef0123456789abcdef789123456789abcdef0123456789abcd',
-        pageCount: 1,
-        summaryBn: 'আরএস খতিয়ান রেকর্ড নং খতিয়ান-৮৮, প্রজা: কামাল হোসেন, মোট এলাকা: ৪০ শতক।',
-        summaryEn: 'RS Khatian Record No. Khatian-88, Tenant: Kamal Hossain, Area: 40.0 decimals.',
-        parties: { owner: 'কামাল হোসেন' },
-        mouza: 'ধামরাই',
-        dagNumber: '৮৮',
-        areaDecimals: 40.0,
-        ocrConfidence: 0.97,
-        extractedFields: [
-          { fieldKey: 'khatian_number', labelBn: 'খতিয়ান নম্বর', labelEn: 'Khatian Number', rawValue: 'খতিয়ান-৮৮', normalizedValue: '88', confidence: 0.98 },
-          { fieldKey: 'recorded_owner', labelBn: 'রেকর্ডীয় প্রজা/মালিক', labelEn: 'Recorded Owner', rawValue: 'কামাল হোসেন', normalizedValue: 'কামাল হোসেন', confidence: 0.97 }
-        ]
-      }
-    ]
-  },
-  {
-    id: 'UB-2026-1003',
-    titleBn: 'মৌজা তেঁতুলঝোড়া দাগ ২৯১ - বায়া দলিলের ধারাবাহিকতা বিচ্ছিন্ন',
-    titleEn: 'Mouza Tetuljhora Dag 291 - Broken Title Chain (Missing Baya Deed)',
-    descBn: 'খতিয়ানভুক্ত মালিকের সাথে বর্তমান বিক্রেতার মালিকানা প্রাপ্তির কোনো বৈধ বায়া দলিল বা রেকর্ডীয় সংযোগ অনুপস্থিত।',
-    descEn: 'Broken chain of title: Recorded owner in Khatian is Late Golam Rahman, but current seller is Md. Saiful Islam with no connecting deed.',
-    mouza: 'তেঁতুলঝোড়া',
-    dagNumber: '২৯১',
-    area: 18.5,
-    expectedRiskLevel: 'high',
-    expectedRiskScore: 65,
-    conflictType: 'broken_chain',
-    documents: [
-      {
-        id: 'doc-1003-1',
-        name: 'প্রস্তাবিত_সাফ_কবলা_দলিল_৫১২৩.pdf',
-        type: 'deed',
-        sizeBytes: 1250000,
-        hash: '5123abcd8901ef2345678901abcdef2345678901abcdef2345678901abcdef23',
-        pageCount: 3,
-        summaryBn: 'দলিল নং ৫১২৩ (২০২৬)। বিক্রেতা: মো: সাইফুল ইসলাম, ক্রেতা: সুলতানা পারভীন, দাগ: ২৯১।',
-        summaryEn: 'Deed No. 5123 (2026). Seller: Md. Saiful Islam, Buyer: Sultana Parvin, Plot: 291.',
-        parties: { seller: 'মো: সাইফুল ইসলাম', buyer: 'সুলতানা পারভীন' },
-        mouza: 'তেঁতুলঝোড়া',
-        dagNumber: '২৯১',
-        areaDecimals: 18.5,
-        registrationDate: '2026-03-20',
-        ocrConfidence: 0.96,
-        extractedFields: [
-          { fieldKey: 'deed_number', labelBn: 'দলিল নম্বর', labelEn: 'Deed Number', rawValue: '৫১২৩', normalizedValue: '5123', confidence: 0.98 },
-          { fieldKey: 'seller_name', labelBn: 'বিক্রেতার নাম', labelEn: 'Seller Name', rawValue: 'মো: সাইফুল ইসলাম', normalizedValue: 'মো: সাইফুল ইসলাম', confidence: 0.97 },
-          { fieldKey: 'buyer_name', labelBn: 'ক্রেতার নাম', labelEn: 'Buyer Name', rawValue: 'সুলতানা পারভীন', normalizedValue: 'সুলতানা পারভীন', confidence: 0.96 }
-        ]
-      },
-      {
-        id: 'doc-1003-2',
-        name: 'আরএস_রেকর্ডীয়_খতিয়ান_২৯১.pdf',
-        type: 'khatian',
-        sizeBytes: 890000,
-        hash: '2910abcdef1234567890abcdef1234567890abcdef1234567890abcdef123456',
-        pageCount: 1,
-        summaryBn: 'আরএস খতিয়ান নং ২৯১। রেকর্ডীয় প্রজা: মৃত গোলাম রহমান। বিক্রেতার নামের সাথে কোনো সংযোগ নেই।',
-        summaryEn: 'RS Khatian No. 291. Recorded Tenant: Late Golam Rahman. Disconnected from current seller.',
-        parties: { owner: 'মৃত গোলাম রহমান' },
-        mouza: 'তেঁতুলঝোড়া',
-        dagNumber: '২৯১',
-        areaDecimals: 18.5,
-        ocrConfidence: 0.97,
-        extractedFields: [
-          { fieldKey: 'khatian_number', labelBn: 'খতিয়ান নম্বর', labelEn: 'Khatian Number', rawValue: 'খতিয়ান-২৯১', normalizedValue: '291', confidence: 0.98 },
-          { fieldKey: 'recorded_owner', labelBn: 'রেকর্ডীয় প্রজা/মালিক', labelEn: 'Recorded Owner', rawValue: 'মৃত গোলাম রহমান', normalizedValue: 'মৃত গোলাম রহমান', confidence: 0.97 }
-        ]
-      }
-    ]
-  },
-  {
-    id: 'UB-2026-1004',
-    titleBn: 'মৌজা সাভার দাগ ৫১০ - দলিল বনাম খতিয়ান স্বত্ব অসঙ্গতি',
-    titleEn: 'Mouza Savar Dag 510 - Deed Seller vs Khatian Owner Mismatch',
-    descBn: 'প্রস্তাবিত দলিলে উল্লেখিত দাগে খতিয়ানভুক্ত মালিকের নামের সাথে বিক্রেতার সম্পূর্ণ অমিল এবং রেকর্ডহীন স্থানান্তর।',
-    descEn: 'Direct ownership contradiction: Deed seller is Anwar Hossain, but the survey record is registered under Harendra Kumar Saha with zero mutation.',
-    mouza: 'সাভার',
-    dagNumber: '৫১০',
-    area: 30.0,
-    expectedRiskLevel: 'high',
-    expectedRiskScore: 60,
-    conflictType: 'deed_khatian_mismatch',
-    documents: [
-      {
-        id: 'doc-1004-1',
-        name: 'বিক্রয়_দলিল_৬৭৮১.pdf',
-        type: 'deed',
-        sizeBytes: 1180000,
-        hash: '6781fedcba9876543210abcdef1234567890abcdef1234567890abcdef123456',
-        pageCount: 3,
-        summaryBn: 'দলিল নং ৬৭৮১ (২০২৬)। বিক্রেতা: আনোয়ার হোসেন, ক্রেতা: মো: তারেক রহমান, দাগ: ৫১০, পরিমাণ: ৩০ শতক।',
-        summaryEn: 'Deed No. 6781 (2026). Seller: Anwar Hossain, Buyer: Md. Tareq Rahman, Plot: 510, Area: 30 decimals.',
-        parties: { seller: 'আনোয়ার হোসেন', buyer: 'মো: তারেক রহমান' },
-        mouza: 'সাভার',
-        dagNumber: '৫১০',
-        areaDecimals: 30.0,
-        registrationDate: '2026-02-28',
-        ocrConfidence: 0.96,
-        extractedFields: [
-          { fieldKey: 'deed_number', labelBn: 'দলিল নম্বর', labelEn: 'Deed Number', rawValue: '৬৭৮১', normalizedValue: '6781', confidence: 0.98 },
-          { fieldKey: 'seller_name', labelBn: 'বিক্রেতার নাম', labelEn: 'Seller Name', rawValue: 'আনোয়ার হোসেন', normalizedValue: 'আনোয়ার হোসেন', confidence: 0.97 },
-          { fieldKey: 'buyer_name', labelBn: 'ক্রেতার নাম', labelEn: 'Buyer Name', rawValue: 'মো: তারেক রহমান', normalizedValue: 'মো: তারেক রহমান', confidence: 0.96 }
-        ]
-      },
-      {
-        id: 'doc-1004-2',
-        name: 'আরএস_খতিয়ান_৫১০.pdf',
-        type: 'khatian',
-        sizeBytes: 920000,
-        hash: '5100fedcba9876543210abcdef1234567890abcdef1234567890abcdef123456',
-        pageCount: 1,
-        summaryBn: 'আরএস খতিয়ান নং ৫১০। রেকর্ডীয় প্রজা: হরেন্দ্র কুমার সাহা। বিক্রেতার স্বত্বের কোনো সরকারি রেকর্ড নেই।',
-        summaryEn: 'RS Khatian No. 510. Recorded Tenant: Harendra Kumar Saha. Seller has zero government land title record.',
-        parties: { owner: 'হরেন্দ্র কুমার সাহা' },
-        mouza: 'সাভার',
-        dagNumber: '৫১০',
-        areaDecimals: 30.0,
-        ocrConfidence: 0.97,
-        extractedFields: [
-          { fieldKey: 'khatian_number', labelBn: 'খতিয়ান নম্বর', labelEn: 'Khatian Number', rawValue: 'খতিয়ান-৫১০', normalizedValue: '510', confidence: 0.98 },
-          { fieldKey: 'recorded_owner', labelBn: 'রেকর্ডীয় প্রজা/মালিক', labelEn: 'Recorded Owner', rawValue: 'হরেন্দ্র কুমার সাহা', normalizedValue: 'হরেন্দ্র কুমার সাহা', confidence: 0.97 }
-        ]
-      }
-    ]
-  }
-];
+// (Scenarios imported from @/lib/demoScenarios)
 
 export default function InteractiveDemoPage() {
   const { language, t, formatNumber } = useLanguage();
@@ -446,7 +122,7 @@ export default function InteractiveDemoPage() {
   const [workspaceDocs, setWorkspaceDocs] = useState<DemoDocumentFixture[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
   const [fileFilter, setFileFilter] = useState('');
-  const [currentFolder, setCurrentFolder] = useState<'root' | 'deeds' | 'khatian' | 'revenue' | 'all'>('root');
+  const [currentFolder, setCurrentFolder] = useState<'root' | 'deeds' | 'khatian' | 'revenue' | 'maps' | 'all'>('root');
   const [fmViewMode, setFmViewMode] = useState<'grid' | 'list'>('grid');
 
   // Document Preview Modal State
@@ -1116,23 +792,49 @@ export default function InteractiveDemoPage() {
     const isDoubleSale = scenario.conflictType === 'double_sale';
     const isBrokenChain = scenario.conflictType === 'broken_chain';
     const isMismatch = scenario.conflictType === 'deed_khatian_mismatch';
+    const isCaseA = scenario.conflictType === 'partial_area_deficit';
+    const isCaseB = scenario.conflictType === 'hash_tampering';
+    const isCaseC = scenario.conflictType === 'survey_transition_conflict';
+    const isCaseD = scenario.conflictType === 'registration_mutation_mismatch';
+    const isCaseE = scenario.conflictType === 'mortgage_collateral_conflict';
+    const isCaseF = scenario.conflictType === 'low_ocr_confidence_hitl';
 
     return [
+      {
+        ruleId: 'D-001',
+        version: 'v2.1-integrity-audit',
+        descriptionBn: 'ক্রিপ্টোগ্রাফিক হ্যাশ ও ডিজিটাল নথি অখণ্ডতা যাচাই (Rule D001 / P2)',
+        descriptionEn: 'Cryptographic Hash & Document Tampering Audit (Rule D001 / P2)',
+        result: isCaseB ? 'FAIL' : 'PASS',
+        inputValues: isCaseB
+          ? `আপলোডকৃত দলিলের হ্যাশ: ${scenario.documents[0]?.hash.slice(0, 16)}... | ভল্টে সংরক্ষিত মূল হ্যাশ: ${scenario.documents[0]?.enrolledHash?.slice(0, 16) || 'e3b0c442...'}...`
+          : `SHA-256 হ্যাশ: ${scenario.documents[0]?.hash.slice(0, 20)}... | সাব-রেজিস্ট্রি ভল্ট ডিজিটাল স্বাক্ষর অক্ষত`,
+        expectedValue: 'দাখিলকৃত নথির ক্রিপ্টোগ্রাফিক হ্যাশ সাব-রেজিস্ট্রি ভল্ট ও মূল রেজিস্ট্রেশন রেকর্ডের সাথে হুবহু ১০০% মিল থাকতে হবে',
+        observedValue: isCaseB
+          ? 'ভিজ্যুয়াল সাদৃশ্য উচ্চ হলেও SHA-256 হ্যাশ অমিল শনাক্ত হয়েছে। মূল নথির একটি ডিজিট ফটোশপ/ডিজিটাল মাধ্যমে বিকৃত করা হয়েছে (File altered since enrollment)!'
+          : 'নথির হ্যাশ ভল্ট ফিঙ্গারপ্রিন্টের সাথে শতভাগ সামঞ্জস্যপূর্ণ (Verified Authentic Fingerprint)',
+        severity: isCaseB ? 'critical' : 'none',
+        sourceDocs: [scenario.documents[0]?.name].filter(Boolean),
+        pageRefs: [1],
+        riskWeight: isCaseB ? 50 : 0
+      },
       {
         ruleId: 'R-01',
         version: 'v1.4.2-bd-land',
         descriptionBn: 'দলিল বিক্রেতা বনাম খতিয়ান প্রজার নাম সামঞ্জস্য',
         descriptionEn: 'Deed Seller vs Khatian Recorded Tenant Consistency',
-        result: isMismatch ? 'FAIL' : 'PASS',
+        result: isMismatch || isCaseD ? 'FAIL' : 'PASS',
         inputValues: isMismatch
           ? 'দলিল বিক্রেতা: আনোয়ার হোসেন | খতিয়ান প্রজা: হরেন্দ্র কুমার সাহা'
-          : `বিক্রেতা: ${scenario.documents[0]?.parties?.seller || 'মো: আব্দুর রহিম'} | খতিয়ান প্রজা: ${scenario.documents[1]?.parties?.owner || 'মো: আব্দুর রহিম'}`,
+          : isCaseD
+          ? 'দলিল বিক্রেতা: মাহবুবুর রহমান | খতিয়ান প্রজা: হাজী আব্দুল করিম (খারিজ আদেশ ছাড়া হস্তান্তর)'
+          : `বিক্রেতা: ${scenario.documents[0]?.parties?.seller || 'মো: আব্দুর রহিম'} | খতিয়ান প্রজা: ${scenario.documents[1]?.parties?.owner || scenario.documents[2]?.parties?.owner || 'মো: আব্দুর রহিম'}`,
         expectedValue: 'বিক্রেতা ও খতিয়ান প্রজার নাম হুবহু এক অথবা বৈধ উত্তরাধিকারী হতে হবে',
-        observedValue: isMismatch ? 'বিক্রেতার নামের সাথে খতিয়ান প্রজার কোনো সংযোগ বা নামজারি নেই' : 'সরাসরি সামঞ্জস্যপূর্ণ (Consistent match)',
-        severity: isMismatch ? 'high' : 'none',
-        sourceDocs: [scenario.documents[0]?.name, scenario.documents[1]?.name].filter(Boolean),
+        observedValue: isMismatch || isCaseD ? 'বিক্রেতার নামের সাথে খতিয়ান প্রজার সরাসরি সংযোগ অনুপস্থিত' : 'সরাসরি সামঞ্জস্যপূর্ণ (Consistent match)',
+        severity: isMismatch || isCaseD ? 'high' : 'none',
+        sourceDocs: [scenario.documents[0]?.name, scenario.documents[2]?.name].filter(Boolean),
         pageRefs: [1, 1],
-        riskWeight: isMismatch ? 30 : 0
+        riskWeight: isMismatch || isCaseD ? 30 : 0
       },
       {
         ruleId: 'R-02',
@@ -1150,17 +852,21 @@ export default function InteractiveDemoPage() {
       },
       {
         ruleId: 'R-03',
-        version: 'v1.4.2-bd-land',
-        descriptionBn: 'রেকর্ডীয় ও হস্তান্তরিত জমির পরিমাণ সামঞ্জস্য',
-        descriptionEn: 'Land Area Summation & Deficit Check',
-        result: 'PASS',
-        inputValues: `হস্তান্তরিত জমি: ${scenario.area} শতক | খতিয়ান মোট জমি: ${scenario.area} শতক`,
-        expectedValue: 'বিক্রিত জমি খতিয়ানের মোট বা অবশিষ্ট অংশের সমান বা কম হতে হবে',
-        observedValue: `${scenario.area} শতক সীমার মধ্যে রয়েছে (ঘাটতি নেই)`,
-        severity: 'none',
-        sourceDocs: [scenario.documents[0]?.name],
-        pageRefs: [1],
-        riskWeight: 0
+        version: 'v2.1-area-normalization',
+        descriptionBn: 'আংশিক দাগ হস্তান্তর ও জমির ধারণক্ষমতা ঘাটতি হিসাব (Rule P002)',
+        descriptionEn: 'Partial Parcel Transfer & Area Summation Check (Rule P002)',
+        result: isCaseA ? 'FAIL' : 'PASS',
+        inputValues: isCaseA
+          ? 'মূল খতিয়ান ধারণক্ষমতা: ৫০.০ শতক | পূর্ববর্তী হস্তান্তর: ২৫.০ শতক | বর্তমান প্রস্তাবিত হস্তান্তর: ৩০.০ শতক (মোট ৫৫.০ শতক)'
+          : `হস্তান্তরিত জমি: ${scenario.area} শতক | খতিয়ান মোট জমি: ${scenario.area} শতক`,
+        expectedValue: 'বিক্রিত জমির যোগফল খতিয়ানের অনুমোদিত ধারণক্ষমতার সমান বা কম হতে হবে',
+        observedValue: isCaseA
+          ? 'জমির ধারণক্ষমতা ঘাটতি: প্রস্তাবিত ৩০ শতক হস্তান্তরের ফলে মোট বিক্রিত জমি ৫৫ শতক দাঁড়ায়, যা খতিয়ানের চেয়ে ৫ শতক বেশি (Exceeds khatian area limit by 5 decimals)!'
+          : `${scenario.area} শতক সীমার মধ্যে রয়েছে (ঘাটতি নেই)`,
+        severity: isCaseA ? 'high' : 'none',
+        sourceDocs: [scenario.documents[0]?.name, scenario.documents[1]?.name, scenario.documents[2]?.name].filter(Boolean),
+        pageRefs: [1, 1, 1],
+        riskWeight: isCaseA ? 40 : 0
       },
       {
         ruleId: 'R-04',
@@ -1182,39 +888,99 @@ export default function InteractiveDemoPage() {
       },
       {
         ruleId: 'R-05',
-        version: 'v1.4.2-bd-land',
-        descriptionBn: 'দ্বৈত বিক্রয় বা পূর্ববর্তী সক্রিয় হস্তান্তর বিরোধ',
-        descriptionEn: 'Duplicate Active Transfer / Double-Sale Detection',
+        version: 'v2.0-double-sale-detector',
+        descriptionBn: 'দ্বৈত বিক্রয় বা পূর্ববর্তী সক্রিয় হস্তান্তর বিরোধ (P3 / Rule P003)',
+        descriptionEn: 'Duplicate Active Transfer / Double-Sale Detection (P3 / Rule P003)',
         result: isDoubleSale ? 'FAIL' : 'PASS',
         inputValues: isDoubleSale
-          ? `দাগ নং ${scenario.dagNumber} এর জন্য পূর্ববর্তী দলিল নং ১০৪২ (১০/০২/২০২৬) এবং প্রস্তাবিত দলিল নং ৪৫২১ (০১/০৩/২০২৬)`
+          ? `দাগ নং ${scenario.dagNumber} এর জন্য পূর্ববর্তী দলিল নং ৩২০১ (১০/১১/২০২৪) এবং প্রস্তাবিত দলিল নং ৮৯১০ (০২/০৪/২০২৬)`
           : `দাগ নং ${scenario.dagNumber} এ অন্য কোনো সমসাময়িক সক্রিয় হস্তান্তর অনুপস্থিত`,
         expectedValue: 'একই দাগ ও অংশে পূর্ববর্তী কোনো সক্রিয় বিক্রয় বা বিরোধ থাকতে পারবে না',
         observedValue: isDoubleSale
-          ? 'গুরুতর বিরোধ: একই বিক্রেতা কর্তৃক মাত্র ২০ দিনের ব্যবধানে একই দাগের ১২.৫ শতক জমি দুইবার বিক্রয়!'
+          ? 'গুরুতর অপরাধমূলক বিরোধ: একই বিক্রেতা কামাল হোসেন কর্তৃক একই দাগের ৪০ শতক জমি দুই ভিন্ন ব্যক্তির নিকট হস্তান্তর!'
           : 'পূর্ববর্তী কোনো দ্বৈত বিক্রয় রেকর্ড পাওয়া যায়নি (Clean transfer history)',
         severity: isDoubleSale ? 'critical' : 'none',
         sourceDocs: scenario.documents.map((d) => d.name),
-        pageRefs: [1, 3],
+        pageRefs: [1, 2],
         riskWeight: isDoubleSale ? 45 : 0
       },
       {
         ruleId: 'R-06',
-        version: 'v1.4.2-bd-land',
-        descriptionBn: 'নামজারি খতিয়ান ও ডিসিআর পেমেন্ট ক্রস-যাচাই',
-        descriptionEn: 'Mutation Record & DCR Fee Receipt Reconciliation',
-        result: isMismatch ? 'FAIL' : 'PASS',
-        inputValues: isMismatch
+        version: 'v2.1-mutation-reconciliation',
+        descriptionBn: 'নামজারি খতিয়ান ও খারিজ আদেশ বৈধতা ক্রস-যাচাই (Rule M001)',
+        descriptionEn: 'Registration vs. Mutation Record Reconciliation (Rule M001)',
+        result: isCaseD ? 'FAIL' : isMismatch ? 'FAIL' : 'PASS',
+        inputValues: isCaseD
+          ? 'সহকারী কমিশনার (ভূমি) অফিস সাভার, মিউটেশন কেস নং ৫৯২/২০২৫: REJECTED'
+          : isMismatch
           ? 'বিক্রেতা আনোয়ার হোসেনের কোনো নামজারি খতিয়ান জমা দেওয়া হয়নি'
-          : 'নামজারি খতিয়ান ও ডিসিআর চালান অন্তর্ভুক্ত',
-        expectedValue: 'অনুমোদিত সহকারী কমিশনার (ভূমি) এর খারিজ খতিয়ান ও ফি রসিদ',
-        observedValue: isMismatch
+          : 'অনুমোদিত নামজারি খতিয়ান ও ডিসিআর চালান অন্তর্ভুক্ত',
+        expectedValue: 'অনুমোদিত সহকারী কমিশনার (ভূমি) এর খারিজ খতিয়ান ও ফি রসিদ কার্যকর থাকতে হবে',
+        observedValue: isCaseD
+          ? 'নামজারি স্থিতি বাতিল: এসি ল্যান্ড কোর্টে দাখিলকৃত আবেদন আপত্তি ও অনুপস্থিতির কারণে নামঞ্জুর/বাতিল (Rejected status in land revenue records)!'
+          : isMismatch
           ? 'নামজারি বা সরকারি খারিজ আদেশ অনুপস্থিত'
           : 'নামজারি রেকর্ড অনুমোদিত ও কার্যকর',
-        severity: isMismatch ? 'medium' : 'none',
-        sourceDocs: [scenario.documents[2]?.name].filter(Boolean),
+        severity: isCaseD || isMismatch ? 'high' : 'none',
+        sourceDocs: [scenario.documents[3]?.name || scenario.documents[0]?.name].filter(Boolean),
         pageRefs: [1],
-        riskWeight: isMismatch ? 15 : 0
+        riskWeight: isCaseD ? 40 : isMismatch ? 15 : 0
+      },
+      {
+        ruleId: 'P-004',
+        version: 'v2.0-survey-transition',
+        descriptionBn: 'ঐতিহাসিক জরিপ রূপান্তর (CS → SA → RS → BS) সঙ্গতি (Rule P004)',
+        descriptionEn: 'Survey Era Transition & Plot Bifurcation (Rule P004)',
+        result: isCaseC ? 'FAIL' : 'PASS',
+        inputValues: isCaseC
+          ? 'দলিলে বর্ণিত জরিপ: আরএস দাগ ৮৮ | হাল জরিপ: বিএস খতিয়ান ও দাগ ১৪২ ও ১৪৩'
+          : 'আরএস ও বিএস দাগ বিন্যাস সঙ্গতিপূর্ণ',
+        expectedValue: 'জরিপ পরিবর্তনের ক্ষেত্রে আরএস দাগ থেকে বিএস দাগে সুস্পষ্ট বণ্টন বা বাটোয়ারা ডিক্রি থাকতে হবে',
+        observedValue: isCaseC
+          ? 'জরিপ রূপান্তর সংঘাত: আরএস দাগ ৮৮ হাল বিএস জরিপে ১৪২ ও ১৪৩ দাগে দ্বিখণ্ডিত হয়েছে। বৈধ বাটোয়ারা ব্যতীত হস্তান্তর সীমানা বিরোধ সৃষ্টি করবে!'
+          : 'জরিপ রূপান্তর সামঞ্জস্যপূর্ণ (Survey lineage validated)',
+        severity: isCaseC ? 'high' : 'none',
+        sourceDocs: [scenario.documents[0]?.name, scenario.documents[2]?.name, scenario.documents[4]?.name].filter(Boolean),
+        pageRefs: [1, 1, 1],
+        riskWeight: isCaseC ? 35 : 0
+      },
+      {
+        ruleId: 'G-001',
+        version: 'v2.2-collateral-legal-audit',
+        descriptionBn: 'ব্যাংক বন্ধকী দায় ও আদালতের দেওয়ানি স্থগিতাদেশ (Rule G001)',
+        descriptionEn: 'Bank Mortgage Lien & Court Injunction Check (Rule G001)',
+        result: isCaseE ? 'FAIL' : 'NOT APPLICABLE',
+        inputValues: isCaseE
+          ? 'মৌজা সাভার দাগ ৭৭০ | অগ্রণী ব্যাংক ৮ কোটি টাকার রেজিস্টার্ড বন্ধকনামা নং ১২০১ | অর্থ জারি মামলা নং ৪৪/২০২৫'
+          : `কেস রেফারেন্স: ${scenario.id}`,
+        expectedValue: 'সম্পত্তিটি কোনো আর্থিক প্রতিষ্ঠানে দায়বদ্ধ বা দেওয়ানি আদালতের নিষেধাজ্ঞার আওতাভুক্ত থাকা যাবে না',
+        observedValue: isCaseE
+          ? 'গুরুতর আর্থিক দায়বদ্ধতা: সম্পত্তিটি অগ্রণী ব্যাংকের নিকট বন্ধকযুক্ত এবং অর্থঋণ আদালত-২ ঢাকার সক্রিয় অন্তর্বর্তীকালীন স্থগিতাদেশ বিদ্যমান!'
+          : 'দাখিলকৃত নথিপত্রে কোনো সক্রিয় ব্যাংক বন্ধক বা আদালতের নিষেধাজ্ঞা নেই',
+        severity: isCaseE ? 'critical' : 'none',
+        sourceDocs: [scenario.documents[1]?.name, scenario.documents[5]?.name].filter(Boolean),
+        pageRefs: [1, 1],
+        riskWeight: isCaseE ? 48 : 0,
+        skipReasonBn: !isCaseE ? 'কোনো ব্যাংক দায়বদ্ধতা বা আদালতের নিষেধাজ্ঞা রেফারেন্স নেই' : undefined,
+        skipReasonEn: !isCaseE ? 'No active mortgage lien or court injunction recorded' : undefined
+      },
+      {
+        ruleId: 'X-001',
+        version: 'v2.0-responsible-ai-gate',
+        descriptionBn: 'ওসিআর কনফিডেন্স থ্রেশহোল্ড ও মানব পর্যালোচনা গেট (Rule X001)',
+        descriptionEn: 'OCR Confidence Gate & Human-in-the-Loop Review (Rule X001)',
+        result: isCaseF ? 'FAIL' : 'PASS',
+        inputValues: isCaseF
+          ? 'দাগ নম্বর ওসিআর আত্মবিশ্বাস: ৪৫% (০.৪৫) | স্ট্যাম্পের সিল ও হাতে লেখা কালির দাগ অস্পষ্ট'
+          : `গড় ওসিআর আত্মবিশ্বাস: ${(scenario.documents[0]?.ocrConfidence * 100).toFixed(0)}%`,
+        expectedValue: 'স্বয়ংক্রিয় নিষ্পত্তির জন্য সংবেদনশীল ফিল্ডসমূহের ন্যূনতম ওসিআর কনফিডেন্স ৮০% বা তদূর্ধ্ব হতে হবে',
+        observedValue: isCaseF
+          ? '⚠️ নিম্ন আত্মবিশ্বাস (৪৫%): দাগ নম্বরে কালি ছড়ানো থাকায় ভুল শনাক্তকরণের ঝুঁকি। চূড়ান্ত স্কোরিংয়ের পূর্বে মানব পর্যালোচকের (Human-in-the-Loop) সরাসরি অনুমোদন প্রয়োজন!'
+          : 'সকল মূল ফিল্ডের ওসিআর আত্মবিশ্বাস অনুমোদিত থ্রেশহোল্ডের ঊর্ধ্বে (Confident extraction)',
+        severity: isCaseF ? 'medium' : 'none',
+        sourceDocs: [scenario.documents[0]?.name].filter(Boolean),
+        pageRefs: [1],
+        riskWeight: isCaseF ? 20 : 0
       },
       {
         ruleId: 'R-07',
@@ -1231,83 +997,23 @@ export default function InteractiveDemoPage() {
         riskWeight: 0
       },
       {
-        ruleId: 'R-08',
-        version: 'v1.4.2-bd-land',
-        descriptionBn: 'আমমোক্তারনামা বা অপ্রাপ্তবয়স্ক সংক্রান্ত আইনি বৈধতা',
-        descriptionEn: 'Power of Attorney & Legal Capacity Validation',
-        result: 'PASS',
-        inputValues: 'দলিলদাতা প্রাপ্তবয়স্ক ও স্বয়ং উপস্থিত',
-        expectedValue: 'আমমোক্তারনামা থাকলে তা পাওয়ার অব অ্যাটর্নি আইন ২০১৫ অনুযায়ী নিবন্ধিত হতে হবে',
-        observedValue: 'সরাসরি মালিক কর্তৃক সম্পাদিত, কোনো পাওয়ার অব অ্যাটর্নি জটিলতা নেই',
-        severity: 'none',
-        sourceDocs: [scenario.documents[0]?.name],
-        pageRefs: [1],
-        riskWeight: 0
-      },
-      {
         ruleId: 'R-09',
         version: 'v1.4.2-bd-land',
-        descriptionBn: 'ভূমি উন্নয়ন কর দাখিলা ও খাজনা হালনাগাদ স্থিতি',
-        descriptionEn: 'Land Development Tax Dakhila Verification',
+        descriptionBn: 'ভূমি উন্নয়ন কর দাখিলা স্থিতি (সহায়ক প্রমাণপত্র)',
+        descriptionEn: 'Land Development Tax Dakhila Verification (Supporting Evidence Only)',
         result: 'PASS',
-        inputValues: 'বর্তমান অর্থবছর (২০২৫-২৬) এর খাজনা পরিশোধ রসিদ',
-        expectedValue: 'সর্বশেষ অর্থবছর পর্যন্ত ভূমি উন্নয়ন কর পরিশোধ থাকতে হবে',
-        observedValue: 'দাখিলা হালনাগাদ রয়েছে (Tax cleared)',
+        inputValues: 'বর্তমান অর্থবছর (১৪৩২ বঙ্গাব্দ) এর খাজনা পরিশোধ রসিদ',
+        expectedValue: 'সর্বশেষ অর্থবছর পর্যন্ত ভূমি উন্নয়ন কর পরিশোধ থাকতে হবে (লক্ষ্য করুন: এটি সহায়ক প্রমাণ, মালিকানার প্রমাণ নয়)',
+        observedValue: 'দাখিলা হালনাগাদ রয়েছে [সহায়ক প্রমাণপত্র মাত্র — এককভাবে মালিকানার চূড়ান্ত প্রমাণ নয়]',
         severity: 'none',
         sourceDocs: scenario.documents.filter((d) => d.type === 'tax_receipt').map((d) => d.name),
         pageRefs: [1],
         riskWeight: 0
-      },
-      {
-        ruleId: 'R-10',
-        version: 'v1.4.2-bd-land',
-        descriptionBn: 'অর্পিত বা খাস খতিয়ান স্বত্ব তালিকা চেক',
-        descriptionEn: 'Vested & Government Property Ledger Check',
-        result: 'NOT APPLICABLE',
-        inputValues: `মৌজা: ${scenario.mouza} | দাগ: ${scenario.dagNumber}`,
-        expectedValue: 'ভূমি মন্ত্রণালয়ের অর্পিত সম্পত্তি ‘ক’ বা ‘খ’ তালিকাভুক্ত নয়',
-        observedValue: 'নথিভুক্ত দাগটি সাধারণ রায়তি জোতভুক্ত; খাস বা অর্পিত তালিকাভুক্ত নয়',
-        severity: 'none',
-        sourceDocs: [],
-        pageRefs: [],
-        riskWeight: 0,
-        skipReasonBn: 'এই দাগের ক্ষেত্রে অর্পিত বা খাস তালিকাভুক্তির কোনো সরকারি দাবি নেই',
-        skipReasonEn: 'Parcel does not carry government or vested property classification'
-      },
-      {
-        ruleId: 'R-11',
-        version: 'v1.4.2-bd-land',
-        descriptionBn: 'উপ-রেজিস্ট্রি অফিসের প্রশাসনিক এখতিয়ার যাচাই',
-        descriptionEn: 'Sub-Registry Office Jurisdiction Match',
-        result: 'PASS',
-        inputValues: 'সাব-রেজিস্ট্রি অফিস: সাভার, ঢাকা',
-        expectedValue: 'মৌজা সাভার ও কাউন্দিয়া সাভার সাব-রেজিস্ট্রি অফিসের অধীন',
-        observedValue: 'এখতিয়ার সামঞ্জস্যপূর্ণ (Jurisdiction matches deed locus)',
-        severity: 'none',
-        sourceDocs: [scenario.documents[0]?.name],
-        pageRefs: [1],
-        riskWeight: 0
-      },
-      {
-        ruleId: 'R-12',
-        version: 'v1.4.2-bd-land',
-        descriptionBn: 'আদালতি নিষেধাজ্ঞা বা লিস পেন্ডেন্স অনুসন্ধান',
-        descriptionEn: 'Court Injunction & Lis Pendens Search',
-        result: 'NOT APPLICABLE',
-        inputValues: `কেস রেফারেন্স: ${scenario.id}`,
-        expectedValue: 'দেওয়ানি আদালতের কোনো স্থগিতাদেশ বা বিচারাধীন মামলা নেই',
-        observedValue: 'দাখিলকৃত নথিপত্রে কোনো আদালতের নিষেধাজ্ঞা বা লিস পেন্ডেন্স পাওয়া যায়নি',
-        severity: 'none',
-        sourceDocs: [],
-        pageRefs: [],
-        riskWeight: 0,
-        skipReasonBn: 'কোনো চলমান সিভিল ইনজাংশন রেফারেন্স পাওয়া যায়নি',
-        skipReasonEn: 'No active civil court injunctions or lis pendens recorded'
       }
     ];
   };
 
-  // --- RUN INTERACTIVE 6-STAGE PIPELINE WITH OBSERVABLE SUB-OPERATIONS ---
+  // --- RUN INTERACTIVE 6-STAGE PIPELINE  // --- RUN INTERACTIVE 6-STAGE PIPELINE WITH OBSERVABLE SUB-OPERATIONS ---
   const handleRunPipeline = async () => {
     if (workspaceDocs.length === 0) {
       handleAddAllToWorkspace();
@@ -1879,12 +1585,12 @@ export default function InteractiveDemoPage() {
     }
 
     const ruleMatrix = generateRuleMatrix(activeScenario, findings);
-    const r1 = ruleMatrix.find((r) => r.ruleId === 'R-01')!;
-    const r2 = ruleMatrix.find((r) => r.ruleId === 'R-02')!;
-    const r3 = ruleMatrix.find((r) => r.ruleId === 'R-03')!;
-    const r4 = ruleMatrix.find((r) => r.ruleId === 'R-04')!;
-    const r5 = ruleMatrix.find((r) => r.ruleId === 'R-05')!;
-    const r6 = ruleMatrix.find((r) => r.ruleId === 'R-06')!;
+    const r1 = ruleMatrix.find((r) => r.ruleId === 'R-01') || ruleMatrix[0];
+    const r2 = ruleMatrix.find((r) => r.ruleId === 'R-02') || ruleMatrix[1];
+    const r3 = ruleMatrix.find((r) => r.ruleId === 'R-03' || r.ruleId === 'P-002') || ruleMatrix[2];
+    const r4 = ruleMatrix.find((r) => r.ruleId === 'R-04') || ruleMatrix[3];
+    const r5 = ruleMatrix.find((r) => r.ruleId === 'R-05' || r.ruleId === 'P-003') || ruleMatrix[4];
+    const r6 = ruleMatrix.find((r) => r.ruleId === 'R-06' || r.ruleId === 'M-001') || ruleMatrix[5];
 
     await stepSubOp(5, 'op_5_2', r1.result === 'FAIL' ? 'warning' : 'completed', 50, {
       stageNameBn: '৫. রুল ইঞ্জিন ক্রস-চেক',
@@ -2192,6 +1898,10 @@ export default function InteractiveDemoPage() {
     () => fileManagerDocs.filter((d) => d.type === 'mutation' || d.type === 'tax_receipt'),
     [fileManagerDocs]
   );
+  const mapDocs = useMemo(
+    () => fileManagerDocs.filter((d) => d.type === 'mouza_map'),
+    [fileManagerDocs]
+  );
 
   // Folder categories metadata
   const folderCategories = useMemo(
@@ -2235,8 +1945,21 @@ export default function InteractiveDemoPage() {
         bgColor: 'bg-[var(--bg-surface-soft)]/50 hover:bg-[var(--bg-surface)]',
         sizeBytes: revenueDocs.reduce((acc, d) => acc + d.sizeBytes, 0),
       },
+      {
+        id: 'maps' as const,
+        nameBn: 'মৌজা নকশা ও প্লট ম্যাপ',
+        nameEn: 'Mouza Maps & Plot Survey',
+        count: mapDocs.length,
+        types: ['mouza_map'],
+        descBn: 'মৌজা ক্যাডাস্ট্রাল জরিপ, সীমানা ও দাগ বাউন্ডারি',
+        descEn: 'Cadastral maps, plot boundaries & geo-dags',
+        accentColor: 'text-indigo-600 dark:text-indigo-400',
+        borderColor: 'border-[var(--border-color)] hover:border-[var(--brand-accent)]/50',
+        bgColor: 'bg-[var(--bg-surface-soft)]/50 hover:bg-[var(--bg-surface)]',
+        sizeBytes: mapDocs.reduce((acc, d) => acc + d.sizeBytes, 0),
+      },
     ],
-    [deedDocs, khatianDocs, revenueDocs]
+    [deedDocs, khatianDocs, revenueDocs, mapDocs]
   );
 
   // Filtered documents by active folder and search query
@@ -2248,6 +1971,8 @@ export default function InteractiveDemoPage() {
       list = khatianDocs;
     } else if (currentFolder === 'revenue') {
       list = revenueDocs;
+    } else if (currentFolder === 'maps') {
+      list = mapDocs;
     }
     if (!fileFilter.trim()) return list;
     const q = fileFilter.toLowerCase();
@@ -2321,7 +2046,7 @@ export default function InteractiveDemoPage() {
             <span>{t('demo_cases_tab')}</span>
           </h2>
           <span className="text-xs text-[var(--text-secondary)]">
-            {language === 'bn' ? '৪টি মানদণ্ড দৃশ্যকল্প' : '4 Standard Test Scenarios'}
+            {language === 'bn' ? `${formatNumber(DEMO_SCENARIOS.length)}টি বাস্তবধর্মী দৃশ্যকল্প ও অডিট কেস (Cases A-F)` : `${DEMO_SCENARIOS.length} Realistic Domain Audit Scenarios (Cases A-F)`}
           </span>
         </div>
 
@@ -2333,25 +2058,34 @@ export default function InteractiveDemoPage() {
                 ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30'
                 : sc.expectedRiskLevel === 'high'
                 ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30'
+                : sc.expectedRiskLevel === 'review'
+                ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/30'
                 : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30';
 
             return (
               <button
                 key={sc.id}
                 onClick={() => setSelectedCaseId(sc.id)}
-                className={`text-left p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-3 ${
+                className={`text-left p-3.5 sm:p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-3 ${
                   isSelected
                     ? 'border-[var(--brand-accent)] bg-[var(--bg-surface)] shadow-md ring-2 ring-[var(--brand-accent)]/15'
                     : 'border-[var(--border-color)] bg-[var(--bg-surface)] hover:border-[var(--brand-accent)]/40 hover:bg-[var(--bg-surface-soft)]/50'
                 }`}
               >
                 <div className="space-y-1.5 w-full">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className={`font-mono text-xs font-bold ${isSelected ? 'text-[var(--brand-accent)]' : 'text-[var(--text-secondary)]'}`}>
-                      {sc.id}
-                    </span>
+                  <div className="flex items-center justify-between gap-1.5">
+                    <div className="flex items-center gap-1.5 truncate">
+                      <span className={`font-mono text-xs font-bold ${isSelected ? 'text-[var(--brand-accent)]' : 'text-[var(--text-secondary)]'}`}>
+                        {sc.id}
+                      </span>
+                      {sc.caseBadge && (
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-[var(--brand-accent)]/10 text-[var(--brand-accent)] border border-[var(--brand-accent)]/20 truncate">
+                          {sc.caseBadge}
+                        </span>
+                      )}
+                    </div>
                     <span
-                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${riskBadgeColor}`}
+                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full border shrink-0 ${riskBadgeColor}`}
                     >
                       {sc.expectedRiskLevel.toUpperCase()} ({formatNumber(sc.expectedRiskScore)})
                     </span>
@@ -2364,6 +2098,10 @@ export default function InteractiveDemoPage() {
                   <p className="text-[11px] text-[var(--text-secondary)] line-clamp-2">
                     {language === 'bn' ? sc.descBn : sc.descEn}
                   </p>
+
+                  <div className="text-[10px] font-medium text-[var(--brand-accent)]/90 bg-[var(--bg-surface-soft)] px-2 py-0.5 rounded border border-[var(--border-color)]/60 truncate">
+                    {language === 'bn' ? `টার্গেট: ${sc.personaBn}` : `Target: ${sc.personaEn}`}
+                  </div>
                 </div>
 
                 <div className="pt-2 border-t border-[var(--border-color)] text-[10px] text-[var(--text-secondary)] flex items-center justify-between w-full">
@@ -2380,7 +2118,7 @@ export default function InteractiveDemoPage() {
         </div>
       </div>
 
-      {/* 3. WORKSPACE & BUILT-IN FILE MANAGER GRID */}
+      {/* 3. WORKSPACE      {/* 3. WORKSPACE & BUILT-IN FILE MANAGER GRID */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* LEFT COLUMN: AUTHENTIC BUILT-IN DEMO FILE MANAGER (6 COLS) */}
         <div className="lg:col-span-6 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-surface)] overflow-hidden shadow-sm flex flex-col">
@@ -2584,7 +2322,7 @@ export default function InteractiveDemoPage() {
                   <span>{formatNumber(folderCategories.length)} {language === 'bn' ? 'টি ফোল্ডার' : 'Folders'}</span>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                   {folderCategories.map((cat) => (
                     <div
                       key={cat.id}
@@ -4092,97 +3830,47 @@ export default function InteractiveDemoPage() {
 
       {/* 6. DOCUMENT PREVIEW MODAL */}
       {previewDoc && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in-50">
-          <div className="w-full max-w-2xl max-h-[90vh] flex flex-col rounded-2xl border border-[var(--border-color)] bg-[var(--bg-surface)] shadow-2xl overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/70 backdrop-blur-sm animate-in fade-in-50">
+          <div className="w-full max-w-4xl max-h-[92vh] flex flex-col rounded-2xl border border-[var(--border-color)] bg-[var(--bg-surface)] shadow-2xl overflow-hidden">
             {/* Modal Header */}
-            <div className="p-4 border-b border-[var(--border-color)] flex items-center justify-between bg-[var(--bg-surface-soft)]">
-              <div className="flex items-center gap-2">
-                <FileText className="w-4 h-4 text-[var(--brand-accent)]" />
-                <span className="text-xs font-bold text-[var(--text-primary)]">
+            <div className="p-3.5 sm:p-4 border-b border-[var(--border-color)] flex items-center justify-between bg-[var(--bg-surface-soft)]">
+              <div className="flex items-center gap-2.5 truncate">
+                <FileText className="w-4 h-4 text-[var(--brand-accent)] shrink-0" />
+                <span className="text-xs sm:text-sm font-bold text-[var(--text-primary)] truncate">
                   {t('demo_preview_title')}: {previewDoc.name}
+                </span>
+                <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-[var(--bg-surface)] border border-[var(--border-color)] text-[var(--text-secondary)] shrink-0">
+                  {previewDoc.type.replace('_', ' ')}
                 </span>
               </div>
               <button
                 onClick={() => setPreviewDoc(null)}
-                className="p-1 text-[var(--text-secondary)] hover:text-[var(--text-primary)] rounded-lg"
+                className="p-1.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface)] rounded-lg transition-colors cursor-pointer shrink-0"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            {/* Modal Content - Bangladeshi Legal Document Emulation */}
-            <div className="p-6 overflow-y-auto space-y-4">
+            {/* Modal Content - Live Bangladeshi Legal Document Emulation with Real Laser OCR Scan */}
+            <div className="p-4 sm:p-6 overflow-y-auto space-y-4">
               {/* Synthetic Disclaimer Watermark */}
               <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-400 text-center text-xs font-bold flex items-center justify-center gap-1.5">
                 <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
                 <span>{t('demo_synthetic_watermark')}</span>
               </div>
 
-              {/* Rendered Deed Sheet */}
-              <div className="p-6 rounded-xl border border-[#E5E0D2] bg-white text-[#263126] font-serif space-y-4 shadow-inner relative">
-                {/* Government Stamp Style */}
-                <div className="border-2 border-[#286B35] rounded-lg p-3 text-center bg-[#FBF8EE] space-y-1">
-                  <span className="text-xs font-bold text-[#286B35] block">
-                    গণপ্রজাতন্ত্রী বাংলাদেশ সরকার — ১০০ টাকা নন-জুডিশিয়াল স্ট্যাম্প
-                  </span>
-                  <span className="text-sm font-extrabold text-[#286B35] block">
-                    {previewDoc.type === 'deed' ? 'সাফ-কবলা জমি বিক্রয় দলিল' : previewDoc.type === 'khatian' ? 'আরএস খতিয়ান রেকর্ড অব রাইটস' : 'ভূমি রেকর্ড নথি'}
-                  </span>
-                </div>
-
-                {/* Document Body & Extracted Fields Overlay */}
-                <div className="space-y-2 text-xs leading-relaxed">
-                  <p>
-                    <strong>মৌজা:</strong> {previewDoc.mouza} | <strong>দাগ নং:</strong> {formatNumber(previewDoc.dagNumber)} | <strong>জমির পরিমাণ:</strong> {formatNumber(previewDoc.areaDecimals)} শতক
-                  </p>
-                  {previewDoc.parties.seller && (
-                    <p>
-                      <strong>বিক্রেতা/হস্তান্তরকারী:</strong> {previewDoc.parties.seller}
-                    </p>
-                  )}
-                  {previewDoc.parties.buyer && (
-                    <p>
-                      <strong>ক্রেতা/গ্রহীতা:</strong> {previewDoc.parties.buyer}
-                    </p>
-                  )}
-                  {previewDoc.parties.owner && (
-                    <p>
-                      <strong>রেকর্ডীয় প্রজা/মালিক:</strong> {previewDoc.parties.owner}
-                    </p>
-                  )}
-                </div>
-
-                {/* Highlighted OCR Bounding Boxes */}
-                <div className="border border-dashed border-[var(--brand-accent)]/50 p-3 rounded-lg bg-[var(--accent-light)] space-y-1.5 font-sans">
-                  <span className="text-[11px] font-bold text-[var(--brand-accent)] block">
-                    নিষ্কাশিত ওসিআর উপাত্ত (Multimodal Field Extraction):
-                  </span>
-                  <div className="grid grid-cols-2 gap-2 text-[10px]">
-                    {previewDoc.extractedFields.map((f, i) => (
-                      <div key={i} className="p-1.5 rounded bg-white/90 border border-[var(--brand-accent)]/20">
-                        <span className="text-gray-500 block">{f.labelBn}:</span>
-                        <span className="font-bold text-gray-900">{f.rawValue} ({(f.confidence * 100).toFixed(0)}%)</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Registry Seal & SHA-256 Digest */}
-                <div className="pt-3 border-t border-[#E5E0D2] flex items-center justify-between text-[10px] font-mono text-gray-600">
-                  <span>SHA-256: {previewDoc.hash}</span>
-                  <span className="text-[#2E7D46] font-bold flex items-center gap-1">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-[#2E7D46]" />
-                    <span>VERIFIED FINGERPRINT</span>
-                  </span>
-                </div>
-              </div>
+              {/* Genuine Bangladeshi Document Viewer */}
+              <DocumentGenuineViewer doc={previewDoc} isScanningDefault={true} />
             </div>
 
             {/* Modal Footer */}
-            <div className="p-3 border-t border-[var(--border-color)] bg-[var(--bg-surface-soft)] flex justify-end">
+            <div className="p-3 sm:p-3.5 border-t border-[var(--border-color)] bg-[var(--bg-surface-soft)] flex justify-between items-center text-xs">
+              <div className="font-mono text-[10px] text-[var(--text-secondary)] truncate max-w-[280px] sm:max-w-md">
+                SHA-256: {previewDoc.hash}
+              </div>
               <button
                 onClick={() => setPreviewDoc(null)}
-                className="px-4 py-1.5 rounded-xl text-xs font-bold bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-[var(--cta-text)]"
+                className="px-4 py-1.5 rounded-xl text-xs font-bold bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-[var(--cta-text)] transition-colors cursor-pointer"
               >
                 {t('cancel')}
               </button>

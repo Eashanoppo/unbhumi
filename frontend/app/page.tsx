@@ -227,10 +227,10 @@ export default function LandingPage() {
           {/* Hero Visual Image */}
           <div className="lg:col-span-5 order-first lg:order-last">
             <ImageArea
-              src="/images/landing/hero-landscape.svg"
+              src="/images/landing/1792339333.png"
               alt={t('hero_img_alt')}
               aspectRatio="video"
-              className="shadow-md rounded-2xl overflow-hidden"
+              className="shadow-md rounded-2xl overflow-hidden border border-[var(--border-color)]"
               caption={t('hero_img_caption')}
               priority
             />

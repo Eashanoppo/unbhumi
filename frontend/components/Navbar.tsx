@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useLanguage, DICTIONARY } from '@/lib/i18n';
 import { useTheme } from '@/lib/theme';
@@ -151,14 +152,21 @@ export const Navbar: React.FC = () => {
           <div className="flex items-center justify-between h-16">
             {/* 1. Logo & Brand */}
             <Link href="/" className="flex items-center gap-3 group shrink-0" aria-label="UNBhumi Home">
-              <div className="w-10 h-10 rounded-xl bg-[var(--brand-accent)] text-white flex items-center justify-center shadow-xs transition-transform group-hover:scale-105">
-                <ShieldCheck className="w-5 h-5 stroke-[2.4]" />
+              <div className="w-10 h-10 rounded-xl overflow-hidden border border-[var(--border-color)] bg-[var(--bg-surface-soft)] shadow-xs transition-transform group-hover:scale-105 relative flex items-center justify-center p-1">
+                <Image
+                  src="/images/brand/logo.png"
+                  alt="UNBHUMI Logo"
+                  width={36}
+                  height={36}
+                  className="w-full h-full object-contain"
+                  priority
+                />
               </div>
               <div>
                 <span suppressHydrationWarning className="font-extrabold text-sm sm:text-base tracking-tight text-[var(--text-primary)] block leading-none">
-                  {mounted && language === 'en' ? 'UNLEFT LandGuard' : 'আনলেফট ল্যান্ডগার্ড'}
+                  {safeT('brand_title')}
                 </span>
-                <span className="text-[10px] font-semibold text-[var(--text-secondary)] tracking-wider uppercase block mt-1">
+                <span suppressHydrationWarning className="text-[10px] font-semibold text-[var(--text-secondary)] tracking-wider uppercase block mt-1">
                   UNBUmi Detector • AI LandGuard
                 </span>
               </div>
@@ -581,7 +589,7 @@ export const Navbar: React.FC = () => {
           >
             <Layers className={`w-5 h-5 ${pathname === '/dashboard' ? 'stroke-[2.5]' : 'stroke-[1.8]'}`} />
             <span suppressHydrationWarning className="text-[10px] mt-1 tracking-tight truncate max-w-[56px]">
-              {mounted && language === 'en' ? 'Dashboard' : 'সারসংক্ষেপ'}
+              {safeT('nav_dashboard')}
             </span>
           </Link>
 
@@ -596,7 +604,7 @@ export const Navbar: React.FC = () => {
           >
             <ShieldCheck className={`w-5 h-5 ${pathname.startsWith('/cases') ? 'stroke-[2.5]' : 'stroke-[1.8]'}`} />
             <span suppressHydrationWarning className="text-[10px] mt-1 tracking-tight truncate max-w-[56px]">
-              {mounted && language === 'en' ? 'Cases' : 'মামলা'}
+              {safeT('nav_cases')}
             </span>
           </Link>
 
@@ -610,7 +618,7 @@ export const Navbar: React.FC = () => {
               <Plus className="w-6 h-6 stroke-[2.5]" />
             </div>
             <span suppressHydrationWarning className="text-[10px] font-bold text-[var(--brand-accent)] mt-0.5 tracking-tight truncate max-w-[56px]">
-              {mounted && language === 'en' ? 'Verify' : 'নতুন যাচাই'}
+              {safeT('cta_verify')}
             </span>
           </Link>
 
@@ -625,7 +633,7 @@ export const Navbar: React.FC = () => {
           >
             <AlertTriangle className={`w-5 h-5 ${pathname.startsWith('/review-queue') ? 'stroke-[2.5]' : 'stroke-[1.8]'}`} />
             <span suppressHydrationWarning className="text-[10px] mt-1 tracking-tight truncate max-w-[56px]">
-              {mounted && language === 'en' ? 'Alerts' : 'কিউ'}
+              {safeT('nav_alerts')}
             </span>
           </Link>
 
@@ -640,7 +648,7 @@ export const Navbar: React.FC = () => {
           >
             <Zap className={`w-5 h-5 ${pathname.startsWith('/demo') ? 'stroke-[2.5]' : 'stroke-[1.8]'}`} />
             <span suppressHydrationWarning className="text-[10px] mt-1 tracking-tight truncate max-w-[56px]">
-              {mounted && language === 'en' ? 'Demo' : 'ডেমো'}
+              {safeT('nav_demo')}
             </span>
           </Link>
         </div>

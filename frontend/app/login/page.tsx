@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { useLanguage } from '@/lib/i18n';
 import { api } from '@/lib/api';
 import { ShieldCheck, UserCheck, Key, ArrowRight, Info, Lock } from 'lucide-react';
@@ -57,8 +58,15 @@ export default function LoginPage() {
       <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-surface)] p-6 sm:p-8 shadow-sm space-y-6">
         {/* Header */}
         <div className="text-center space-y-2">
-          <div className="w-12 h-12 rounded-xl bg-[var(--accent-deep)] mx-auto flex items-center justify-center text-[#7ED957] mb-3 shadow-sm">
-            <ShieldCheck className="w-7 h-7" />
+          <div className="w-16 h-16 rounded-2xl overflow-hidden border border-[var(--border-color)] bg-[var(--bg-surface-soft)] mx-auto flex items-center justify-center p-1.5 mb-3 shadow-sm">
+            <Image
+              src="/images/brand/logo.png"
+              alt="UNBHUMI Logo"
+              width={52}
+              height={52}
+              className="w-full h-full object-contain"
+              priority
+            />
           </div>
           <h1 className="text-xl font-bold text-[var(--text-primary)]">
             {language === 'bn' ? 'ডেমো লগইন প্ল্যাটফর্ম' : 'Demo Authentication'}
