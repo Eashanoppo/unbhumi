@@ -8,6 +8,7 @@ import {
   Settings, User as UserIcon, Shield, Sliders, Database,
   RefreshCw, CheckCircle2, Moon, Sun, Globe, AlertTriangle
 } from 'lucide-react';
+import { PremiumLanguageToggle, PremiumThemeToggle } from '@/components/PremiumToggles';
 
 export default function SettingsPage() {
   const { language, setLanguage, t } = useLanguage();
@@ -199,26 +200,7 @@ export default function SettingsPage() {
                   </span>
                 </div>
               </div>
-              <div className="flex rounded-xl border border-[var(--border-color)] p-0.5 bg-[var(--bg-surface)]">
-                <button
-                  type="button"
-                  onClick={() => setLanguage('bn')}
-                  className={`px-3 py-2 rounded-lg text-xs font-bold transition-colors min-h-[40px] touch-target cursor-pointer ${
-                    language === 'bn' ? 'bg-[var(--brand-accent)] text-white shadow-2xs' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
-                  }`}
-                >
-                  বাংলা
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setLanguage('en')}
-                  className={`px-3 py-2 rounded-lg text-xs font-bold transition-colors min-h-[40px] touch-target cursor-pointer ${
-                    language === 'en' ? 'bg-[var(--brand-accent)] text-white shadow-2xs' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
-                  }`}
-                >
-                  English
-                </button>
-              </div>
+              <PremiumLanguageToggle />
             </div>
 
             {/* Theme Toggle */}
@@ -238,33 +220,17 @@ export default function SettingsPage() {
                   </span>
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={toggleTheme}
-                className="px-4 py-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)] text-xs font-bold hover:bg-[var(--bg-surface-soft)] flex items-center justify-center gap-2 text-[var(--text-primary)] min-h-[44px] touch-target cursor-pointer transition-colors"
-              >
-                {theme === 'dark' ? (
-                  <>
-                    <Sun className="w-4 h-4 text-amber-500" />
-                    <span>{language === 'bn' ? 'লাইট মোড' : 'Light Mode'}</span>
-                  </>
-                ) : (
-                  <>
-                    <Moon className="w-4 h-4 text-[var(--text-secondary)]" />
-                    <span>{language === 'bn' ? 'ডার্ক মোড' : 'Dark Mode'}</span>
-                  </>
-                )}
-              </button>
+              <PremiumThemeToggle />
             </div>
 
             {/* Palette Specs */}
             <div className="p-4 rounded-xl bg-[var(--bg-surface-soft)]/60 border border-[var(--border-color)] space-y-1 text-xs text-[var(--text-secondary)]">
               <div className="font-bold text-[var(--text-primary)]">
-                {language === 'bn' ? 'ব্র্যান্ড রঙ স্পেসিফিকেশন:' : 'Brand Palette Standards:'}
+                {language === 'bn' ? 'ব্র্যান্ড রঙ স্পেসিফিকেশন (প্যারট ও ক্রিম):' : 'Brand Palette Standards (Parrot & Cream):'}
               </div>
-              <div>• Emerald Primary: <span className="font-mono text-[var(--text-primary)]">#15803D / #286B35</span></div>
-              <div>• Lime Secondary: <span className="font-mono text-[var(--text-primary)]">#7ED957</span></div>
-              <div>• Surface Neutral: <span className="font-mono text-[var(--text-primary)]">#F8FAFC / #0A0F15</span></div>
+              <div>• Parrot Primary: <span className="font-mono text-[var(--text-primary)]">#15803D / #1EA955</span></div>
+              <div>• Cream Surface & Canvas: <span className="font-mono text-[var(--text-primary)]">#FAF8F5 / #F3EFE6</span></div>
+              <div>• Obsidian Forest Dark: <span className="font-mono text-[var(--text-primary)]">#0C130E / #121E16</span></div>
             </div>
           </div>
         </div>

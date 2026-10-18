@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { AlertCircle, AlertTriangle, CheckCircle2, HelpCircle } from 'lucide-react';
+import { AlertCircle, AlertTriangle, Check, Info } from 'lucide-react';
 import { useLanguage } from '@/lib/i18n';
 
 interface RiskBadgeProps {
@@ -27,53 +27,56 @@ export const RiskBadge: React.FC<RiskBadgeProps> = ({
 
   const formattedScore = score !== undefined ? formatNumber(score) : null;
 
+  // Single uniform box color across all risk levels as requested
+  const baseBadge = `inline-flex items-center rounded-full border border-[var(--border-color)] bg-[var(--bg-surface-soft)] shadow-2xs font-semibold ${sizeClasses}`;
+
   switch (level) {
     case 'critical':
       return (
-        <span
-          className={`inline-flex items-center font-bold rounded-full border bg-rose-50 text-rose-800 dark:bg-rose-950/50 dark:text-rose-300 border-rose-200 dark:border-rose-800/60 shadow-xs ${sizeClasses}`}
-        >
+        <span className={baseBadge}>
           <AlertCircle className={`${iconSize} text-rose-600 dark:text-rose-400 shrink-0`} />
-          <span>{language === 'bn' ? 'গুরুতর সংকেত' : 'Critical Conflict'}</span>
+          <span className="text-rose-700 dark:text-rose-400 font-bold">
+            {language === 'bn' ? 'গুরুতর সংকেত' : 'Critical Conflict'}
+          </span>
           {showScore && formattedScore !== null && (
-            <span className="opacity-90 font-mono font-bold">({formattedScore})</span>
+            <span className="text-[var(--text-muted)] font-mono text-[10px]">({formattedScore})</span>
           )}
         </span>
       );
     case 'high':
       return (
-        <span
-          className={`inline-flex items-center font-bold rounded-full border bg-amber-50 text-amber-900 dark:bg-amber-950/50 dark:text-amber-300 border-amber-200 dark:border-amber-800/60 shadow-xs ${sizeClasses}`}
-        >
+        <span className={baseBadge}>
           <AlertTriangle className={`${iconSize} text-amber-600 dark:text-amber-400 shrink-0`} />
-          <span>{language === 'bn' ? 'উচ্চ ঝুঁকি' : 'High Risk'}</span>
+          <span className="text-amber-700 dark:text-amber-400 font-bold">
+            {language === 'bn' ? 'উচ্চ ঝুঁকি' : 'High Risk'}
+          </span>
           {showScore && formattedScore !== null && (
-            <span className="opacity-90 font-mono font-bold">({formattedScore})</span>
+            <span className="text-[var(--text-muted)] font-mono text-[10px]">({formattedScore})</span>
           )}
         </span>
       );
     case 'review':
       return (
-        <span
-          className={`inline-flex items-center font-semibold rounded-full border bg-sky-50 text-sky-900 dark:bg-sky-950/50 dark:text-sky-300 border-sky-200 dark:border-sky-800/60 shadow-xs ${sizeClasses}`}
-        >
-          <HelpCircle className={`${iconSize} text-sky-600 dark:text-sky-400 shrink-0`} />
-          <span>{language === 'bn' ? 'পর্যালোচনা স্তর' : 'Needs Review'}</span>
+        <span className={baseBadge}>
+          <Info className={`${iconSize} text-sky-600 dark:text-sky-400 shrink-0`} />
+          <span className="text-sky-700 dark:text-sky-400 font-semibold">
+            {language === 'bn' ? 'পর্যালোচনা স্তর' : 'Needs Review'}
+          </span>
           {showScore && formattedScore !== null && (
-            <span className="opacity-90 font-mono font-bold">({formattedScore})</span>
+            <span className="text-[var(--text-muted)] font-mono text-[10px]">({formattedScore})</span>
           )}
         </span>
       );
     case 'low':
     default:
       return (
-        <span
-          className={`inline-flex items-center font-semibold rounded-full border bg-emerald-50 text-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60 shadow-xs ${sizeClasses}`}
-        >
-          <CheckCircle2 className={`${iconSize} text-emerald-600 dark:text-emerald-400 shrink-0`} />
-          <span>{language === 'bn' ? 'স্বাভাবিক' : 'Low Risk'}</span>
+        <span className={baseBadge}>
+          <Check className={`${iconSize} text-[var(--brand-accent)] shrink-0`} />
+          <span className="text-[var(--brand-accent)] font-semibold">
+            {language === 'bn' ? 'স্বাভাবিক' : 'Low Risk'}
+          </span>
           {showScore && formattedScore !== null && (
-            <span className="opacity-90 font-mono font-bold">({formattedScore})</span>
+            <span className="text-[var(--text-muted)] font-mono text-[10px]">({formattedScore})</span>
           )}
         </span>
       );

@@ -1,17 +1,35 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useLanguage } from '@/lib/i18n';
 import { ImageArea } from '@/components/ImageArea';
 import { RiskBadge } from '@/components/RiskBadge';
 import {
-  ShieldCheck, AlertTriangle, GitFork, FileText, CheckCircle2,
-  ArrowRight, Sparkles, HelpCircle, FileCheck, Layers
+  ShieldCheck, AlertTriangle, Activity, FileText, Check,
+  ChevronRight, Zap, Info, FileCheck, Layers, Search
 } from 'lucide-react';
 
 export default function LandingPage() {
   const { language, t } = useLanguage();
+  const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const query = searchQuery.trim();
+    if (query) {
+      router.push(`/cases?search=${encodeURIComponent(query)}`);
+    } else {
+      router.push('/cases');
+    }
+  };
+
+  const handleQuickSearch = (plotOrMouza: string) => {
+    setSearchQuery(plotOrMouza);
+    router.push(`/cases?search=${encodeURIComponent(plotOrMouza)}`);
+  };
 
   const syntheticDemos = [
     {
@@ -119,22 +137,74 @@ export default function LandingPage() {
               {t('hero_description')}
             </p>
 
-            {/* Mobile-First Action Buttons (44px min touch height) */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
-              <Link
-                href="/documents/new"
-                className="flex items-center justify-center gap-2 px-6 py-3.5 min-h-[44px] rounded-xl text-sm font-bold bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-[var(--cta-text)] transition-all shadow-sm hover:shadow active:scale-98"
+            {/* Search Type UI (Matching Image 1) */}
+            <div className="pt-2">
+              <form
+                onSubmit={handleSearchSubmit}
+                className="bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-2xl sm:rounded-3xl p-3.5 sm:p-4.5 shadow-[0_10px_30px_-5px_rgba(21,128,61,0.12),0_4px_12px_-2px_rgba(0,0,0,0.04)] space-y-3"
               >
-                <span>{t('cta_verify')}</span>
-                <ArrowRight className="w-4 h-4 stroke-[2.5]" />
-              </Link>
-              <Link
-                href="/demo"
-                className="flex items-center justify-center gap-2 px-5 py-3.5 min-h-[44px] rounded-xl text-sm font-bold border border-[var(--brand-accent)]/60 bg-[var(--accent-light)] text-[var(--text-primary)] hover:bg-[var(--brand-accent)] hover:text-[var(--cta-text)] transition-all shadow-xs"
-              >
-                <Sparkles className="w-4 h-4 text-[var(--brand-accent)]" />
-                <span>{language === 'bn' ? 'ইন্টারেক্টিভ ডেমো চালান' : 'Try Interactive Demo'}</span>
-              </Link>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder={
+                      language === 'bn'
+                        ? 'খতিয়ান নম্বর, দাগ নম্বর অথবা মৌজার নাম দিয়ে অনুসন্ধান করুন...'
+                        : 'Search by Khatian No, Plot No, or Mouza Name...'
+                    }
+                    className="w-full px-4 py-3 sm:py-3.5 text-sm sm:text-base rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface-soft)] text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-accent)]/30 focus:border-[var(--brand-accent)] transition-all font-medium"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full flex items-center justify-center gap-2.5 py-3.5 px-6 rounded-xl font-bold text-sm sm:text-base bg-[#15803D] hover:bg-[#126E34] text-white shadow-[0_4px_14px_rgba(21,128,61,0.35)] hover:shadow-[0_6px_20px_rgba(21,128,61,0.45)] active:scale-[0.99] transition-all cursor-pointer"
+                >
+                  <Search className="w-5 h-5 stroke-[2.5]" />
+                  <span>{language === 'bn' ? 'রেকর্ড অনুসন্ধান করুন' : 'Search Records'}</span>
+                </button>
+
+                {/* Sub-actions & Quick Pills preserving full workflow functionality */}
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-1 px-1 text-xs">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-[var(--text-muted)] font-medium">
+                      {language === 'bn' ? 'উদাহরণ:' : 'Quick tags:'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleQuickSearch('৪১২')}
+                      className="px-2 py-0.5 rounded-md bg-[var(--bg-surface-soft)] text-[var(--text-secondary)] hover:text-[var(--brand-accent)] hover:border-[var(--brand-accent)] border border-[var(--border-color)] transition-colors cursor-pointer"
+                    >
+                      {language === 'bn' ? 'দাগ ৪১২ (কাউন্দিয়া)' : 'Plot 412 (Kaundia)'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleQuickSearch('৮৮')}
+                      className="px-2 py-0.5 rounded-md bg-[var(--bg-surface-soft)] text-[var(--text-secondary)] hover:text-amber-700 dark:hover:text-amber-400 hover:border-amber-500 border border-[var(--border-color)] transition-colors cursor-pointer"
+                    >
+                      {language === 'bn' ? 'দাগ ৮৮ (দ্বৈত বিক্রি)' : 'Plot 88 (Double Sale)'}
+                    </button>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <Link
+                      href="/documents/new"
+                      className="font-bold text-[var(--brand-accent)] hover:underline inline-flex items-center gap-1"
+                    >
+                      <span>{language === 'bn' ? '+ নতুন ফাইল আপলোড' : '+ Upload Deed'}</span>
+                    </Link>
+                    <span className="text-[var(--border-color)]">•</span>
+                    <Link
+                      href="/demo"
+                      className="font-bold text-[var(--text-secondary)] hover:text-[var(--brand-accent)] inline-flex items-center gap-1"
+                    >
+                      <Zap className="w-3 h-3 text-[var(--brand-accent)]" />
+                      <span>{language === 'bn' ? 'ডেমো কেস' : 'Demo Cases'}</span>
+                    </Link>
+                  </div>
+                </div>
+              </form>
             </div>
 
             {/* Responsive Trust Points */}
@@ -196,7 +266,7 @@ export default function LandingPage() {
 
             <div className="p-6 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-color)] space-y-3 shadow-xs hover:border-amber-300 transition-colors">
               <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-950/60 flex items-center justify-center text-amber-700">
-                <GitFork className="w-5 h-5" />
+                <Activity className="w-5 h-5" />
               </div>
               <h4 className="text-base font-bold text-[var(--text-primary)]">{t('prob_card2_title')}</h4>
               <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
@@ -271,7 +341,7 @@ export default function LandingPage() {
               className="flex items-center gap-1.5 px-4 py-2 min-h-[40px] rounded-xl text-xs font-bold bg-[var(--bg-surface-soft)] text-[var(--text-primary)] border border-[var(--border-color)] hover:border-[var(--brand-accent)] transition-colors"
             >
               <span>{t('demo_view_all')}</span>
-              <ArrowRight className="w-3.5 h-3.5" />
+              <ChevronRight className="w-3.5 h-3.5" />
             </Link>
           </div>
 
@@ -298,7 +368,7 @@ export default function LandingPage() {
                 </div>
                 <div className="pt-2 border-t border-[var(--border-color)]/60 flex items-center justify-between text-xs text-[var(--text-secondary)]">
                   <span className="font-medium">{t('demo_view_results')}</span>
-                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform text-[var(--brand-accent)]" />
+                  <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform text-[var(--brand-accent)]" />
                 </div>
               </Link>
             ))}
@@ -321,7 +391,7 @@ export default function LandingPage() {
           {faqs.map((faq, i) => (
             <div key={i} className="p-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-surface)] space-y-2 shadow-xs">
               <h4 className="text-sm font-bold text-[var(--text-primary)] flex items-start gap-2.5">
-                <HelpCircle className="w-4 h-4 text-[var(--brand-accent)] shrink-0 mt-0.5" />
+                <Info className="w-4 h-4 text-[var(--brand-accent)] shrink-0 mt-0.5" />
                 <span>{faq.q}</span>
               </h4>
               <p className="text-xs sm:text-sm text-[var(--text-secondary)] leading-relaxed pl-6">

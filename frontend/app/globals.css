@@ -1,84 +1,98 @@
 @import "tailwindcss";
 
 :root {
-  /* Base & Canvas Layers (60%) — Executive Light Mode */
-  --bg-primary: #F8FAFC;          /* Clean, crisp Pearl Slate canvas */
-  --bg-surface: #FFFFFF;          /* Pure White cards and data grids */
-  --bg-surface-soft: #F1F5F9;     /* Soft slate for secondary panels, chips, table headers */
-  --border-color: #E2E8F0;        /* Precision structural border */
-  --border-focus: #15803D;        /* Deep Sovereign Emerald focus */
+  /* Base & Canvas Layers (60%) — Luxurious Warm Cream & Ivory Canvas */
+  --bg-primary: #FAF8F5;          /* Velvety Warm Cream Canvas */
+  --bg-surface: #FFFFFF;          /* Pure Porcelain White Cards & Data Grids */
+  --bg-surface-soft: #F3EFE6;     /* Elevated Warm Cream for Inputs, Secondary Panels, Chips */
+  --border-color: #E6DFD1;        /* Warm Cream-Stone Structural Border */
+  --border-focus: #15803D;        /* Deep Sovereign Parrot Emerald Focus */
 
-  /* Typography & Hierarchy (30%) */
-  --text-primary: #0F172A;        /* Slate-900 — Authoritative, high-contrast text */
-  --text-secondary: #475569;      /* Slate-600 — Clean, readable secondary info */
-  --text-muted: #94A3B8;          /* Slate-400 — Structural metadata */
+  /* Typography & Hierarchy (30%) — WCAG 2.2 AAA Contrast on Cream/White */
+  --text-primary: #151F16;        /* Deep Forest Espresso/Charcoal (15.5:1 contrast) — Super Crisp & Readable */
+  --text-secondary: #3B4A3D;      /* Deep Moss Slate (8.2:1 contrast) — Highly Readable Secondary Text */
+  --text-muted: #596B5B;          /* Rich Muted Sage (5.2:1 contrast) — High Readability, No Washed-Out Text */
 
-  /* Brand & Action Accents (10%) — Executive Sovereign Emerald */
-  --brand-accent: #15803D;        /* Prestige Forest Emerald — Authoritative & Executive */
-  --brand-accent-hover: #166534;  /* Deepened Forest Green */
-  --accent-deep: #0F5132;         /* Deep Jade Green for badges */
-  --accent-parrot: #15803D;       /* Unified with brand */
-  --accent-light: rgba(21, 128, 61, 0.08); /* Subtle 8% luxury emerald tint */
-  --cta-text: #FFFFFF;            /* Pure white text on prestige emerald buttons */
+  /* Brand & Action Accents (10%) — Sovereign Parrot Emerald */
+  --brand-accent: #15803D;        /* Prestige Parrot Emerald */
+  --brand-accent-hover: #126E34;  /* Deepened Forest Green */
+  --accent-deep: #0F5132;         /* Deep Jade Green */
+  --accent-parrot: #1EA955;       /* Vibrant Parrot Highlight */
+  --accent-cream: #FAF8F5;        /* Warm Cream */
+  --accent-cream-soft: #F3EFE6;
+  --accent-light: rgba(21, 128, 61, 0.08); /* 8% Luxury Parrot Tint */
+  --cta-text: #FFFFFF;            /* Pure White on Parrot Green */
 
   /* System Alerts & Map States */
   --success: #15803D;             /* Forest Emerald */
-  --success-bg: #ECFDF5;
-  --warning: #D97706;             /* Amber */
-  --warning-bg: #FFFBEB;
+  --success-bg: #EAF7EE;          /* Warm Cream-Mint Tint */
+  --warning: #B45309;             /* Warm Amber */
+  --warning-bg: #FEF3C7;
   --error: #DC2626;               /* Crimson Red */
-  --error-bg: #FEF2F2;
+  --error-bg: #FEE2E2;
 
-  --card-critical-bg: rgba(220, 38, 38, 0.04);
-  --card-critical-border: rgba(220, 38, 38, 0.20);
-  --card-warning-bg: rgba(217, 119, 6, 0.04);
-  --card-warning-border: rgba(217, 119, 6, 0.20);
-  --card-success-bg: rgba(21, 128, 61, 0.04);
-  --card-success-border: rgba(21, 128, 61, 0.20);
+  --card-critical-bg: rgba(220, 38, 38, 0.05);
+  --card-critical-border: rgba(220, 38, 38, 0.25);
+  --card-warning-bg: rgba(180, 83, 9, 0.05);
+  --card-warning-border: rgba(180, 83, 9, 0.25);
+  --card-success-bg: rgba(21, 128, 61, 0.05);
+  --card-success-border: rgba(21, 128, 61, 0.25);
 
   --background: var(--bg-primary);
   --foreground: var(--text-primary);
+
+  /* Premium Shaders & Shadows */
+  --shadow-card: 0 4px 20px -2px rgba(21, 31, 22, 0.06), 0 2px 6px -1px rgba(21, 31, 22, 0.04);
+  --shadow-card-hover: 0 12px 28px -4px rgba(21, 128, 61, 0.14), 0 4px 10px -2px rgba(21, 31, 22, 0.05);
+  --shadow-glow: 0 0 20px rgba(30, 169, 85, 0.22);
 }
 
 .dark {
-  /* Base & Canvas Layers (60%) — Executive Obsidian Dark Mode */
-  --bg-primary: #0A0F15;          /* Deep Obsidian Midnight */
-  --bg-surface: #111823;          /* Titanium Slate cards and panels */
-  --bg-surface-soft: #17212E;     /* Elevated slate for secondary panels & chips */
-  --border-color: #1E293B;        /* Crisp dark border */
-  --border-focus: #16A34A;        /* Sovereign emerald focus */
+  /* Base & Canvas Layers (60%) — Obsidian Midnight with Parrot Undertones */
+  --bg-primary: #0C130E;          /* Deep Forest Obsidian */
+  --bg-surface: #121E16;          /* Luxurious Dark Slate-Emerald Cards */
+  --bg-surface-soft: #18281E;     /* Elevated Emerald-Slate for Secondary Panels */
+  --border-color: #243B2D;        /* Deep Parrot-Stone Border */
+  --border-focus: #22C55E;        /* Bright Parrot Emerald Focus */
 
-  /* Typography & Hierarchy (30%) */
-  --text-primary: #F8FAFC;        /* Soft White / Slate-50 */
-  --text-secondary: #94A3B8;      /* Slate-400 */
-  --text-muted: #64748B;          /* Slate-500 */
+  /* Typography & Hierarchy (30%) — Crisp Cream on Dark */
+  --text-primary: #F8F9F5;        /* Soft Cream Ivory (16.2:1 contrast) */
+  --text-secondary: #C8D6CA;      /* Sage Cream (9.4:1 contrast) */
+  --text-muted: #8FA693;          /* Muted Sage (5.3:1 contrast) */
 
-  /* Brand & Action Accents (10%) — Sovereign Emerald in Dark Mode */
+  /* Brand & Action Accents (10%) — Vibrant Parrot Green */
   --brand-accent: #16A34A;        /* Emerald-600 */
   --brand-accent-hover: #15803D;  /* Emerald-700 */
   --accent-deep: #22C55E;         /* Visible emerald text */
-  --accent-parrot: #16A34A;
-  --accent-light: rgba(22, 163, 74, 0.12); /* Subtle glow */
+  --accent-parrot: #1EA955;
+  --accent-cream: #F8F9F5;
+  --accent-cream-soft: #18281E;
+  --accent-light: rgba(22, 163, 74, 0.12); /* Subtle parrot glow */
   --cta-text: #FFFFFF;            /* Pure white text on emerald CTA */
 
   /* System Alerts & Map States */
-  --success: #16A34A;             /* Emerald Green */
+  --success: #16A34A;
   --success-bg: #064E3B;
-  --warning: #F59E0B;             /* Amber Orange */
+  --warning: #F59E0B;
   --warning-bg: #78350F;
-  --error: #EF4444;               /* Crimson Red */
+  --error: #EF4444;
   --error-bg: #7F1D1D;
 
-  --card-critical-bg: rgba(239, 68, 68, 0.06);
-  --card-critical-border: rgba(239, 68, 68, 0.25);
-  --card-warning-bg: rgba(245, 158, 11, 0.06);
-  --card-warning-border: rgba(245, 158, 11, 0.25);
-  --card-success-bg: rgba(22, 163, 74, 0.06);
-  --card-success-border: rgba(22, 163, 74, 0.25);
+  --card-critical-bg: rgba(239, 68, 68, 0.08);
+  --card-critical-border: rgba(239, 68, 68, 0.30);
+  --card-warning-bg: rgba(245, 158, 11, 0.08);
+  --card-warning-border: rgba(245, 158, 11, 0.30);
+  --card-success-bg: rgba(22, 163, 74, 0.08);
+  --card-success-border: rgba(22, 163, 74, 0.30);
 
   --background: var(--bg-primary);
   --foreground: var(--text-primary);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
+
+  /* Premium Dark Shaders */
+  --shadow-card: 0 4px 20px -2px rgba(0, 0, 0, 0.5), 0 2px 6px -1px rgba(0, 0, 0, 0.3);
+  --shadow-card-hover: 0 12px 30px -4px rgba(22, 163, 74, 0.2), 0 4px 12px -2px rgba(0, 0, 0, 0.5);
+  --shadow-glow: 0 0 25px rgba(34, 197, 94, 0.3);
 }
 
 :root {

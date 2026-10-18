@@ -7,10 +7,10 @@ import { api, DashboardSummary, CaseItem } from '@/lib/api';
 import { ImageArea } from '@/components/ImageArea';
 import { RiskBadge } from '@/components/RiskBadge';
 import {
-  Layers, PlusCircle, AlertCircle, CheckCircle2, FileText,
-  Clock, ArrowRight, RefreshCw, Activity,
-  Database, AlertOctagon, Sparkles, User, MapPin,
-  Calendar, ShieldCheck, ShieldAlert
+  Layers, Plus, AlertCircle, Check, FileText,
+  Clock, ChevronRight, RefreshCw, Activity,
+  Database, AlertTriangle, Zap, User, MapPin,
+  Calendar, ShieldCheck, Shield
 } from 'lucide-react';
 
 export default function DashboardPage() {
@@ -101,7 +101,7 @@ export default function DashboardPage() {
             href="/demo"
             className="flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl text-xs font-bold border border-[var(--brand-accent)]/50 bg-[var(--accent-light)] text-[var(--brand-accent)] hover:bg-[var(--brand-accent)] hover:text-[var(--cta-text)] transition-all shadow-xs"
           >
-            <Sparkles className="w-3.5 h-3.5" />
+            <Zap className="w-3.5 h-3.5" />
             <span>{language === 'bn' ? 'ইন্টারেক্টিভ ডেমো' : 'Interactive Demo'}</span>
           </Link>
 
@@ -110,7 +110,7 @@ export default function DashboardPage() {
             href="/documents/new"
             className="flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl text-xs font-bold bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-[var(--cta-text)] transition-all shadow-sm hover:shadow active:scale-95"
           >
-            <PlusCircle className="w-3.5 h-3.5 stroke-[2.5]" />
+            <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
             <span>{t('cta_verify')}</span>
           </Link>
         </div>
@@ -120,7 +120,7 @@ export default function DashboardPage() {
       <div className="p-5 sm:p-6 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-surface)] space-y-4 shadow-xs">
         <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-3">
           <div className="flex items-center gap-2">
-            <ShieldAlert className="w-4 h-4 text-[var(--brand-accent)]" />
+            <Shield className="w-4 h-4 text-[var(--brand-accent)]" />
             <h2 className="text-xs font-extrabold uppercase tracking-wider text-[var(--text-primary)]">
               {t('dash_assessment_title')}
             </h2>
@@ -148,32 +148,32 @@ export default function DashboardPage() {
           </div>
 
           {/* Q2: Critical Fraud Risks */}
-          <div className="p-4 rounded-xl bg-rose-50/70 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/40 space-y-1.5 transition-all">
-            <span className="text-xs font-bold text-rose-700 dark:text-rose-400 block flex items-center gap-1">
-              <AlertOctagon className="w-3.5 h-3.5 shrink-0" />
+          <div className="p-4 rounded-xl bg-[var(--bg-surface-soft)] border border-[var(--border-color)] space-y-1.5 transition-all hover:border-rose-400">
+            <span className="text-xs font-bold text-[var(--text-primary)] block flex items-center gap-1.5">
+              <AlertTriangle className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400 shrink-0" />
               <span>{t('dash_q2_title')}</span>
             </span>
             <div className="flex items-baseline gap-2">
               <span className="text-2xl font-black text-rose-700 dark:text-rose-400 font-mono">
                 {formatNumber(metrics.critical_high_count)}
               </span>
-              <span className="text-xs text-rose-800 dark:text-rose-300 truncate">
+              <span className="text-xs text-[var(--text-secondary)] truncate">
                 {t('dash_q2_desc', { count: metrics.critical_high_count })}
               </span>
             </div>
           </div>
 
           {/* Q3: Awaiting Adjudication */}
-          <div className="p-4 rounded-xl bg-amber-50/70 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 space-y-1.5 transition-all">
-            <span className="text-xs font-bold text-amber-800 dark:text-amber-400 block flex items-center gap-1">
-              <Clock className="w-3.5 h-3.5 shrink-0" />
+          <div className="p-4 rounded-xl bg-[var(--bg-surface-soft)] border border-[var(--border-color)] space-y-1.5 transition-all hover:border-amber-400">
+            <span className="text-xs font-bold text-[var(--text-primary)] block flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
               <span>{t('dash_q3_title')}</span>
             </span>
             <div className="flex items-baseline gap-2">
               <span className="text-2xl font-black text-amber-700 dark:text-amber-400 font-mono">
                 {formatNumber(metrics.needs_review_count)}
               </span>
-              <span className="text-xs text-amber-800 dark:text-amber-300 truncate">
+              <span className="text-xs text-[var(--text-secondary)] truncate">
                 {t('dash_q3_desc', { count: metrics.needs_review_count })}
               </span>
             </div>
@@ -182,7 +182,7 @@ export default function DashboardPage() {
           {/* Q4: Recommended Next Step */}
           <div className="p-4 rounded-xl bg-[var(--bg-surface-soft)] border border-[var(--border-color)] hover:border-[var(--brand-accent)]/50 space-y-2 transition-all flex flex-col justify-between">
             <span className="text-xs font-bold text-[var(--brand-accent)] block flex items-center gap-1">
-              <Sparkles className="w-3.5 h-3.5 text-[var(--brand-accent)] shrink-0" />
+              <Zap className="w-3.5 h-3.5 text-[var(--brand-accent)] shrink-0" />
               <span>{t('dash_q4_title')}</span>
             </span>
             <p className="text-xs text-[var(--text-primary)] leading-tight line-clamp-2">
@@ -193,7 +193,7 @@ export default function DashboardPage() {
               className="inline-flex items-center gap-1 text-xs font-bold text-[var(--brand-accent)] hover:underline pt-1"
             >
               <span>{t('dash_open_investigation')}</span>
-              <ArrowRight className="w-3.5 h-3.5" />
+              <ChevronRight className="w-3.5 h-3.5" />
             </Link>
           </div>
         </div>
@@ -218,49 +218,49 @@ export default function DashboardPage() {
         </div>
 
         {/* Metric 2 */}
-        <div className="p-4 sm:p-5 rounded-2xl border border-rose-200 dark:border-rose-900/40 bg-rose-50/50 dark:bg-rose-950/20 space-y-1.5 shadow-xs">
-          <div className="flex items-center justify-between text-xs text-rose-700 dark:text-rose-400">
+        <div className="p-4 sm:p-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-surface)] space-y-1.5 shadow-xs transition-all hover:border-rose-400">
+          <div className="flex items-center justify-between text-xs text-[var(--text-secondary)]">
             <span className="font-bold truncate">{t('metric_critical_risks')}</span>
-            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-rose-500/10 flex items-center justify-center text-rose-500 shrink-0">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-rose-500/10 flex items-center justify-center text-rose-600 dark:text-rose-400 shrink-0">
               <AlertCircle className="w-4 h-4" />
             </div>
           </div>
           <p className="text-2xl sm:text-3xl font-black text-rose-700 dark:text-rose-400 tracking-tight font-mono">
             {formatNumber(metrics.critical_high_count)}
           </p>
-          <span className="text-[11px] text-rose-800 dark:text-rose-300 block font-medium truncate">
+          <span className="text-[11px] text-[var(--text-secondary)] block font-medium truncate">
             {t('metric_urgent_action')}
           </span>
         </div>
 
         {/* Metric 3 */}
-        <div className="p-4 sm:p-5 rounded-2xl border border-amber-200 dark:border-amber-900/40 bg-amber-50/50 dark:bg-amber-950/20 space-y-1.5 shadow-xs">
-          <div className="flex items-center justify-between text-xs text-amber-800 dark:text-amber-400">
+        <div className="p-4 sm:p-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-surface)] space-y-1.5 shadow-xs transition-all hover:border-amber-400">
+          <div className="flex items-center justify-between text-xs text-[var(--text-secondary)]">
             <span className="font-bold truncate">{t('metric_needs_review')}</span>
-            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500 shrink-0">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0">
               <Clock className="w-4 h-4" />
             </div>
           </div>
           <p className="text-2xl sm:text-3xl font-black text-amber-700 dark:text-amber-400 tracking-tight font-mono">
             {formatNumber(metrics.needs_review_count)}
           </p>
-          <span className="text-[11px] text-amber-800 dark:text-amber-300 block font-medium truncate">
+          <span className="text-[11px] text-[var(--text-secondary)] block font-medium truncate">
             {t('metric_queue_waiting')}
           </span>
         </div>
 
         {/* Metric 4 */}
-        <div className="p-4 sm:p-5 rounded-2xl border border-emerald-200 dark:border-emerald-900/40 bg-emerald-50/50 dark:bg-emerald-950/20 space-y-1.5 shadow-xs">
-          <div className="flex items-center justify-between text-xs text-emerald-800 dark:text-emerald-400">
+        <div className="p-4 sm:p-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-surface)] space-y-1.5 shadow-xs transition-all hover:border-[var(--brand-accent)]/50">
+          <div className="flex items-center justify-between text-xs text-[var(--text-secondary)]">
             <span className="font-bold truncate">{t('metric_clean_cases')}</span>
             <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center text-[var(--brand-accent)] shrink-0">
-              <CheckCircle2 className="w-4 h-4" />
+              <Check className="w-4 h-4" />
             </div>
           </div>
-          <p className="text-2xl sm:text-3xl font-black text-emerald-700 dark:text-emerald-400 tracking-tight font-mono">
+          <p className="text-2xl sm:text-3xl font-black text-[var(--brand-accent)] tracking-tight font-mono">
             {formatNumber(metrics.clean_count)}
           </p>
-          <span className="text-[11px] text-emerald-800 dark:text-emerald-300 block font-medium truncate">
+          <span className="text-[11px] text-[var(--text-secondary)] block truncate">
             {t('metric_clean_desc')}
           </span>
         </div>
@@ -282,7 +282,7 @@ export default function DashboardPage() {
               className="text-xs font-bold text-[var(--brand-accent)] hover:underline flex items-center gap-1"
             >
               <span>{t('view_all')}</span>
-              <ArrowRight className="w-3.5 h-3.5" />
+              <ChevronRight className="w-3.5 h-3.5" />
             </Link>
           </div>
 
@@ -316,7 +316,7 @@ export default function DashboardPage() {
                     <span className="px-2.5 py-1 rounded-lg bg-[var(--bg-surface-soft)] text-[11px] font-semibold border border-[var(--border-color)] text-[var(--text-secondary)]">
                       {getStatusLabel(c.status)}
                     </span>
-                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform text-[var(--brand-accent)]" />
+                    <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform text-[var(--brand-accent)]" />
                   </div>
                 </Link>
               ))

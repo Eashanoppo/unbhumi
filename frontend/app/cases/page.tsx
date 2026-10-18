@@ -1,28 +1,32 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { useLanguage } from '@/lib/i18n';
 import { api, CaseItem } from '@/lib/api';
 import { RiskBadge } from '@/components/RiskBadge';
 import {
-  Search, Filter, PlusCircle, AlertTriangle,
-  ArrowRight, RefreshCw, MapPin
+  Search, Filter, Plus, AlertTriangle,
+  ChevronRight, RefreshCw, MapPin
 } from 'lucide-react';
 
-export default function CasesDirectoryPage() {
+function CasesContent() {
   const { language, t, formatNumber, formatDate, getStatusLabel } = useLanguage();
+  const searchParams = useSearchParams();
+  const initialSearch = searchParams?.get('search') || '';
+
   const [cases, setCases] = useState<CaseItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState(initialSearch);
   const [riskFilter, setRiskFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
 
-  const loadCases = async () => {
+  const loadCases = async (query = search) => {
     setLoading(true);
     try {
       const data = await api.getCases({
-        search,
+        search: query,
         risk: riskFilter,
         status: statusFilter
       });
@@ -35,8 +39,14 @@ export default function CasesDirectoryPage() {
   };
 
   useEffect(() => {
-    loadCases();
-  }, [riskFilter, statusFilter]);
+    const urlQuery = searchParams?.get('search') || '';
+    if (urlQuery !== search) {
+      setSearch(urlQuery);
+      loadCases(urlQuery);
+    } else {
+      loadCases();
+    }
+  }, [riskFilter, statusFilter, searchParams]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,7 +70,7 @@ export default function CasesDirectoryPage() {
           href="/documents/new"
           className="flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl text-xs font-bold bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-[var(--cta-text)] transition-all shadow-xs shrink-0 active:scale-95"
         >
-          <PlusCircle className="w-4 h-4 stroke-[2.5]" />
+          <Plus className="w-4 h-4 stroke-[2.5]" />
           <span>{t('cta_verify')}</span>
         </Link>
       </div>
@@ -170,7 +180,7 @@ export default function CasesDirectoryPage() {
                           className="inline-flex items-center gap-1 px-3 py-1.5 min-h-[36px] rounded-lg bg-[var(--bg-surface-soft)] hover:bg-[var(--border-color)]/60 text-xs font-bold text-[var(--brand-accent)] border border-[var(--border-color)] transition-colors"
                         >
                           <span>{t('details')}</span>
-                          <ArrowRight className="w-3 h-3" />
+                          <ChevronRight className="w-3.5 h-3.5" />
                         </Link>
                       </td>
                     </tr>
@@ -211,7 +221,7 @@ export default function CasesDirectoryPage() {
                     </span>
                     <span className="font-bold text-[var(--brand-accent)] flex items-center gap-1 shrink-0 ml-2">
                       <span>{t('details')}</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
+                      <ChevronRight className="w-3.5 h-3.5" />
                     </span>
                   </div>
                 </Link>
@@ -225,5 +235,13 @@ export default function CasesDirectoryPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function CasesDirectoryPage() {
+  return (
+    <Suspense fallback={<div className="max-w-7xl mx-auto p-12 text-center text-xs text-[var(--text-secondary)]">লোড হচ্ছে...</div>}>
+      <CasesContent />
+    </Suspense>
   );
 }

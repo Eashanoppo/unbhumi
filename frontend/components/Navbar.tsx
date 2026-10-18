@@ -7,10 +7,11 @@ import { useLanguage, DICTIONARY } from '@/lib/i18n';
 import { useTheme } from '@/lib/theme';
 import { api, User } from '@/lib/api';
 import {
-  FileText, PlusCircle, ShieldCheck, Sun, Moon, Globe, Settings,
-  Menu, X, GitFork, AlertTriangle, Layers, BookOpen, LogIn, LogOut,
-  ChevronRight, ChevronDown, Sparkles, Info
+  FileText, Plus, ShieldCheck, Sun, Moon, Globe, Settings,
+  Menu, X, AlertTriangle, Layers, BookOpen, LogOut,
+  ChevronRight, ChevronDown, Zap, Info, User as UserIcon, Activity
 } from 'lucide-react';
+import { PremiumLanguageToggle, PremiumThemeToggle } from '@/components/PremiumToggles';
 
 export const Navbar: React.FC = () => {
   const pathname = usePathname();
@@ -19,6 +20,7 @@ export const Navbar: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<'investigations' | 'reports' | null>(null);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const navRef = useRef<HTMLDivElement>(null);
 
@@ -26,6 +28,7 @@ export const Navbar: React.FC = () => {
     setMounted(true);
     setCurrentUser(api.getCurrentUser());
     setOpenDropdown(null);
+    setUserMenuOpen(false);
     setMobileMenuOpen(false);
   }, [pathname]);
 
@@ -42,6 +45,7 @@ export const Navbar: React.FC = () => {
     const handleOutsideClick = (e: MouseEvent) => {
       if (navRef.current && !navRef.current.contains(e.target as Node)) {
         setOpenDropdown(null);
+        setUserMenuOpen(false);
       }
     };
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -96,7 +100,7 @@ export const Navbar: React.FC = () => {
       href: '/ownership-graph',
       title: safeT('nav_graph'),
       desc: safeT('nav_graph_desc'),
-      icon: GitFork,
+      icon: Activity,
       badge: 'Network'
     }
   ];
@@ -180,15 +184,12 @@ export const Navbar: React.FC = () => {
                 href="/demo"
                 className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all ${
                   pathname === '/demo'
-                    ? 'bg-[var(--accent-light)] text-[var(--text-primary)] border border-[var(--brand-accent)] shadow-xs ring-1 ring-[var(--brand-accent)]/30'
+                    ? 'bg-[var(--accent-light)] text-[var(--text-primary)] border border-[var(--brand-accent)] shadow-xs'
                     : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-soft)]'
                 }`}
               >
-                <Sparkles className="w-3.5 h-3.5 text-[var(--brand-accent)]" />
+                <Zap className="w-3.5 h-3.5 text-[var(--brand-accent)]" />
                 <span suppressHydrationWarning>{safeT('nav_demo')}</span>
-                <span className="ml-1 text-[9px] font-mono px-1.5 py-0.5 rounded-full bg-[var(--brand-accent)] text-[var(--cta-text)] font-extrabold">
-                  P3
-                </span>
               </Link>
 
               {/* Submenu Dropdown 1: Investigations & Analysis */}
@@ -316,105 +317,99 @@ export const Navbar: React.FC = () => {
             </nav>
 
             {/* 3. Actions & Utilities */}
-            <div className="hidden sm:flex items-center gap-2.5 shrink-0">
+            <div className="hidden sm:flex items-center gap-2 xl:gap-2.5 shrink-0">
               {/* Primary Action CTA: New Investigation */}
               <Link
                 href="/documents/new"
-                className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-[var(--cta-text)] transition-all shadow-sm hover:shadow active:scale-95"
+                className="flex items-center gap-1.5 px-3 py-1.5 min-h-[36px] rounded-xl text-xs font-bold bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-[var(--cta-text)] transition-all shadow-xs hover:shadow active:scale-95 shrink-0"
               >
-                <PlusCircle className="w-3.5 h-3.5 stroke-[2.5]" />
-                <span suppressHydrationWarning>{safeT('cta_verify')}</span>
+                <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+                <span suppressHydrationWarning>
+                  {mounted && language === 'en' ? 'New Case' : 'নতুন অনুসন্ধান'}
+                </span>
               </Link>
 
-              {/* Language Switcher */}
-              <button
-                onClick={toggleLanguage}
-                aria-label="Toggle language between Bangla and English"
-                className="flex items-center gap-1.5 px-3 py-2 min-h-[40px] rounded-xl text-xs font-bold border border-[var(--border-color)] bg-[var(--bg-surface-soft)] text-[var(--text-primary)] hover:border-[var(--brand-accent)] transition-all cursor-pointer"
-              >
-                <Globe className="w-3.5 h-3.5 text-[var(--text-secondary)]" />
-                <span suppressHydrationWarning className="font-semibold">
-                  {mounted && language === 'bn' ? 'English' : 'বাংলা'}
-                </span>
-              </button>
+              {/* Premium Language Switcher */}
+              <PremiumLanguageToggle />
 
-              {/* Theme Toggle */}
-              <button
-                onClick={toggleTheme}
-                aria-label="Toggle dark mode"
-                className="p-2.5 min-h-[40px] min-w-[40px] flex items-center justify-center rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface-soft)] text-[var(--text-primary)] hover:border-[var(--brand-accent)] transition-all cursor-pointer"
-              >
-                {theme === 'light' ? (
-                  <Moon className="w-4 h-4 text-[var(--text-secondary)]" />
-                ) : (
-                  <Sun className="w-4 h-4 text-[var(--brand-accent)]" />
-                )}
-              </button>
+              {/* Premium Theme Switcher */}
+              <PremiumThemeToggle />
 
               {/* User profile / Login */}
               {currentUser ? (
-                <div className="flex items-center gap-2 pl-2 border-l border-[var(--border-color)]">
-                  <Link
-                    href="/settings"
-                    title="প্রোফাইল ও সেটিংস"
-                    className="text-xs px-2.5 py-1.5 rounded-lg bg-[var(--accent-light)] text-[var(--text-primary)] font-bold max-w-[130px] truncate border border-[var(--border-color)] hover:opacity-90 transition-opacity"
-                  >
-                    {currentUser.profile?.full_name_bn || currentUser.username}
-                  </Link>
-                  <Link
-                    href="/settings"
-                    aria-label={language === 'bn' ? 'সেটিংস' : 'Settings'}
-                    className="p-2 min-h-[40px] min-w-[40px] flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] rounded-lg transition-colors"
-                  >
-                    <Settings className="w-4 h-4" />
-                  </Link>
+                <div className="relative pl-1 border-l border-[var(--border-color)]">
                   <button
-                    onClick={() => { api.logout(); setCurrentUser(null); }}
-                    aria-label={safeT('nav_logout')}
-                    className="p-2 min-h-[40px] min-w-[40px] flex items-center justify-center text-[var(--text-secondary)] hover:text-red-600 rounded-lg transition-colors cursor-pointer"
+                    type="button"
+                    onClick={() => setUserMenuOpen(!userMenuOpen)}
+                    aria-expanded={userMenuOpen}
+                    aria-label="User Account Menu"
+                    className="flex items-center gap-2 p-1.5 pr-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface-soft)] text-xs font-bold text-[var(--text-primary)] hover:border-[var(--brand-accent)] transition-all cursor-pointer shadow-2xs"
                   >
-                    <LogOut className="w-4 h-4" />
+                    <div className="w-6 h-6 rounded-lg bg-[var(--brand-accent)] text-white flex items-center justify-center text-[11px] font-black shrink-0">
+                      {(currentUser.profile?.full_name_bn || currentUser.username || 'U')[0].toUpperCase()}
+                    </div>
+                    <span className="max-w-[100px] truncate hidden xl:inline">
+                      {currentUser.profile?.full_name_bn || currentUser.username}
+                    </span>
+                    <ChevronDown className={`w-3.5 h-3.5 text-[var(--text-secondary)] transition-transform duration-200 ${userMenuOpen ? 'rotate-180' : ''}`} />
                   </button>
+
+                  {userMenuOpen && (
+                    <div className="absolute right-0 mt-2 w-56 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-surface)] p-2 shadow-xl ring-1 ring-black/5 animate-in fade-in-50 slide-in-from-top-1 z-50">
+                      <div className="px-3 py-2 border-b border-[var(--border-color)]">
+                        <p className="text-xs font-bold text-[var(--text-primary)] truncate">
+                          {currentUser.profile?.full_name_bn || currentUser.username}
+                        </p>
+                        <p className="text-[10px] text-[var(--text-secondary)] font-mono truncate">
+                          {currentUser.email || 'reviewer@unbhumi.gov.bd'}
+                        </p>
+                      </div>
+
+                      <div className="py-1 space-y-0.5">
+                        <Link
+                          href="/settings"
+                          onClick={() => setUserMenuOpen(false)}
+                          className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-soft)] transition-colors"
+                        >
+                          <Settings className="w-3.5 h-3.5 text-[var(--text-secondary)]" />
+                          <span suppressHydrationWarning>{mounted && language === 'en' ? 'Settings & Profile' : 'সেটিংস ও প্রোফাইল'}</span>
+                        </Link>
+                        <button
+                          onClick={() => {
+                            api.logout();
+                            setCurrentUser(null);
+                            setUserMenuOpen(false);
+                          }}
+                          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer text-left"
+                        >
+                          <LogOut className="w-3.5 h-3.5" />
+                          <span suppressHydrationWarning>{safeT('nav_logout')}</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <Link
                   href="/login"
-                  className="flex items-center gap-1.5 px-3 py-2 min-h-[40px] rounded-xl text-xs font-bold border border-[var(--border-color)] text-[var(--text-primary)] hover:bg-[var(--bg-surface-soft)] transition-colors"
+                  className="flex items-center gap-1.5 px-3 py-1.5 min-h-[36px] rounded-xl text-xs font-bold border border-[var(--border-color)] bg-[var(--bg-surface-soft)] text-[var(--text-primary)] hover:border-[var(--brand-accent)] transition-colors shadow-2xs"
                 >
-                  <LogIn className="w-3.5 h-3.5 text-[var(--text-secondary)]" />
+                  <UserIcon className="w-3.5 h-3.5 text-[var(--text-secondary)]" />
                   <span suppressHydrationWarning>{safeT('nav_login')}</span>
                 </Link>
               )}
             </div>
 
             {/* 4. Mobile header controls (with 44px min touch targets) */}
-            <div className="flex sm:hidden items-center gap-1.5">
-              <button
-                suppressHydrationWarning
-                onClick={toggleLanguage}
-                aria-label="Toggle language"
-                className="min-h-[44px] min-w-[44px] flex items-center justify-center px-2 py-1 text-xs font-bold border border-[var(--border-color)] bg-[var(--bg-surface-soft)] rounded-xl text-[var(--text-primary)]"
-              >
-                {mounted && language === 'bn' ? 'EN' : 'বাং'}
-              </button>
-
-              <button
-                onClick={toggleTheme}
-                aria-label="Toggle theme"
-                className="min-h-[44px] min-w-[44px] flex items-center justify-center p-2 border border-[var(--border-color)] bg-[var(--bg-surface-soft)] rounded-xl"
-              >
-                {theme === 'light' ? (
-                  <Moon className="w-4 h-4 text-[var(--text-secondary)]" />
-                ) : (
-                  <Sun className="w-4 h-4 text-[var(--brand-accent)]" />
-                )}
-              </button>
+            <div className="flex sm:hidden items-center gap-2">
+              <PremiumLanguageToggle compact />
+              <PremiumThemeToggle compact />
 
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 aria-expanded={mobileMenuOpen}
                 aria-label="Toggle mobile drawer"
-                className="min-h-[44px] min-w-[44px] flex items-center justify-center p-2 border border-[var(--border-color)] bg-[var(--bg-surface-soft)] rounded-xl text-[var(--text-primary)]"
+                className="min-h-[40px] min-w-[40px] flex items-center justify-center p-2 border border-[var(--border-color)] bg-[var(--bg-surface-soft)] rounded-xl text-[var(--text-primary)]"
               >
                 {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
               </button>
@@ -431,7 +426,7 @@ export const Navbar: React.FC = () => {
               onClick={() => setMobileMenuOpen(false)}
               className="flex items-center justify-center gap-2 w-full min-h-[44px] py-2.5 rounded-xl font-bold bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-[var(--cta-text)] shadow-sm"
             >
-              <PlusCircle className="w-4 h-4 stroke-[2.5]" />
+              <Plus className="w-4 h-4 stroke-[2.5]" />
               <span suppressHydrationWarning>{safeT('cta_verify')}</span>
             </Link>
 
@@ -459,7 +454,7 @@ export const Navbar: React.FC = () => {
                     : 'border-[var(--border-color)] bg-[var(--bg-surface-soft)] text-[var(--text-primary)]'
                 }`}
               >
-                <Sparkles className="w-3.5 h-3.5 text-[var(--brand-accent)]" />
+                <Zap className="w-3.5 h-3.5 text-[var(--brand-accent)]" />
                 <span suppressHydrationWarning>{safeT('nav_demo')}</span>
               </Link>
             </div>
@@ -559,7 +554,7 @@ export const Navbar: React.FC = () => {
                   onClick={() => setMobileMenuOpen(false)}
                   className="flex items-center justify-center gap-2 min-h-[44px] p-2.5 rounded-xl text-xs font-bold border border-[var(--border-color)] text-[var(--text-primary)] hover:bg-[var(--bg-surface-soft)]"
                 >
-                  <LogIn className="w-4 h-4 text-[var(--text-secondary)]" />
+                  <UserIcon className="w-4 h-4 text-[var(--text-secondary)]" />
                   <span suppressHydrationWarning>{safeT('nav_login')}</span>
                 </Link>
               )}
@@ -585,8 +580,8 @@ export const Navbar: React.FC = () => {
             }`}
           >
             <Layers className={`w-5 h-5 ${pathname === '/dashboard' ? 'stroke-[2.5]' : 'stroke-[1.8]'}`} />
-            <span className="text-[10px] mt-1 tracking-tight truncate max-w-[56px]">
-              {language === 'bn' ? 'সারসংক্ষেপ' : 'Dashboard'}
+            <span suppressHydrationWarning className="text-[10px] mt-1 tracking-tight truncate max-w-[56px]">
+              {mounted && language === 'en' ? 'Dashboard' : 'সারসংক্ষেপ'}
             </span>
           </Link>
 
@@ -600,8 +595,8 @@ export const Navbar: React.FC = () => {
             }`}
           >
             <ShieldCheck className={`w-5 h-5 ${pathname.startsWith('/cases') ? 'stroke-[2.5]' : 'stroke-[1.8]'}`} />
-            <span className="text-[10px] mt-1 tracking-tight truncate max-w-[56px]">
-              {language === 'bn' ? 'মামলা' : 'Cases'}
+            <span suppressHydrationWarning className="text-[10px] mt-1 tracking-tight truncate max-w-[56px]">
+              {mounted && language === 'en' ? 'Cases' : 'মামলা'}
             </span>
           </Link>
 
@@ -612,10 +607,10 @@ export const Navbar: React.FC = () => {
             className="flex flex-col items-center justify-center h-full min-h-[44px] px-1 group -mt-3"
           >
             <div className="w-12 h-12 rounded-full bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-[var(--cta-text)] flex items-center justify-center shadow-md active:scale-95 transition-transform">
-              <PlusCircle className="w-6 h-6 stroke-[2.5]" />
+              <Plus className="w-6 h-6 stroke-[2.5]" />
             </div>
-            <span className="text-[10px] font-bold text-[var(--brand-accent)] mt-0.5 tracking-tight truncate max-w-[56px]">
-              {language === 'bn' ? 'নতুন যাচাই' : 'Verify'}
+            <span suppressHydrationWarning className="text-[10px] font-bold text-[var(--brand-accent)] mt-0.5 tracking-tight truncate max-w-[56px]">
+              {mounted && language === 'en' ? 'Verify' : 'নতুন যাচাই'}
             </span>
           </Link>
 
@@ -629,8 +624,8 @@ export const Navbar: React.FC = () => {
             }`}
           >
             <AlertTriangle className={`w-5 h-5 ${pathname.startsWith('/review-queue') ? 'stroke-[2.5]' : 'stroke-[1.8]'}`} />
-            <span className="text-[10px] mt-1 tracking-tight truncate max-w-[56px]">
-              {language === 'bn' ? 'কিউ' : 'Alerts'}
+            <span suppressHydrationWarning className="text-[10px] mt-1 tracking-tight truncate max-w-[56px]">
+              {mounted && language === 'en' ? 'Alerts' : 'কিউ'}
             </span>
           </Link>
 
@@ -643,9 +638,9 @@ export const Navbar: React.FC = () => {
                 : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
             }`}
           >
-            <Sparkles className={`w-5 h-5 ${pathname.startsWith('/demo') ? 'stroke-[2.5]' : 'stroke-[1.8]'}`} />
-            <span className="text-[10px] mt-1 tracking-tight truncate max-w-[56px]">
-              {language === 'bn' ? 'ডেমো' : 'Demo'}
+            <Zap className={`w-5 h-5 ${pathname.startsWith('/demo') ? 'stroke-[2.5]' : 'stroke-[1.8]'}`} />
+            <span suppressHydrationWarning className="text-[10px] mt-1 tracking-tight truncate max-w-[56px]">
+              {mounted && language === 'en' ? 'Demo' : 'ডেমো'}
             </span>
           </Link>
         </div>
