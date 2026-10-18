@@ -57,7 +57,7 @@ export interface AnomalyFinding {
   title_en: string;
   description_bn: string;
   description_en: string;
-  conflicting_records: any[];
+  conflicting_records: Record<string, unknown>[];
   source_pages: number[];
   source_fields: string[];
   human_action_recommended_bn: string;
@@ -65,6 +65,24 @@ export interface AnomalyFinding {
   status: string;
   status_display: string;
   created_at: string;
+}
+
+export interface ParcelInfo {
+  id?: number;
+  mouza?: string;
+  dag_number?: string;
+  survey_type?: string;
+  recorded_area_decimals?: number;
+  [key: string]: any;
+}
+
+export interface AuditEventItem {
+  id: number;
+  action_display: string;
+  details: any;
+  user_email?: string;
+  created_at: string;
+  [key: string]: any;
 }
 
 export interface CaseItem {
@@ -83,11 +101,11 @@ export interface CaseItem {
   anomalies_count?: number;
   mouza?: string;
   dag_number?: string;
-  parcel?: any;
+  parcel?: ParcelInfo;
   recorded_area?: number;
   documents?: DocumentItem[];
   anomalies?: AnomalyFinding[];
-  audit_events?: any[];
+  audit_events?: AuditEventItem[];
   created_at: string;
   updated_at: string;
 }
@@ -179,7 +197,7 @@ export interface DashboardSummary {
 }
 
 // Fallback synthetic data in case backend server is temporarily uncontactable
-const FALLBACK_CASES: CaseItem[] = [
+export const FALLBACK_CASES: CaseItem[] = [
   {
     id: 1,
     case_number: 'UB-2026-1001',
@@ -367,37 +385,9 @@ export const api = {
   },
 
   // Dashboard Summary
+  // Dashboard Summary
   async getDashboardSummary(): Promise<DashboardSummary> {
-    try {
-      return await fetchApi<DashboardSummary>('/dashboard/summary/');
-    } catch {
-      return {
-        metrics: {
-          total_cases: 8,
-          critical_high_count: 4,
-          needs_review_count: 5,
-          clean_count: 1,
-          total_docs: 16
-        },
-        status_distribution: {
-          flagged_review: 5,
-          verified_clean: 1,
-          resolved: 1,
-          pending: 1
-        },
-        risk_distribution: {
-          critical: 1,
-          high: 3,
-          review: 2,
-          low: 2
-        },
-        recent_cases: FALLBACK_CASES,
-        recent_activity: [
-          { id: 1, action: 'অসঙ্গতি পরীক্ষা', case_number: 'UB-2026-1002', user: 'reviewer', timestamp: new Date().toISOString() },
-          { id: 2, action: 'নথি আপলোড', case_number: 'UB-2026-1001', user: 'reviewer', timestamp: new Date().toISOString() }
-        ]
-      };
-    }
+    return await fetchApi<DashboardSummary>('/dashboard/summary/');
   },
 
   // Cases
@@ -406,25 +396,11 @@ export const api = {
     if (params.risk) query.append('risk', params.risk);
     if (params.status) query.append('status', params.status);
     if (params.search) query.append('search', params.search);
-
-    try {
-      return await fetchApi<CaseItem[]>(`/cases/?${query.toString()}`);
-    } catch {
-      let filtered = [...FALLBACK_CASES];
-      if (params.risk) filtered = filtered.filter(c => c.risk_level === params.risk);
-      if (params.search) filtered = filtered.filter(c => c.case_number.includes(params.search!) || c.title.includes(params.search!));
-      return filtered;
-    }
+    return await fetchApi<CaseItem[]>(`/cases/?${query.toString()}`);
   },
 
   async getCaseDetail(caseId: string): Promise<CaseItem> {
-    try {
-      return await fetchApi<CaseItem>(`/cases/${caseId}/`);
-    } catch {
-      const found = FALLBACK_CASES.find(c => c.case_number === caseId || String(c.id) === caseId);
-      if (found) return found;
-      return FALLBACK_CASES[0];
-    }
+    return await fetchApi<CaseItem>(`/cases/${caseId}/`);
   },
 
   async createCase(data: { title: string; description: string; mouza: string; dag_number: string; survey_type: string; area: number }): Promise<CaseItem> {
@@ -448,103 +424,18 @@ export const api = {
   },
 
   async getCaseGraph(caseId: string): Promise<GraphData> {
-    try {
-      return await fetchApi<GraphData>(`/cases/${caseId}/graph/`);
-    } catch {
-      return {
-        case_id: caseId,
-        nodes: [
-          { id: 'parcel_1', label: 'দাগ ৮৮ (ধামরাই)', type: 'parcel', subtext: 'RS জরিপ | ৪০ শতাংশ' },
-          { id: 'deed_1', label: 'দলিল নং ৮৯১০ (২০২৬)', type: 'deed', subtext: 'বিক্রেতা: কামাল -> জসিম' },
-          { id: 'deed_2', label: 'দলিল নং ৩২০১ (২০২৪)', type: 'deed', subtext: 'বিক্রেতা: কামাল -> রফিকুল' },
-          { id: 'person_1', label: 'কামাল হোসেন', type: 'person', subtext: 'বিক্রেতা' },
-          { id: 'person_2', label: 'মো: জসিম উদ্দিন', type: 'person', subtext: 'বর্তমান ক্রেতা' },
-          { id: 'person_3', label: 'মো: রফিকুল ইসলাম', type: 'person', subtext: 'পূর্ববর্তী ক্রেতা' },
-        ],
-        edges: [
-          { id: 'e1', source: 'person_1', target: 'deed_1', relation: 'SELLER_OF', label: 'বিক্রি করেছেন' },
-          { id: 'e2', source: 'deed_1', target: 'person_2', relation: 'BUYER_OF', label: '⚠️ দ্বৈত বিক্রির শিকার', is_conflict: true },
-          { id: 'e3', source: 'person_1', target: 'deed_2', relation: 'SELLER_OF', label: 'পূর্বে বিক্রি করেছিলেন' },
-          { id: 'e4', source: 'deed_2', target: 'person_3', relation: 'BUYER_OF', label: 'মালিকানা প্রাপ্ত' },
-          { id: 'e5', source: 'deed_1', target: 'parcel_1', relation: 'REFERS_TO_PARCEL', label: 'দাগ ৮৮ হস্তান্তর', is_conflict: true },
-          { id: 'e6', source: 'deed_2', target: 'parcel_1', relation: 'REFERS_TO_PARCEL', label: 'দাগ ৮৮ মূল হস্তান্তর' },
-        ],
-        metrics: {
-          node_count: 6,
-          edge_count: 6,
-          conflict_edges: 2,
-          has_conflicting_paths: true
-        }
-      };
-    }
+    return await fetchApi<GraphData>(`/cases/${caseId}/graph/`);
   },
 
   async queryGraphRAG(caseId: string, query: string): Promise<GraphRAGResult> {
-    try {
-      return await fetchApi<GraphRAGResult>(`/cases/${caseId}/graph-rag/`, {
-        method: 'POST',
-        body: JSON.stringify({ query })
-      });
-    } catch {
-      return {
-        query,
-        case_id: caseId,
-        retrieved_nodes: [
-          { id: 'person_1', label: 'কামাল হোসেন', type: 'person', subtext: 'বিক্রেতা' },
-          { id: 'deed_1', label: 'দলিল নং ৮৯১০ (২০২৬)', type: 'deed', subtext: 'প্রস্তাবিত সাফ-কবলা' },
-          { id: 'deed_2', label: 'দলিল নং ৩২০১ (২০২৪)', type: 'deed', subtext: 'পূর্ববর্তী সাফ-কবলা' },
-          { id: 'person_2', label: 'মো: জসিম উদ্দিন', type: 'person', subtext: 'প্রস্তাবিত ক্রেতা' },
-          { id: 'person_3', label: 'মো: রফিকুল ইসলাম', type: 'person', subtext: 'পূর্ববর্তী ক্রেতা' },
-          { id: 'parcel_1', label: 'দাগ ৮৮ (ধামরাই)', type: 'parcel', subtext: '৪০ শতক' }
-        ],
-        retrieved_edges: [
-          { id: 'e1', source: 'person_1', target: 'deed_1', relation: 'SELLER_OF', label: 'বিক্রি করেছেন' },
-          { id: 'e2', source: 'deed_1', target: 'person_2', relation: 'TRANSFERRED_TO', label: '⚠️ দ্বৈত বিক্রির শিকার', is_conflict: true },
-          { id: 'e3', source: 'person_1', target: 'deed_2', relation: 'SELLER_OF', label: 'পূর্বে বিক্রি করেছিলেন' },
-          { id: 'e4', source: 'deed_2', target: 'person_3', relation: 'TRANSFERRED_TO', label: 'মালিকানা প্রাপ্ত' },
-          { id: 'e5', source: 'deed_1', target: 'parcel_1', relation: 'DESCRIBES_PARCEL', label: 'দাগ ৮৮ হস্তান্তর', is_conflict: true },
-          { id: 'e6', source: 'deed_2', target: 'parcel_1', relation: 'DESCRIBES_PARCEL', label: 'দাগ ৮৮ মূল হস্তান্তর' }
-        ],
-        grounded_evidence: [
-          {
-            doc_id: 1,
-            doc_title: 'মূল_সাফ_কবলা_দলিল_৮৯১০.pdf',
-            doc_type: 'সাফ-কবলা দলিল',
-            page: 1,
-            field_key: 'seller_name',
-            field_label_bn: 'বিক্রেতার নাম',
-            field_value: 'কামাল হোসেন',
-            confidence: 0.98,
-            hash_snippet: '64a8b7c9120de3fa'
-          },
-          {
-            doc_id: 2,
-            doc_title: 'পূর্ববর্তী_রেজিস্ট্রিকৃত_দলিল_৩২০১.pdf',
-            doc_type: 'বায়া দলিল',
-            page: 1,
-            field_key: 'buyer_name',
-            field_label_bn: 'পূর্ববর্তী ক্রেতা',
-            field_value: 'মো: রফিকুল ইসলাম',
-            confidence: 0.96,
-            hash_snippet: '201e55fab1983019'
-          }
-        ],
-        graph_synthesis_bn: 'গ্রাফ আরএজি বিশ্লেষণে প্রমাণিত যে বিক্রেতা কামাল হোসেন একই দাগ ৮৮-এর ৪০ শতক জমি ২০২৪ সালে মো: রফিকুল ইসলামের নিকট দলিল ৩২০১ মূলে বিক্রি করা সত্ত্বেও ২০২৬ সালে পুনরায় মো: জসিম উদ্দিনের নিকট দলিল ৮৯১০ মূলে বিক্রির চেষ্টা করেছেন। এটি স্পষ্ট দ্বৈত বিক্রি অসঙ্গতি।',
-        graph_synthesis_en: 'GraphRAG retrieval proves that seller Kamal Hossain previously transferred the exact 40 decimals of Dag 88 to Md. Rafiqul Islam in 2024 (Deed 3201), yet attempted to sell the same parcel again in 2026 to Md. Jasim Uddin (Deed 8910). This constitutes a confirmed double-selling conflict.',
-        conflicts_count: 2,
-        metrics: {
-          total_nodes_in_case: 6,
-          retrieved_node_count: 6,
-          retrieved_edge_count: 6,
-          cited_documents_count: 2
-        },
-        provenance: 'NetworkX DiGraph Traversal & Case Grounded Evidence'
-      };
-    }
+    return await fetchApi<GraphRAGResult>(`/cases/${caseId}/graph-rag/`, {
+      method: 'POST',
+      body: JSON.stringify({ query })
+    });
   },
 
   async getCaseReport(caseId: string) {
-    return await fetchApi<any>(`/cases/${caseId}/report/`);
+    return await fetchApi<Record<string, unknown>>(`/cases/${caseId}/report/`);
   },
 
   // Documents

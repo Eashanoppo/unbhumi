@@ -16,11 +16,14 @@ interface UploadItem {
   type: string;
   size: number;
   hash: string;
+  file?: File;
+  isSample?: boolean;
 }
 
 export default function NewAnalysisPage() {
   const router = useRouter();
   const { language, t, formatNumber } = useLanguage();
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   // Wizard Step State (1: Parcel, 2: Documents, 3: Review & Submit)
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
@@ -33,31 +36,48 @@ export default function NewAnalysisPage() {
   const [area, setArea] = useState('25.0');
   const [description, setDescription] = useState('');
 
-  // Step 2: Uploaded documents list
-  const [documents, setDocuments] = useState<UploadItem[]>([
-    {
-      id: 'doc-1',
-      name: 'মূল_সাফ_কবলা_দলিল_৭৪৫২.pdf',
-      type: 'deed',
-      size: 1428500,
-      hash: '7a9f4c3d8e12b6a901ffc562e104a39d84c391219b6732f90119c836a0f44391'
-    },
-    {
-      id: 'doc-2',
-      name: 'আরএস_খতিয়ান_৫৮৩.pdf',
-      type: 'khatian',
-      size: 985200,
-      hash: '3e41b9d09a7218cf5092a40e6712ab098f430198de72a5b112998a6094b81093'
-    }
-  ]);
+  // Step 2: Uploaded documents list (real files)
+  const [documents, setDocuments] = useState<UploadItem[]>([]);
 
-  const [newDocType, setNewDocType] = useState('baya_deed');
+  const [newDocType, setNewDocType] = useState('deed');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionProgress, setSubmissionProgress] = useState(0);
   const [submissionStage, setSubmissionStage] = useState(1);
   const [errorMsg, setErrorMsg] = useState('');
 
   const docTypeKeys = ['deed', 'baya_deed', 'khatian', 'mutation', 'mouza_map', 'tax_receipt'];
+
+  const handleRealFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    const files = Array.from(e.target.files);
+    const newItems: UploadItem[] = [];
+
+    for (const file of files) {
+      let hashHex = '';
+      try {
+        const buffer = await file.arrayBuffer();
+        const hashBuf = await crypto.subtle.digest('SHA-256', buffer);
+        const hashArray = Array.from(new Uint8Array(hashBuf));
+        hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      } catch {
+        hashHex = Math.random().toString(16).substring(2, 10);
+      }
+
+      newItems.push({
+        id: `doc-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        name: file.name,
+        type: newDocType,
+        size: file.size,
+        hash: hashHex,
+        file: file,
+        isSample: false
+      });
+    }
+
+    setDocuments((prev) => [...prev, ...newItems]);
+    setErrorMsg('');
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
   const handleAddSyntheticFile = () => {
     const randomHex = Math.random().toString(16).substring(2, 10) + Math.random().toString(16).substring(2, 10);
@@ -67,7 +87,8 @@ export default function NewAnalysisPage() {
       name: `${prefix}_doc_${Date.now().toString().slice(-4)}.pdf`,
       type: newDocType,
       size: Math.floor(Math.random() * 800000) + 400000,
-      hash: `${randomHex}${randomHex}${randomHex}${randomHex}`.slice(0, 64)
+      hash: `${randomHex}${randomHex}${randomHex}${randomHex}`.slice(0, 64),
+      isSample: true
     };
     setDocuments([...documents, newItem]);
     setErrorMsg('');
@@ -120,11 +141,7 @@ export default function NewAnalysisPage() {
     setSubmissionStage(1);
 
     try {
-      setTimeout(() => {
-        setSubmissionProgress(40);
-        setSubmissionStage(2);
-      }, 700);
-
+      // 1. Create Case
       const createdCase = await api.createCase({
         title,
         description,
@@ -134,9 +151,35 @@ export default function NewAnalysisPage() {
         area: parseFloat(area) || 20.0
       });
 
+      setSubmissionProgress(35);
+      setSubmissionStage(2);
+
+      // 2. Upload actual selected documents to the created case
+      for (let i = 0; i < documents.length; i++) {
+        const doc = documents[i];
+        if (doc.file) {
+          await api.uploadCaseDocument(createdCase.case_number, {
+            title: doc.name,
+            document_type: doc.type,
+            file: doc.file,
+            file_hash: doc.hash,
+            file_size_bytes: doc.size
+          });
+        } else {
+          await api.uploadCaseDocument(createdCase.case_number, {
+            title: doc.name,
+            document_type: doc.type,
+            file_hash: doc.hash,
+            file_size_bytes: doc.size
+          });
+        }
+        setSubmissionProgress(35 + Math.round(((i + 1) / documents.length) * 35));
+      }
+
       setSubmissionProgress(75);
       setSubmissionStage(3);
 
+      // 3. Run Checks
       await api.runChecks(createdCase.case_number);
       setSubmissionProgress(100);
       setSubmissionStage(4);
@@ -469,6 +512,15 @@ export default function NewAnalysisPage() {
                 </div>
 
                 <div className="w-full sm:w-auto flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2.5 pt-2">
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleRealFileSelect}
+                    accept=".pdf,.png,.jpg,.jpeg"
+                    multiple
+                    className="hidden"
+                  />
+
                   <select
                     value={newDocType}
                     onChange={(e) => setNewDocType(e.target.value)}
@@ -481,11 +533,21 @@ export default function NewAnalysisPage() {
 
                   <button
                     type="button"
-                    onClick={handleAddSyntheticFile}
+                    onClick={() => fileInputRef.current?.click()}
                     className="px-4 py-2.5 min-h-[44px] rounded-xl text-xs font-bold bg-[var(--brand-accent)] text-[var(--cta-text)] hover:bg-[var(--brand-accent-hover)] transition-colors flex items-center justify-center gap-1.5 shadow-xs cursor-pointer active:scale-95"
                   >
-                    <Plus className="w-4 h-4" />
-                    <span>{t('add_doc')}</span>
+                    <UploadCloud className="w-4 h-4" />
+                    <span>{language === 'bn' ? 'ফাইল আপলোড করুন (PDF/Image)' : 'Upload Real Document'}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleAddSyntheticFile}
+                    className="px-3.5 py-2.5 min-h-[44px] rounded-xl text-xs font-semibold border border-[var(--border-color)] bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-soft)] transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                    title={language === 'bn' ? 'নমুনা নথি যুক্ত করুন' : 'Add sample record'}
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>{language === 'bn' ? 'নমুনা নথি' : 'Sample'}</span>
                   </button>
                 </div>
               </div>

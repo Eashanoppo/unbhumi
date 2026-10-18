@@ -3,12 +3,20 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
+from django.http import FileResponse, Http404
+from django.core.exceptions import ValidationError
+
 from .models import Document, ExtractedField
 from apps.cases.models import Case
 from apps.cases.serializers import DocumentSerializer, ExtractedFieldSerializer
+from apps.cases.permissions import IsCaseAuthorized
 from apps.audit.models import AuditEvent
 from services.ocr_service import OCRService
+from services.normalization_service import NormalizationService
+from services.vector_service import VectorService
 from services.rule_engine import RuleEngine
+from services.storage_service import validate_file_upload, generate_secure_storage_path
+
 
 class DocumentListView(APIView):
     def get(self, request):
@@ -46,23 +54,38 @@ class DocumentListView(APIView):
         if case_id:
             case = get_object_or_404(Case, pk=case_id) if str(case_id).isdigit() else get_object_or_404(Case, case_number=case_id)
 
+        file_meta = {}
+        if file_obj:
+            try:
+                file_meta = validate_file_upload(file_obj)
+            except ValidationError as ve:
+                return Response({'error': str(ve)}, status=status.HTTP_400_BAD_REQUEST)
+
         file_hash = request.data.get('file_hash', '')
-        file_size_bytes = int(request.data.get('file_size_bytes', 0))
+        file_size_bytes = int(request.data.get('file_size_bytes', file_meta.get('size_bytes', 0)))
 
         doc = Document.objects.create(
             case=case,
             document_type=doc_type,
             title=title,
             file=file_obj,
+            original_filename=file_meta.get('name', ''),
             file_hash=file_hash,
             file_size_bytes=file_size_bytes,
             uploaded_by=request.user if request.user.is_authenticated else None
         )
 
+        # 1. Real OCR & field extraction
         OCRService.process_document(doc)
 
+        # 2. Entity normalization & relation sync
+        NormalizationService.sync_entities_from_document(doc)
+
+        # 3. Page-aware vector chunking & indexing
+        VectorService.index_document(doc)
+
         if case:
-            # Re-evaluate case rules
+            # 4. Re-evaluate case rules
             engine = RuleEngine(case)
             engine.evaluate_all()
 
@@ -92,6 +115,23 @@ class DocumentDetailView(APIView):
         return Response({'success': True, 'message': 'নথি সফলভাবে অপসারিত হয়েছে।'}, status=status.HTTP_200_OK)
 
 
+class DocumentFileDownloadView(APIView):
+    """Authorized file download / stream endpoint with case-level permission checks."""
+    permission_classes = [IsCaseAuthorized]
+
+    def get(self, request, pk):
+        doc = get_object_or_404(Document, pk=pk)
+        self.check_object_permissions(request, doc)
+
+        if not doc.file:
+            raise Http404("নথির কোনো ফাইল সংরক্ষিত নেই (No file attached to this document).")
+
+        try:
+            return FileResponse(doc.file.open('rb'), content_type=doc.mime_type or 'application/octet-stream')
+        except Exception as e:
+            return Response({'error': f"ফাইল খোলা সম্ভব হয়নি: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 class DocumentFieldsView(APIView):
     def get(self, request, pk):
         doc = get_object_or_404(Document, pk=pk)
@@ -116,6 +156,9 @@ class DocumentFieldsView(APIView):
         field.status = 'corrected'
         field.corrected_by = request.user if request.user.is_authenticated else None
         field.save()
+
+        # Synchronize normalized entities with corrected field value
+        NormalizationService.sync_entities_from_document(doc)
 
         # Re-evaluate case rules
         if doc.case:
@@ -143,21 +186,38 @@ class CaseDocumentUploadView(APIView):
         doc_type = request.data.get('document_type', 'deed')
         title = request.data.get('title', 'সংযুক্ত দলিল')
         file_obj = request.FILES.get('file')
+
+        file_meta = {}
+        if file_obj:
+            try:
+                file_meta = validate_file_upload(file_obj)
+            except ValidationError as ve:
+                return Response({'error': str(ve)}, status=status.HTTP_400_BAD_REQUEST)
+
         file_hash = request.data.get('file_hash', '')
-        file_size_bytes = int(request.data.get('file_size_bytes', 0))
+        file_size_bytes = int(request.data.get('file_size_bytes', file_meta.get('size_bytes', 0)))
 
         doc = Document.objects.create(
             case=case,
             document_type=doc_type,
             title=title,
             file=file_obj,
+            original_filename=file_meta.get('name', ''),
             file_hash=file_hash,
             file_size_bytes=file_size_bytes,
             uploaded_by=request.user if request.user.is_authenticated else None
         )
 
+        # 1. Run real OCR
         OCRService.process_document(doc)
 
+        # 2. Sync entity relations
+        NormalizationService.sync_entities_from_document(doc)
+
+        # 3. Vector chunking & index
+        VectorService.index_document(doc)
+
+        # 4. Evaluate rules
         engine = RuleEngine(case)
         engine.evaluate_all()
 

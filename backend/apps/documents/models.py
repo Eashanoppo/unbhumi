@@ -25,6 +25,8 @@ class Document(models.Model):
     document_type = models.CharField(max_length=32, choices=DOCUMENT_TYPES, default='deed')
     title = models.CharField(max_length=255)
     file = models.FileField(upload_to='documents/%Y/%m/', null=True, blank=True)
+    original_filename = models.CharField(max_length=255, blank=True, default='')
+    mime_type = models.CharField(max_length=64, blank=True, default='')
     file_hash = models.CharField(max_length=64, blank=True, db_index=True)
     file_size_bytes = models.PositiveIntegerField(default=0)
     page_count = models.PositiveIntegerField(default=1)
@@ -39,10 +41,15 @@ class Document(models.Model):
             self.file_size_bytes = len(content_bytes)
         elif self.file:
             hasher = hashlib.sha256()
-            for chunk in self.file.chunks():
-                hasher.update(chunk)
-            self.file_hash = hasher.hexdigest()
-            self.file_size_bytes = self.file.size
+            try:
+                self.file.seek(0)
+                for chunk in self.file.chunks():
+                    hasher.update(chunk)
+                self.file.seek(0)
+                self.file_hash = hasher.hexdigest()
+                self.file_size_bytes = self.file.size
+            except Exception:
+                pass
         return self.file_hash
 
     def __str__(self):
@@ -100,3 +107,28 @@ class ExtractedField(models.Model):
 
     def __str__(self):
         return f"{self.field_label_bn}: {self.effective_value}"
+
+
+class DocumentChunk(models.Model):
+    """
+    Page-aware semantic chunks for vector retrieval and RAG.
+    Maintains document and page provenance, embedding vector, and case scoping.
+    """
+    document = models.ForeignKey(Document, on_delete=models.CASCADE, related_name='chunks')
+    case = models.ForeignKey('cases.Case', on_delete=models.CASCADE, related_name='document_chunks', null=True, blank=True)
+    page_number = models.PositiveIntegerField(default=1)
+    chunk_index = models.PositiveIntegerField(default=0)
+    text_content = models.TextField()
+    embedding_json = models.JSONField(default=list, blank=True)
+    embedding_model = models.CharField(max_length=64, default='dense-feature-v1')
+    model_version = models.CharField(max_length=32, default='1.0.0')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['document', 'page_number', 'chunk_index']
+        indexes = [
+            models.Index(fields=['case', 'document']),
+        ]
+
+    def __str__(self):
+        return f"Chunk {self.chunk_index} of {self.document.title} (Page {self.page_number})"

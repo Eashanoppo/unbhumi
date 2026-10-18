@@ -350,8 +350,8 @@ class GraphService:
 
     def query_graph(self, query: str):
         """
-        Executes genuine GraphRAG (Graph-Grounded Retrieval and Evidence Synthesis)
-        using NetworkX graph traversal and database document citation.
+        Executes genuine GraphRAG (Graph-Grounded Retrieval, Vector Similarity, and Evidence Synthesis)
+        using NetworkX graph traversal, VectorService semantic chunks, and database document citations.
         """
         graph_data = self.build_and_persist_graph()
         nodes = graph_data['nodes']
@@ -396,12 +396,18 @@ class GraphService:
             if e['source'] in retrieved_nodes_set and e['target'] in retrieved_nodes_set
         ]
 
-        # 3. Extract documentary evidence citations
+        # 3. Retrieve semantically matching document passages via VectorService
+        from .vector_service import VectorService
+        vector_chunks = VectorService.retrieve_similar_chunks(self.case, query_clean, top_k=3)
+
+        # 4. Extract documentary evidence citations
         grounded_evidence = []
         cited_doc_ids = set()
         for n in retrieved_nodes:
             for doc_id in n.get('doc_ids', []):
                 cited_doc_ids.add(doc_id)
+        for vc in vector_chunks:
+            cited_doc_ids.add(vc['doc_id'])
 
         cited_docs = Document.objects.filter(id__in=cited_doc_ids).prefetch_related('extracted_fields')
         for doc in cited_docs:
@@ -418,30 +424,28 @@ class GraphService:
                     'hash_snippet': doc.file_hash[:16] if doc.file_hash else 'verified-sha256'
                 })
 
-        # 4. Synthesize explainable factual answer strictly from retrieved topology
+        # 5. Synthesize explainable factual answer strictly from retrieved topology and vectors
         conflicts = [e for e in retrieved_edges if e.get('is_conflict')]
-        parcel_nodes = [n for n in retrieved_nodes if n.get('type') == 'parcel']
-        person_nodes = [n for n in retrieved_nodes if n.get('type') == 'person']
-        deed_nodes = [n for n in retrieved_nodes if n.get('type') in ['deed', 'baya_deed']]
+        vector_context_summary = f" (ভেক্টর সাদৃশ্যে {len(vector_chunks)}টি অনুচ্ছেদ উদ্ধৃত)" if vector_chunks else ""
 
         if conflicts:
             synthesis_bn = (
-                f"গ্রাফ আরএজি কোয়েরি বিশ্লেষণে {len(conflicts)}টি সাংঘর্ষিক সম্পর্ক শনাক্ত হয়েছে। "
+                f"গ্রাফ আরএজি কোয়েরি বিশ্লেষণে {len(conflicts)}টি সাংঘর্ষিক সম্পর্ক শনাক্ত হয়েছে{vector_context_summary}। "
                 f"বিক্রেতা ও দাগের মধ্যে একাধিক অসামঞ্জস্যপূর্ণ হস্তান্তর পথ বিদ্যমান। "
                 f"উদ্ধৃত প্রমাণসমূহ: {', '.join([d.title for d in cited_docs[:3]])}।"
             )
             synthesis_en = (
-                f"GraphRAG retrieval identified {len(conflicts)} conflicting edge relationships in the ownership topology. "
+                f"GraphRAG retrieval identified {len(conflicts)} conflicting edge relationships in the ownership topology with {len(vector_chunks)} vector-retrieved clauses. "
                 f"Multiple incompatible transfer pathways detected for the parcel across documents: "
                 f"{', '.join([d.title for d in cited_docs[:3]])}."
             )
         else:
             synthesis_bn = (
-                f"গ্রাফ আরএজি ট্রাভার্সালে {len(retrieved_nodes)}টি নোড এবং {len(retrieved_edges)}টি সমর্থিত সম্পর্ক উদ্ধার করা হয়েছে। "
+                f"গ্রাফ আরএজি ট্রাভার্সালে {len(retrieved_nodes)}টি নোড এবং {len(retrieved_edges)}টি সমর্থিত সম্পর্ক উদ্ধার করা হয়েছে{vector_context_summary}। "
                 f"মালিকানা ধারাবাহিকতা নথিভুক্ত প্রমাণের সাথে সামঞ্জস্যপূর্ণ।"
             )
             synthesis_en = (
-                f"GraphRAG traversal retrieved {len(retrieved_nodes)} nodes and {len(retrieved_edges)} supported edges. "
+                f"GraphRAG traversal retrieved {len(retrieved_nodes)} nodes and {len(retrieved_edges)} supported edges with {len(vector_chunks)} vector-retrieved clauses. "
                 f"Title chain sequence reconciles with available documentary evidence."
             )
 
@@ -450,6 +454,7 @@ class GraphService:
             'case_id': self.case.case_number,
             'retrieved_nodes': retrieved_nodes,
             'retrieved_edges': retrieved_edges,
+            'vector_chunks': vector_chunks,
             'grounded_evidence': grounded_evidence,
             'graph_synthesis_bn': synthesis_bn,
             'graph_synthesis_en': synthesis_en,
@@ -458,7 +463,8 @@ class GraphService:
                 'total_nodes_in_case': len(nodes),
                 'retrieved_node_count': len(retrieved_nodes),
                 'retrieved_edge_count': len(retrieved_edges),
+                'retrieved_vector_chunks_count': len(vector_chunks),
                 'cited_documents_count': len(cited_docs)
             },
-            'provenance': 'NetworkX DiGraph Subgraph Traversal & Verified Case Evidence Grounding'
+            'provenance': 'NetworkX DiGraph Subgraph Traversal, Vector Semantic Chunks & Verified Case Evidence Grounding'
         }

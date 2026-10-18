@@ -3,10 +3,13 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
 from django.db.models import Count, Q
+from django.conf import settings
 from .models import Case, AnalysisRun
 from .serializers import CaseListSerializer, CaseDetailSerializer, AnomalyFindingSerializer
+from .permissions import IsCaseAuthorized
 from apps.documents.models import Document
 from apps.parcels.models import Parcel
+from apps.rules.models import AnomalyFinding
 from apps.audit.models import AuditEvent
 from services.rule_engine import RuleEngine
 from services.graph_service import GraphService
@@ -229,8 +232,8 @@ class CaseReportView(APIView):
         else:
             case = get_object_or_404(Case, case_number=pk_or_number)
 
-        anomalies = case.anomalies.all()
-        documents = case.documents.all()
+        anomalies = AnomalyFinding.objects.filter(case=case)
+        documents = Document.objects.filter(case=case)
 
         return Response({
             'report_id': f"REP-{case.case_number}",
@@ -264,13 +267,18 @@ class CaseReportView(APIView):
                     'user': a.user.email if a.user else 'System',
                     'timestamp': a.created_at,
                     'details': a.details
-                } for a in case.audit_events.all()[:10]
+                } for a in AuditEvent.objects.filter(case=case)[:10]
             ]
         })
 
 
 class SeedDemoView(APIView):
     def post(self, request):
+        if not getattr(settings, 'DEMO_MODE', True):
+            return Response(
+                {'error': 'উৎপাদন পরিবেশে ডেমো ডাটা রিসেট নিষ্ক্রিয় (Demo reset disabled in production mode)'},
+                status=status.HTTP_403_FORBIDDEN
+            )
         count = seed_demo_data()
         from django.contrib.auth.models import User
         from apps.accounts.models import DemoToken
