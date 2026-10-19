@@ -258,10 +258,10 @@ class DocumentScanPreviewView(APIView):
         mime_type = file_meta.get('mime_type', 'application/octet-stream')
         orig_name = file_meta.get('name', 'document')
 
-        # 1. Real OCR extraction
+        # 1. Real OCR extraction (for multi-page preview, process first 3 pages for instant interactive response)
         router = OCRRouter()
         is_pdf = mime_type == 'application/pdf' or orig_name.lower().endswith('.pdf')
-        pages = router.process(file_bytes, is_pdf=is_pdf)
+        pages = router.process(file_bytes, is_pdf=is_pdf, max_pages=3 if is_pdf else None)
 
         raw_text = "\n\n".join(p.get('text', '') for p in pages if p.get('text')).strip()
         confidence = round(sum(p.get('confidence', 0.8) for p in pages) / max(len(pages), 1), 3)

@@ -6,8 +6,10 @@ pixel-level preprocessing, and real Bengali + English OCR via Tesseract.
 
 import io
 import os
+import re
 import shutil
 import logging
+import unicodedata
 from typing import List, Dict, Any, Optional, Tuple
 from pathlib import Path
 from PIL import Image, ImageOps, ImageEnhance
@@ -339,17 +341,96 @@ class PDFPageRenderer:
 
         return rendered
 
+    @classmethod
+    def render_single_page(cls, file_bytes_or_path, page_idx: int, dpi: int = DEFAULT_DPI) -> Optional[Image.Image]:
+        """
+        Renders a single PDF page (0-indexed) at target DPI in ~60ms without re-rendering prior pages.
+        """
+        if not HAS_PYPDFIUM2:
+            return None
+
+        doc = None
+        should_close = False
+        try:
+            if HAS_PYPDFIUM2 and isinstance(file_bytes_or_path, pdfium.PdfDocument):
+                doc = file_bytes_or_path
+                should_close = False
+            elif isinstance(file_bytes_or_path, (bytes, bytearray)):
+                doc = pdfium.PdfDocument(io.BytesIO(file_bytes_or_path))
+                should_close = True
+            else:
+                doc = pdfium.PdfDocument(str(file_bytes_or_path))
+                should_close = True
+
+            if page_idx < 0 or page_idx >= len(doc):
+                return None
+
+            scale = dpi / 72.0
+            page = doc[page_idx]
+            bitmap = page.render(scale=scale)
+            pil_image = bitmap.to_pil()
+            try:
+                bitmap.close()
+            except Exception:
+                pass
+            try:
+                page.close()
+            except Exception:
+                pass
+            return pil_image
+        except Exception as e:
+            logger.warning(f"Error rendering single PDF page {page_idx}: {e}")
+            return None
+        finally:
+            if should_close and doc:
+                try:
+                    doc.close()
+                except Exception:
+                    pass
+
 
 class DigitalPDFExtractor:
     """
     Extracts text, word coordinates, and character metrics from digital PDFs via pdfplumber.
-    Identifies whether pages contain genuine embedded text streams.
+    Identifies whether pages contain genuine clean text streams, or corrupted legacy font encodings.
     """
     @staticmethod
-    def extract_page(page) -> Dict[str, Any]:
+    def is_corrupted_digital_stream(text: str) -> bool:
+        """
+        Detects if PDF embedded digital text suffers from broken font encodings,
+        inverted Bengali vowel signs (e.g. \u09BF before consonant),
+        decomposed rephs (\u09B0\u09CD after consonant), inverted ya-phala,
+        or collapsed word spacing.
+        """
+        if not text or len(text.strip()) < 10:
+            return False
+
+        # 1. Broken Bengali vowel signs (e.g. \u09BF or \u09C7 starting a token or preceding consonant)
+        if re.search(r'(?:^|[\s\(\[\{])[\u09BF\u09C7\u09C8\u09C1\u09C2\u09C3\u09CD][\u0995-\u09B9]', text):
+            return True
+
+        # 2. Inverted Reph: consonant + \u09B0\u09CD (e.g. স্মাটর্)
+        if re.search(r'[\u0995-\u09B9]\u09B0\u09CD(?:[\s\n\.,\)\],]|$)', text):
+            return True
+
+        # 3. Inverted ya-phala: \u09AF\u09CD (e.g. লয্ান্ড or বয্বহার)
+        if '\u09AF\u09CD' in text:
+            return True
+
+        # 4. Long unspaced tokens (e.g. LandTechSoftwareforSmartE-GovernanceinBangladesh)
+        tokens = text.split()
+        long_tokens = [w for w in tokens if len(w) > 28 and not w.startswith(('http', 'www', 'data:', 'file:'))]
+        if len(long_tokens) >= 2:
+            return True
+
+        return False
+
+    @classmethod
+    def extract_page(cls, page) -> Dict[str, Any]:
         raw_text = page.extract_text() or ''
         words = page.extract_words() or []
         char_count = len(raw_text.strip())
+        is_corrupt = cls.is_corrupted_digital_stream(raw_text)
 
         bboxes = []
         for w in words:
@@ -363,14 +444,21 @@ class DigitalPDFExtractor:
             })
 
         # Calculate calibrated digital confidence
-        if char_count > 100:
+        if is_corrupt:
+            confidence = 0.30  # Corrupted font encoding; must fallback to visual OCR
+            is_digital = False
+        elif char_count > 100:
             confidence = 0.95
+            is_digital = True
         elif char_count > 20:
             confidence = 0.85
+            is_digital = True
         elif char_count > 0:
             confidence = 0.65
+            is_digital = False
         else:
             confidence = 0.0  # Zero embedded text; requires scanned OCR
+            is_digital = False
 
         return {
             'text': raw_text.strip(),
@@ -378,7 +466,8 @@ class DigitalPDFExtractor:
             'confidence': confidence,
             'bounding_boxes': bboxes,
             'char_count': char_count,
-            'is_digital': char_count >= 20,
+            'is_digital': is_digital,
+            'is_corrupted': is_corrupt,
             'width': float(page.width),
             'height': float(page.height)
         }
@@ -389,21 +478,31 @@ class OCRRouter:
     Intelligent document router:
     1. Inspects file type (PDF vs Image).
     2. For PDFs: tries digital extraction via pdfplumber page by page.
-    3. If digital text layer is absent or empty (scanned PDF), renders page at 300 DPI via pypdfium2 and runs Tesseract OCR.
+    3. If digital text layer is absent or corrupted (legacy fonts with broken vowels/spacing), renders page at 300 DPI via pypdfium2 and runs Tesseract OCR.
     4. For Images (PNG, JPG): preprocesses pixels and runs real Tesseract OCR.
     5. Returns unified page-by-page extraction output with genuine confidence and provenance.
     """
     def __init__(self, ocr_provider: Optional[BaseOCRProvider] = None):
         self.ocr_provider = ocr_provider or TesseractOCRProvider()
 
-    def process(self, file_path_or_bytes, is_pdf: bool) -> List[Dict[str, Any]]:
+    def process(self, file_path_or_bytes, is_pdf: bool, max_pages: Optional[int] = None) -> List[Dict[str, Any]]:
         if is_pdf:
-            return self._process_pdf(file_path_or_bytes)
+            return self._process_pdf(file_path_or_bytes, max_pages=max_pages)
         else:
             return self._process_image(file_path_or_bytes)
 
-    def _process_pdf(self, target) -> List[Dict[str, Any]]:
+    def _process_pdf(self, target, max_pages: Optional[int] = None) -> List[Dict[str, Any]]:
         pages_data = []
+        pdfium_doc = None
+        if HAS_PYPDFIUM2:
+            try:
+                if isinstance(target, (bytes, bytearray)):
+                    pdfium_doc = pdfium.PdfDocument(io.BytesIO(target))
+                else:
+                    pdfium_doc = pdfium.PdfDocument(str(target))
+            except Exception:
+                pass
+
         try:
             if isinstance(target, (bytes, bytearray)):
                 f_stream = io.BytesIO(target)
@@ -412,11 +511,13 @@ class OCRRouter:
                 pdf = pdfplumber.open(str(target))
 
             with pdf:
-                for idx, page in enumerate(pdf.pages, start=1):
+                total_to_process = min(len(pdf.pages), max_pages) if max_pages else len(pdf.pages)
+                for idx in range(1, total_to_process + 1):
+                    page = pdf.pages[idx - 1]
                     digital_res = DigitalPDFExtractor.extract_page(page)
 
                     if digital_res['is_digital']:
-                        # Page has high-quality embedded text
+                        # Page has verified high-quality, uncorrupted embedded text
                         pages_data.append({
                             'page_number': idx,
                             'text': digital_res['text'],
@@ -429,21 +530,22 @@ class OCRRouter:
                             'engine': 'pdfplumber'
                         })
                     else:
-                        # Scanned image embedded inside PDF; render via pypdfium2 and run OCR
-                        rendered_pages = PDFPageRenderer.render_pdf(target, max_pages=idx, dpi=300)
-                        matching_render = next((img for p_no, img in rendered_pages if p_no == idx), None)
+                        # Scanned image embedded inside PDF OR corrupted digital font encoding;
+                        # Render page at 300 DPI and run genuine Tesseract OCR (ben+eng)
+                        render_source = pdfium_doc if pdfium_doc else target
+                        rendered_img = PDFPageRenderer.render_single_page(render_source, page_idx=idx - 1, dpi=300)
 
-                        if matching_render and self.ocr_provider.is_available():
-                            ocr_res = self.ocr_provider.extract_image(matching_render)
+                        if rendered_img and self.ocr_provider.is_available():
+                            ocr_res = self.ocr_provider.extract_image(rendered_img)
                             pages_data.append({
                                 'page_number': idx,
                                 'text': ocr_res['text'],
                                 'confidence': ocr_res['confidence'],
                                 'words_count': ocr_res['words_count'],
                                 'bounding_boxes': ocr_res['bounding_boxes'],
-                                'width': float(matching_render.width),
-                                'height': float(matching_render.height),
-                                'extraction_type': 'scanned_ocr_300dpi',
+                                'width': float(rendered_img.width),
+                                'height': float(rendered_img.height),
+                                'extraction_type': 'scanned_ocr_300dpi' if not digital_res.get('is_corrupted') else 'visual_ocr_repaired',
                                 'engine': ocr_res['engine'],
                                 'engine_version': ocr_res['engine_version']
                             })
@@ -474,6 +576,12 @@ class OCRRouter:
                 'extraction_type': 'error',
                 'engine': 'none'
             })
+        finally:
+            if pdfium_doc:
+                try:
+                    pdfium_doc.close()
+                except Exception:
+                    pass
 
         return pages_data
 
