@@ -258,10 +258,10 @@ class DocumentScanPreviewView(APIView):
         mime_type = file_meta.get('mime_type', 'application/octet-stream')
         orig_name = file_meta.get('name', 'document')
 
-        # 1. Real OCR extraction (for multi-page preview, process first 3 pages for instant interactive response)
+        # 1. Real OCR extraction (support up to 50 pages for complete document extraction)
         router = OCRRouter()
         is_pdf = mime_type == 'application/pdf' or orig_name.lower().endswith('.pdf')
-        pages = router.process(file_bytes, is_pdf=is_pdf, max_pages=3 if is_pdf else None)
+        pages = router.process(file_bytes, is_pdf=is_pdf, max_pages=50 if is_pdf else None)
 
         raw_text = "\n\n".join(p.get('text', '') for p in pages if p.get('text')).strip()
         confidence = round(sum(p.get('confidence', 0.8) for p in pages) / max(len(pages), 1), 3)
@@ -270,7 +270,9 @@ class DocumentScanPreviewView(APIView):
         for p in pages:
             bboxes.extend(p.get('bounding_boxes', []))
 
-        engine = router.ocr_provider.name if hasattr(router.ocr_provider, 'name') else 'tesseract'
+        # Provenance: pdfplumber for digital PDFs, tesseract for scanned documents/images
+        primary_engine = pages[0].get('engine') if pages and pages[0].get('engine') else 'tesseract'
+        engine = primary_engine
         engine_version = router.ocr_provider.version if hasattr(router.ocr_provider, 'version') else '5.5.0'
         language = router.ocr_provider.lang if hasattr(router.ocr_provider, 'lang') else 'script/Bengali+eng'
 

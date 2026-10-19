@@ -780,7 +780,14 @@ export default function NewAnalysisPage() {
                     </div>
                   ) : (
                     <span className="text-[11px] font-mono text-[var(--text-secondary)]">
-                      ইঞ্জিন: Tesseract OCR 5.5.0 (script/Bengali+eng)
+                      {(() => {
+                        const activeDoc = documents.find(d => d.id === (activePreviewDocId || documents[0]?.id));
+                        const prev = activeDoc ? scanPreviews[activeDoc.id] : null;
+                        if (!prev) return 'ইঞ্জিন: OCR Engine (ben+eng)';
+                        return prev.engine === 'pdfplumber'
+                          ? 'ইঞ্জিন: Digital Stream (pdfplumber / Unicode Normalizer)'
+                          : `ইঞ্জিন: Tesseract OCR ${prev.engine_version || '5.5.0'} (${prev.language || 'ben+eng'})`;
+                      })()}
                     </span>
                   )}
                 </div>

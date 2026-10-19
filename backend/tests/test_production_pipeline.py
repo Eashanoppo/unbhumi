@@ -25,7 +25,9 @@ from services.pipeline.ocr import (
     ImagePreprocessor,
     PDFPageRenderer,
     OCRRouter,
-    find_tesseract_binary
+    find_tesseract_binary,
+    is_visual_encoded_document,
+    repair_visual_bengali_document
 )
 from services.pipeline.layout import TableExtractionProvider, MapVisionProvider
 from services.pipeline.extraction import StructuredFieldExtractor, LandDocumentSchema
@@ -101,6 +103,27 @@ class ProductionPipelineTests(TestCase):
         self.assertEqual(p_no, 1)
         # 612 pts * (300/72) = 2550 px width
         self.assertAlmostEqual(pil_img.width, 2550, delta=10)
+
+    def test_visual_bengali_detection_and_repair(self):
+        # 1. Clean Unicode deed should NOT be flagged as visual
+        clean_deed = "দলিল নং ১২৩৪/২০২৪, বিক্রেতা: মো: রফিকুল ইসলাম, দাগ নং: ১২৩৪"
+        self.assertFalse(is_visual_encoded_document(clean_deed))
+
+        # 2. English document should NOT be flagged as visual
+        english_doc = "LandTech 2026 Innovation Hackathon Rule Book"
+        self.assertFalse(is_visual_encoded_document(english_doc))
+
+        # 3. Visual encoded document SHOULD be flagged
+        visual_str = "লয্ান্ডেটক ইেনােভশন হয্াকাথন এবং স্মাটর্ ই গভনয্র্ ােন্সর জনয্ লয্ান্ড েটক"
+        self.assertTrue(is_visual_encoded_document(visual_str))
+
+        # 4. Repair should correctly normalize to standard Unicode
+        repaired = repair_visual_bengali_document(visual_str)
+        self.assertIn("ল্যান্ডটেক", repaired)
+        self.assertIn("ইনোভেশন", repaired)
+        self.assertIn("হ্যাকাথন", repaired)
+        self.assertIn("স্মার্ট", repaired)
+        self.assertIn("গভর্ন্যান্সের", repaired)
 
     # -------------------------------------------------------------
     # 2. Table & Map Layout Providers
