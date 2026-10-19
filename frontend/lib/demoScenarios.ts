@@ -19,6 +19,8 @@ export interface DemoDocumentFixture {
   tamperingDetailsEn?: string;
   khatianType?: string;
   subRegistry?: string;
+  district?: string;
+  upazila?: string;
   mutationCaseNo?: string;
   dcrNo?: string;
   holdingNo?: string;

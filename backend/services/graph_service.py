@@ -169,16 +169,39 @@ class GraphService:
         if parcel:
             transactions = list(DeedTransaction.objects.filter(parcel=parcel).select_related('seller', 'buyer').order_by('deed_date'))
 
-        # Check for conflicts (multiple transfers of same parcel to different buyers)
-        buyers_seen = set()
-        has_double_sale = len(transactions) > 1
+        # Check for genuine conflicting transfers:
+        # A conflict exists if:
+        # - The same seller transfers to multiple different buyers and cumulative area exceeds parcel recorded area (or seller interest)
+        # - Or seller transfers after their interest was already conveyed
+        # In contrast, sequential resale (Tx1 buyer becomes Tx2 seller) is a valid ownership chain, NOT a conflict.
+        conflicted_tx_ids = set()
+        if len(transactions) > 1:
+            for i, tx1 in enumerate(transactions):
+                for tx2 in transactions[i+1:]:
+                    # Case A: Same seller transferring to two different buyers
+                    if tx1.seller_id == tx2.seller_id and tx1.buyer_id != tx2.buyer_id:
+                        if parcel and parcel.recorded_area_decimals > 0:
+                            if (tx1.transferred_area_decimals + tx2.transferred_area_decimals) > (parcel.recorded_area_decimals + 0.05):
+                                conflicted_tx_ids.add(tx1.id)
+                                conflicted_tx_ids.add(tx2.id)
+                        else:
+                            conflicted_tx_ids.add(tx1.id)
+                            conflicted_tx_ids.add(tx2.id)
+                    # Case B: Unrelated parallel transfers exceeding parcel capacity
+                    elif tx1.buyer_id != tx2.seller_id and tx2.buyer_id != tx1.seller_id:
+                        total_area = tx1.transferred_area_decimals + tx2.transferred_area_decimals
+                        if parcel and parcel.recorded_area_decimals > 0 and total_area > (parcel.recorded_area_decimals + 0.05):
+                            conflicted_tx_ids.add(tx1.id)
+                            conflicted_tx_ids.add(tx2.id)
+
+        has_double_sale = len(conflicted_tx_ids) > 0
 
         for tx in transactions:
             deed_id = f"deed_{tx.id}"
             deed_label = f"দলিল নং {tx.deed_number}"
             seller_id = f"person_{tx.seller.id}"
             buyer_id = f"person_{tx.buyer.id}"
-            tx_doc_id = get_doc_id(str(tx.deed_number)) or get_doc_id("দলিল") or get_doc_id("deed")
+            tx_doc_id = tx.source_document_id or get_doc_id(str(tx.deed_number)) or get_doc_id("দলিল") or get_doc_id("deed")
 
             # Seller Node
             if not any(n['id'] == seller_id for n in nodes):
@@ -250,8 +273,7 @@ class GraphService:
             })
 
             # Deed -> Buyer (TRANSFERRED_TO / BUYER_OF)
-            is_conflicted_tx = has_double_sale and (tx.buyer.id in buyers_seen or len(buyers_seen) > 0)
-            buyers_seen.add(tx.buyer.id)
+            is_conflicted_tx = tx.id in conflicted_tx_ids
 
             edges.append({
                 'id': f"e_{deed_id}_{buyer_id}",
@@ -365,6 +387,24 @@ class GraphService:
 
         query_clean = (query or '').strip().lower()
 
+        # Handle blank query explicitly without substring match explosion
+        if not query_clean:
+            return {
+                'case_id': self.case.case_number,
+                'query': '',
+                'nodes': [],
+                'edges': [],
+                'evidence': [],
+                'grounded_evidence': [],
+                'summary_bn': 'অনুগ্রহ করে অনুসন্ধানের জন্য নির্দিষ্ট কীওয়ার্ড, নাম, দাগ বা দলিল নম্বর প্রদান করুন।',
+                'summary_en': 'Please provide a specific keyword, party name, plot, or deed number to query the graph.',
+                'metrics': {
+                    'total_graph_nodes': len(nodes),
+                    'total_graph_edges': len(edges),
+                    'conflicts_count': sum(1 for e in edges if e.get('is_conflict'))
+                }
+            }
+
         # 1. Identify matched seed nodes in the graph
         matched_node_ids = set()
         for n in nodes:
@@ -403,7 +443,7 @@ class GraphService:
         reranker = HeuristicRerankerProvider()
         vector_chunks = reranker.rerank(query_clean, raw_chunks, top_k=3)
 
-        # 4. Extract documentary evidence citations
+        # 4. Extract documentary evidence citations with genuine provenance
         grounded_evidence = []
         cited_doc_ids = set()
         for n in retrieved_nodes:
@@ -414,16 +454,23 @@ class GraphService:
 
         cited_docs = Document.objects.filter(id__in=cited_doc_ids).prefetch_related('extracted_fields')
         for doc in cited_docs:
-            for field in doc.extracted_fields.all()[:4]:
+            doc_fields = doc.extracted_fields.all()
+            matched_fields = [f for f in doc_fields if query_clean in (f.effective_value or '').lower() or query_clean in (f.field_label_bn or '').lower() or query_clean in (f.field_key or '').lower()]
+            selected_fields = matched_fields if matched_fields else list(doc_fields[:3])
+
+            for field in selected_fields:
+                actual_page = getattr(field, 'page_number', None) or 1
+                conf_val = float(field.confidence) if field.confidence is not None else 0.0
+
                 grounded_evidence.append({
                     'doc_id': doc.id,
                     'doc_title': doc.title,
                     'doc_type': doc.get_document_type_display(),
-                    'page': 1,
+                    'page': actual_page,
                     'field_key': field.field_key,
                     'field_label_bn': field.field_label_bn or field.field_key,
                     'field_value': field.effective_value,
-                    'confidence': field.confidence or 0.95,
+                    'confidence': conf_val,
                     'hash_snippet': doc.file_hash[:16] if doc.file_hash else 'verified-sha256'
                 })
 
@@ -459,6 +506,7 @@ class GraphService:
             'retrieved_edges': retrieved_edges,
             'vector_chunks': vector_chunks,
             'grounded_evidence': grounded_evidence,
+            'evidence': grounded_evidence,
             'graph_synthesis_bn': synthesis_bn,
             'graph_synthesis_en': synthesis_en,
             'conflicts_count': len(conflicts),

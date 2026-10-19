@@ -205,13 +205,9 @@ class RuleEngine:
                 if has_conflict:
                     break
 
-            # Also check if case description explicitly indicates a double-sale dispute
-            if not has_conflict and ('দ্বৈত' in self.case.title or 'দ্বৈত' in self.case.description or 'double' in self.case.title.lower()):
-                has_conflict = True
-
-            if has_conflict:
-                buyer_name = conflicting_tx[0].buyer.name_bn or conflicting_tx[0].buyer.name if conflicting_tx else 'অন্য ক্রেতা'
-                deed_no = conflicting_tx[0].deed_number if conflicting_tx else 'রেজিস্ট্রিকৃত পূর্ববর্তী দলিল'
+            if has_conflict and conflicting_tx:
+                buyer_name = conflicting_tx[0].buyer.name_bn or conflicting_tx[0].buyer.name
+                deed_no = conflicting_tx[0].deed_number
                 findings.append(self._create_finding(
                     rule_code='P001',
                     title_bn=f'সম্ভাব্য দ্বৈত বিক্রি: একই দাগ পূর্বে {buyer_name}-এর নিকট হস্তান্তরিত',
@@ -220,7 +216,7 @@ class RuleEngine:
                     description_en=f'Parcel {parcel.mouza} Dag {parcel.dag_number} was previously sold under deed {deed_no} to {buyer_name}.',
                     conflicting_records=[
                         {'deed': deed_no, 'buyer': buyer_name, 'parcel': str(parcel)},
-                        {'current_case': self.case.case_number}
+                        {'conflicting_deed': conflicting_tx[1].deed_number, 'conflicting_buyer': conflicting_tx[1].buyer.name_bn or conflicting_tx[1].buyer.name}
                     ],
                     source_docs=deed_docs,
                     source_pages=[1],

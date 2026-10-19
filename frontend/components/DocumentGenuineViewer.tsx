@@ -287,17 +287,17 @@ export const DocumentGenuineViewer: React.FC<DocumentGenuineViewerProps> = ({
                 গণপ্রজাতন্ত্রী বাংলাদেশ সরকার — সাফ-কবলা জমি বিক্রয় দলিলপত্র
               </h2>
               <p className="text-[11px] font-sans text-gray-600 dark:text-gray-300">
-                সাব-রেজিস্ট্রি কার্যালয়: {doc.subRegistry || 'সাভার'}, জেলা: ঢাকা
+                সাব-রেজিস্ট্রি কার্যালয়: {doc.subRegistry || '—'}{doc.district ? `, জেলা: ${doc.district}` : ''}
               </p>
             </div>
 
             {/* Preamble */}
             <div className="text-xs leading-relaxed space-y-2 font-serif text-justify">
               <p>
-                লিখিতং <strong>{doc.parties.seller || 'মো: আব্দুর রহিম'}</strong> (জাতীয় পরিচয়পত্র নং: ১৯৭৫২৬৯২৪০১২৩), পিতা: মৃত করিম বক্স, সাং: {doc.mouza}, থানা: সাভার, জেলা: ঢাকা—পক্ষ বিক্রেতা/হস্তান্তরকারী।
+                লিখিতং <strong>{doc.parties.seller || '—'}</strong>, সাং: {doc.mouza || '—'}{doc.district ? `, জেলা: ${doc.district}` : ''}—পক্ষ বিক্রেতা/হস্তান্তরকারী।
               </p>
               <p>
-                কস্য সাফ-কবলা জমি বিক্রয় দলিলপত্র অত্র লিখিত পড়ার মর্ম এই যে, নিম্ন তপশিলভুক্ত জমি আমার নামীয় খতিয়ানভুক্ত স্বত্বাধীন বটে। অদ্য তারিখে সর্বসাকুল্যে পণ মূল্য গ্রহণ করিয়া ক্রেতা <strong>{doc.parties.buyer || 'মোছা: ফাতেমা বেগম'}</strong> বরাবরে জমি চিরতরে হস্তান্তর করিলাম।
+                কস্য সাফ-কবলা জমি বিক্রয় দলিলপত্র অত্র লিখিত পড়ার মর্ম এই যে, নিম্ন তপশিলভুক্ত জমি আমার নামীয় খতিয়ানভুক্ত স্বত্বাধীন বটে। অদ্য তারিখে সর্বসাকুল্যে পণ মূল্য গ্রহণ করিয়া ক্রেতা <strong>{doc.parties.buyer || '—'}</strong> বরাবরে জমি চিরতরে হস্তান্তর করিলাম।
               </p>
             </div>
 
@@ -365,11 +365,11 @@ export const DocumentGenuineViewer: React.FC<DocumentGenuineViewerProps> = ({
                 বাংলাদেশ ফরম নং ১০৭৭ — খতিয়ান ও স্বত্বলিপি (Record of Rights)
               </h2>
               <div className="flex flex-wrap items-center justify-center gap-3 text-xs text-gray-600 dark:text-gray-300 font-medium">
-                <span>জেলা: ঢাকা</span>
-                <span>থানা: সাভার</span>
-                <span>মৌজা: {doc.mouza}</span>
-                <span>জরিপ: <strong>{doc.khatianType || 'RS'}</strong></span>
-                <span>খতিয়ান নং: <strong>{formatNumber(doc.dagNumber)}</strong></span>
+                <span>জেলা: {doc.district || '—'}</span>
+                <span>উপজেলা: {doc.upazila || '—'}</span>
+                <span>মৌজা: {doc.mouza || '—'}</span>
+                <span>জরিপ: <strong>{doc.khatianType || '—'}</strong></span>
+                <span>খতিয়ান নং: <strong>{doc.dagNumber ? formatNumber(doc.dagNumber) : '—'}</strong></span>
               </div>
             </div>
 

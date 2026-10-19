@@ -64,6 +64,8 @@ class DashboardSummaryView(APIView):
 
 
 class CaseListView(APIView):
+    permission_classes = [IsCaseAuthorized]
+
     def get(self, request):
         queryset = Case.objects.all().select_related('parcel').order_by('-created_at')
 
@@ -92,19 +94,39 @@ class CaseListView(APIView):
 
     def post(self, request):
         data = request.data
-        title = data.get('title', 'নতুন জমি দলিল যাচাই')
+        title = (data.get('title') or '').strip() or 'নতুন জমি দলিল যাচাই'
         desc = data.get('description', '')
-        mouza = data.get('mouza', 'সাভার')
-        dag_number = data.get('dag_number', '১০০')
-        survey_type = data.get('survey_type', 'RS')
-        area = float(data.get('area', 20.0))
+        mouza = (data.get('mouza') or '').strip()
+        dag_number = (data.get('dag_number') or '').strip()
+        survey_type = (data.get('survey_type') or '').strip()
+        area_raw = data.get('area')
 
-        parcel, _ = Parcel.objects.get_or_create(
-            mouza=mouza,
-            dag_number=dag_number,
-            survey_type=survey_type,
-            defaults={'recorded_area_decimals': area}
-        )
+        area = 0.0
+        if area_raw is not None and str(area_raw).strip() != '':
+            try:
+                area = float(area_raw)
+            except (ValueError, TypeError):
+                area = 0.0
+
+        parcel = None
+        if mouza and dag_number:
+            from services.normalization_service import normalize_parcel_key
+            norm_key = normalize_parcel_key(
+                district=data.get('district', ''),
+                upazila=data.get('upazila', ''),
+                mouza=mouza,
+                survey_type=survey_type,
+                dag_number=dag_number
+            )
+            parcel, _ = Parcel.objects.get_or_create(
+                normalized_key=norm_key,
+                defaults={
+                    'mouza': mouza,
+                    'dag_number': dag_number,
+                    'survey_type': survey_type or 'unspecified',
+                    'recorded_area_decimals': area
+                }
+            )
 
         user = request.user if request.user.is_authenticated else None
 
@@ -127,11 +149,14 @@ class CaseListView(APIView):
 
 
 class CaseDetailView(APIView):
+    permission_classes = [IsCaseAuthorized]
+
     def get(self, request, pk_or_number):
         if pk_or_number.isdigit():
             case = get_object_or_404(Case, pk=pk_or_number)
         else:
             case = get_object_or_404(Case, case_number=pk_or_number)
+        self.check_object_permissions(request, case)
         serializer = CaseDetailSerializer(case)
         return Response(serializer.data)
 
@@ -140,6 +165,7 @@ class CaseDetailView(APIView):
             case = get_object_or_404(Case, pk=pk_or_number)
         else:
             case = get_object_or_404(Case, case_number=pk_or_number)
+        self.check_object_permissions(request, case)
         
         status_val = request.data.get('status')
         if status_val in dict(Case.STATUS_CHOICES):
@@ -158,11 +184,14 @@ class CaseDetailView(APIView):
 
 
 class CaseRunChecksView(APIView):
+    permission_classes = [IsCaseAuthorized]
+
     def post(self, request, pk_or_number):
         if pk_or_number.isdigit():
             case = get_object_or_404(Case, pk=pk_or_number)
         else:
             case = get_object_or_404(Case, case_number=pk_or_number)
+        self.check_object_permissions(request, case)
 
         engine = RuleEngine(case)
         findings = engine.evaluate_all()
@@ -186,11 +215,14 @@ class CaseRunChecksView(APIView):
 
 
 class CaseGraphView(APIView):
+    permission_classes = [IsCaseAuthorized]
+
     def get(self, request, pk_or_number):
         if pk_or_number.isdigit():
             case = get_object_or_404(Case, pk=pk_or_number)
         else:
             case = get_object_or_404(Case, case_number=pk_or_number)
+        self.check_object_permissions(request, case)
 
         service = GraphService(case)
         graph_data = service.build_and_persist_graph()
@@ -202,11 +234,14 @@ class CaseGraphQueryView(APIView):
     GraphRAG Endpoint: Executes graph traversal and documentary evidence synthesis
     over the case's NetworkX knowledge graph.
     """
+    permission_classes = [IsCaseAuthorized]
+
     def post(self, request, pk_or_number):
         if pk_or_number.isdigit():
             case = get_object_or_404(Case, pk=pk_or_number)
         else:
             case = get_object_or_404(Case, case_number=pk_or_number)
+        self.check_object_permissions(request, case)
 
         query = request.data.get('query', '')
         service = GraphService(case)
@@ -218,6 +253,7 @@ class CaseGraphQueryView(APIView):
             case = get_object_or_404(Case, pk=pk_or_number)
         else:
             case = get_object_or_404(Case, case_number=pk_or_number)
+        self.check_object_permissions(request, case)
 
         query = request.query_params.get('query', '')
         service = GraphService(case)
@@ -226,11 +262,14 @@ class CaseGraphQueryView(APIView):
 
 
 class CaseReportView(APIView):
+    permission_classes = [IsCaseAuthorized]
+
     def get(self, request, pk_or_number):
         if pk_or_number.isdigit():
             case = get_object_or_404(Case, pk=pk_or_number)
         else:
             case = get_object_or_404(Case, case_number=pk_or_number)
+        self.check_object_permissions(request, case)
 
         anomalies = AnomalyFinding.objects.filter(case=case)
         documents = Document.objects.filter(case=case)
@@ -245,12 +284,14 @@ class CaseReportView(APIView):
                 'title': case.title,
                 'mouza': case.parcel.mouza if case.parcel else '',
                 'dag_number': case.parcel.dag_number if case.parcel else '',
-                'survey_type': case.parcel.survey_type if case.parcel else 'RS',
-                'recorded_area': case.parcel.recorded_area_decimals if case.parcel else 0.0,
-                'risk_level': case.get_risk_level_display(),
+                'survey_type': case.parcel.survey_type if (case.parcel and case.parcel.survey_type) else '',
+                'recorded_area': case.parcel.recorded_area_decimals if (case.parcel and case.parcel.recorded_area_decimals is not None) else None,
+                'risk_level': case.risk_level,
+                'risk_level_label': case.get_risk_level_display(),
                 'risk_score': case.risk_score,
                 'risk_summary_bn': case.risk_summary_bn,
-                'status': case.get_status_display(),
+                'status': case.status,
+                'status_label': case.get_status_display(),
             },
             'documents': [
                 {
@@ -297,4 +338,65 @@ class SeedDemoView(APIView):
             'count': count,
             'token': token,
             'user': UserSerializer(reviewer).data if reviewer else None
+        })
+
+
+class CaseAIAdvisorView(APIView):
+    """
+    GraphRAG Land Law AI Advisor API.
+    Provides legal and investigative decision-support grounded in the case findings,
+    NetworkX ownership graph, and Bangladesh statutory land law knowledge base.
+    """
+    permission_classes = [IsCaseAuthorized]
+
+    def post(self, request, pk_or_number):
+        if pk_or_number.isdigit():
+            case = get_object_or_404(Case, pk=pk_or_number)
+        else:
+            case = get_object_or_404(Case, case_number=pk_or_number)
+        self.check_object_permissions(request, case)
+
+        user_message = request.data.get('message', 'আমার এই কেসে পরবর্তী করণীয় কী?')
+        history = request.data.get('history', [])
+        groq_api_key = request.data.get('groq_api_key', '')
+        model = request.data.get('model', 'llama-3.3-70b-versatile')
+
+        from services.land_knowledge_service import LandKnowledgeService
+        result = LandKnowledgeService.generate_advisory_response(
+            case=case,
+            user_message=user_message,
+            conversation_history=history,
+            groq_api_key=groq_api_key,
+            model=model
+        )
+
+        AuditEvent.objects.create(
+            case=case,
+            user=request.user if request.user.is_authenticated else None,
+            action='run_checks',
+            details={'advisor_query': user_message[:100], 'model': result.get('model')}
+        )
+
+        return Response(result)
+
+    def get(self, request, pk_or_number):
+        if pk_or_number.isdigit():
+            case = get_object_or_404(Case, pk=pk_or_number)
+        else:
+            case = get_object_or_404(Case, case_number=pk_or_number)
+        self.check_object_permissions(request, case)
+
+        from services.land_knowledge_service import LandKnowledgeService
+        context = LandKnowledgeService.build_case_rag_context(case, 'পরবর্তী করণীয়')
+        available_models = [
+            'llama-3.3-70b-versatile',
+            'llama-3.1-8b-instant',
+            'llama-guard-3-8b',
+            'mixtral-8x7b-32768',
+            'gemma2-9b-it'
+        ]
+        return Response({
+            'case_number': case.case_number,
+            'available_models': available_models,
+            'context_summary': context
         })

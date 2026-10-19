@@ -118,15 +118,17 @@ class NormalizationService:
         # Resolve or update Parcel
         dag_raw = field_dict.get('dag_number', '')
         mouza_raw = field_dict.get('mouza', '')
-        survey_type = field_dict.get('survey_type', 'RS').upper()
+        survey_type = field_dict.get('survey_type', '').upper()
         area_raw = field_dict.get('land_area', '')
         area_decimals = normalize_area_to_decimals(area_raw)
 
         if dag_raw and mouza_raw:
             norm_dag = bangla_to_arabic_digits(dag_raw).strip()
+            district = field_dict.get('district') or (parcel.district if parcel and parcel.district else '')
+            upazila = field_dict.get('upazila') or (parcel.upazila if parcel and parcel.upazila else '')
             norm_key = normalize_parcel_key(
-                district=getattr(parcel, 'district', 'ঢাকা') if parcel else 'ঢাকা',
-                upazila=getattr(parcel, 'upazila', 'সাভার') if parcel else 'সাভার',
+                district=district,
+                upazila=upazila,
                 mouza=mouza_raw,
                 survey_type=survey_type,
                 dag_number=norm_dag
@@ -136,8 +138,10 @@ class NormalizationService:
                 defaults={
                     'mouza': mouza_raw,
                     'dag_number': dag_raw,
-                    'survey_type': survey_type,
-                    'recorded_area_decimals': area_decimals if area_decimals > 0 else (parcel.recorded_area_decimals if parcel else 20.0)
+                    'survey_type': survey_type or 'unspecified',
+                    'district': district,
+                    'upazila': upazila,
+                    'recorded_area_decimals': area_decimals if area_decimals > 0 else (parcel.recorded_area_decimals if parcel else 0.0)
                 }
             )
             if case and not case.parcel:
@@ -152,6 +156,7 @@ class NormalizationService:
             deed_date_str = field_dict.get('deed_date', '')
             deed_date = parse_date_str(deed_date_str)
             baya_ref = field_dict.get('baya_deed_ref', field_dict.get('prior_deed_reference', ''))
+            sub_reg = field_dict.get('sub_registry_office', field_dict.get('sub_registry', ''))
 
             if seller_name and buyer_name and parcel:
                 seller, _ = PersonOrParty.objects.get_or_create(
@@ -162,16 +167,18 @@ class NormalizationService:
                     name=buyer_name,
                     defaults={'name_bn': buyer_name}
                 )
+                # Ensure idempotency while preventing cross-document or cross-parcel collision
                 DeedTransaction.objects.update_or_create(
                     deed_number=deed_no,
+                    parcel=parcel,
+                    source_document=document,
                     defaults={
                         'seller': seller,
                         'buyer': buyer,
-                        'parcel': parcel,
                         'deed_date': deed_date,
-                        'transferred_area_decimals': area_decimals if area_decimals > 0 else 10.0,
+                        'sub_registry_office': sub_reg or '',
+                        'transferred_area_decimals': area_decimals if area_decimals > 0 else 0.0,
                         'prior_deed_reference': baya_ref,
-                        'source_document': document
                     }
                 )
 
@@ -184,9 +191,9 @@ class NormalizationService:
                     parcel=parcel,
                     khatian_number=khatian_no,
                     defaults={
-                        'survey_type': survey_type,
+                        'survey_type': survey_type or 'unspecified',
                         'recorded_owner_name': owner_name,
-                        'recorded_area_decimals': area_decimals if area_decimals > 0 else parcel.recorded_area_decimals,
+                        'recorded_area_decimals': area_decimals if area_decimals > 0 else 0.0,
                         'source_document': document
                     }
                 )

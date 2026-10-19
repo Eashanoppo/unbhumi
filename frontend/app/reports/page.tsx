@@ -165,20 +165,24 @@ function ReportContent() {
             </div>
             <div>
               <span className="text-gray-500 block">{reportLang === 'bn' ? 'মৌজা ও এলাকা' : 'Mouza & Area'}</span>
-              <span className="font-semibold">{meta.mouza || 'সাভার'}</span>
+              <span className="font-semibold">{meta.mouza || (reportLang === 'bn' ? 'অনির্দিষ্ট' : 'Unspecified')}</span>
             </div>
             <div>
               <span className="text-gray-500 block">{reportLang === 'bn' ? 'দাগ ও জরিপ' : 'Plot (Dag) & Survey'}</span>
               <span className="font-semibold">
-                {reportLang === 'bn'
-                  ? `দাগ নং ${formatNumber(meta.dag_number, 'bn')} (${meta.survey_type})`
-                  : `Dag No. ${meta.dag_number} (${meta.survey_type})`}
+                {meta.dag_number
+                  ? (reportLang === 'bn'
+                      ? `দাগ নং ${formatNumber(meta.dag_number, 'bn')}${meta.survey_type ? ` (${meta.survey_type})` : ''}`
+                      : `Dag No. ${meta.dag_number}${meta.survey_type ? ` (${meta.survey_type})` : ''}`)
+                  : '—'}
               </span>
             </div>
             <div>
               <span className="text-gray-500 block">{reportLang === 'bn' ? 'রেকর্ডকৃত জমি' : 'Recorded Area'}</span>
               <span className="font-semibold">
-                {reportLang === 'bn' ? `${formatNumber(meta.recorded_area, 'bn')} শতাংশ` : `${meta.recorded_area} decimals`}
+                {meta.recorded_area !== undefined && meta.recorded_area !== null
+                  ? (reportLang === 'bn' ? `${formatNumber(meta.recorded_area, 'bn')} শতাংশ` : `${meta.recorded_area} decimals`)
+                  : (reportLang === 'bn' ? 'অনির্দিষ্ট' : 'Not recorded')}
               </span>
             </div>
           </div>
@@ -195,7 +199,9 @@ function ReportContent() {
                 {reportLang === 'bn' ? `ঝুঁকি স্তর: ${getRiskLabel(meta.risk_level, 'bn')}` : `Risk Evaluation: ${getRiskLabel(meta.risk_level, 'en')}`}
               </span>
               <span className="text-xs font-mono font-bold">
-                {reportLang === 'bn' ? `ঝুঁকি স্কোর: ${formatNumber(meta.risk_score || 85, 'bn')}/১০০` : `Risk Score: ${meta.risk_score || 85}/100`}
+                {typeof meta.risk_score === 'number'
+                  ? (reportLang === 'bn' ? `ঝুঁকি স্কোর: ${formatNumber(meta.risk_score, 'bn')}/১০০` : `Risk Score: ${meta.risk_score}/100`)
+                  : (reportLang === 'bn' ? 'ঝুঁকি স্কোর: অপ্রাপ্য' : 'Risk Score: N/A')}
               </span>
             </div>
             <p className="text-xs text-gray-700 leading-relaxed font-serif">
@@ -264,11 +270,23 @@ function ReportContent() {
                 </div>
               ))}
             </div>
+          ) : documents.length === 0 ? (
+            <p className="text-xs text-amber-700 font-semibold p-3 bg-amber-50 rounded border border-amber-200">
+              {reportLang === 'bn'
+                ? '⚠ কোনো নথি দাখিল করা হয়নি। তথ্য অপর্যাপ্ত হওয়ায় স্বত্ব যাচাই সম্ভব হয়নি।'
+                : '⚠ No documents submitted. Title consistency cannot be evaluated due to insufficient evidence.'}
+            </p>
+          ) : meta.status === 'pending' || meta.status === 'processing' ? (
+            <p className="text-xs text-blue-700 font-semibold p-3 bg-blue-50 rounded border border-blue-200">
+              {reportLang === 'bn'
+                ? 'ℹ বিশ্লেষণ প্রক্রিয়াধীন রয়েছে।'
+                : 'ℹ Analysis is currently in progress.'}
+            </p>
           ) : (
             <p className="text-xs text-emerald-700 font-semibold p-3 bg-emerald-50 rounded border border-emerald-200">
               {reportLang === 'bn'
-                ? '✓ দাখিলকৃত নথিপত্রে কোনো স্বত্ব বিরোধ বা গরমিল পাওয়া যায়নি।'
-                : '✓ Zero title conflicts or transaction inconsistencies detected in submitted documents.'}
+                ? '✓ দাখিলকৃত নথিপত্রের সহজলভ্য প্রমাণের ভিত্তিতে কোনো স্বত্ব বিরোধ বা গরমিল পাওয়া যায়নি (এটি কোনো আইনি নিশ্চয়তা নয়)।'
+                : '✓ No title conflicts or inconsistencies detected in the available submitted evidence (analytical decision-support only).'}
             </p>
           )}
         </div>

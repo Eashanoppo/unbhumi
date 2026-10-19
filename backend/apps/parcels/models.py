@@ -12,9 +12,9 @@ class Parcel(models.Model):
 
     mouza = models.CharField(max_length=128, db_index=True)
     jl_number = models.CharField(max_length=32, blank=True, default='')
-    upazila = models.CharField(max_length=128, default='সাভার')
-    district = models.CharField(max_length=128, default='ঢাকা')
-    survey_type = models.CharField(max_length=16, choices=SURVEY_TYPES, default='RS')
+    upazila = models.CharField(max_length=128, blank=True, default='')
+    district = models.CharField(max_length=128, blank=True, default='')
+    survey_type = models.CharField(max_length=16, choices=SURVEY_TYPES, blank=True, default='')
     dag_number = models.CharField(max_length=64, db_index=True)
     normalized_key = models.CharField(max_length=255, unique=True, db_index=True)
     recorded_area_decimals = models.FloatField(default=0.0)
@@ -42,7 +42,7 @@ class Parcel(models.Model):
 class KhatianRecord(models.Model):
     parcel = models.ForeignKey(Parcel, on_delete=models.CASCADE, related_name='khatians')
     khatian_number = models.CharField(max_length=64, db_index=True)
-    survey_type = models.CharField(max_length=16, default='RS')
+    survey_type = models.CharField(max_length=16, blank=True, default='')
     recorded_owner_name = models.CharField(max_length=255)
     recorded_area_decimals = models.FloatField(default=0.0)
     source_document = models.ForeignKey('documents.Document', on_delete=models.SET_NULL, null=True, blank=True)

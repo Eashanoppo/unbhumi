@@ -15,7 +15,7 @@ class PersonOrParty(models.Model):
 class DeedTransaction(models.Model):
     deed_number = models.CharField(max_length=64, db_index=True)
     deed_date = models.DateField(null=True, blank=True)
-    sub_registry_office = models.CharField(max_length=128, default='সাভার সাব-রেজিস্ট্রি অফিস')
+    sub_registry_office = models.CharField(max_length=128, blank=True, default='')
     seller = models.ForeignKey(PersonOrParty, on_delete=models.CASCADE, related_name='sold_transactions')
     buyer = models.ForeignKey(PersonOrParty, on_delete=models.CASCADE, related_name='bought_transactions')
     parcel = models.ForeignKey('parcels.Parcel', on_delete=models.CASCADE, related_name='transactions')

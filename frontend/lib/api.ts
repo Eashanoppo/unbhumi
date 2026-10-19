@@ -211,6 +211,17 @@ export interface GraphRAGResult {
   provenance: string;
 }
 
+export interface AIAdvisorResponse {
+  success: boolean;
+  reply: string;
+  model: string;
+  provider: string;
+  tokens_used?: number;
+  api_warning?: string;
+  grounded_context?: any;
+  suggested_actions?: string[];
+}
+
 export interface DashboardSummary {
   metrics: {
     total_cases: number;
@@ -471,6 +482,22 @@ export const api = {
 
   async getCaseReport(caseId: string) {
     return await fetchApi<Record<string, unknown>>(`/cases/${caseId}/report/`);
+  },
+
+  async askCaseAIAdvisor(caseId: string, payload: {
+    message: string;
+    history?: { role: string; content: string }[];
+    groq_api_key?: string;
+    model?: string;
+  }): Promise<AIAdvisorResponse> {
+    return await fetchApi<AIAdvisorResponse>(`/cases/${caseId}/ai-advisor/`, {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+  },
+
+  async getCaseAIContext(caseId: string): Promise<any> {
+    return await fetchApi<any>(`/cases/${caseId}/ai-advisor/`);
   },
 
   // Documents

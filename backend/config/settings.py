@@ -153,7 +153,19 @@ csrf_env = os.environ.get('CSRF_TRUSTED_ORIGINS')
 if csrf_env:
     CSRF_TRUSTED_ORIGINS += [c.strip() for c in csrf_env.split(',') if c.strip()]
 
-DEMO_MODE = os.environ.get('DEMO_MODE', 'True') == 'True'
+# In development (DEBUG=True), DEMO_MODE defaults to True.
+# In production (DEBUG=False), DEMO_MODE strictly defaults to False to prevent accidental exposure.
+DEMO_MODE = os.environ.get('DEMO_MODE', 'True' if DEBUG else 'False') == 'True'
+
+# Production startup security validation
+import sys
+IS_TESTING = 'test' in sys.argv
+if not DEBUG and not IS_TESTING:
+    if not os.environ.get('SECRET_KEY') or SECRET_KEY.startswith('django-insecure'):
+        from django.core.exceptions import ImproperlyConfigured
+        raise ImproperlyConfigured(
+            "CRITICAL SECURITY: In production (DEBUG=False), a secure SECRET_KEY environment variable is mandatory."
+        )
 
 # UNBhumi Production AI Pipeline Settings
 TESSDATA_DIR = BASE_DIR / 'tessdata'

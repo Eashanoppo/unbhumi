@@ -9,8 +9,9 @@ import { OwnershipGraphVisualizer } from '@/components/OwnershipGraphVisualizer'
 import { DocumentViewer } from '@/components/DocumentViewer';
 import {
   ShieldCheck, AlertTriangle, FileText, GitFork, Printer,
-  RefreshCw, CheckCircle2, Info, ArrowLeft, History, AlertCircle
+  RefreshCw, CheckCircle2, Info, ArrowLeft, History, AlertCircle, Sparkles
 } from 'lucide-react';
+import { CaseAIChatDrawer } from '@/components/CaseAIChatDrawer';
 
 interface CaseDetailPageProps {
   params: Promise<{ id: string }>;
@@ -31,6 +32,7 @@ export default function CaseDetailPage({ params }: CaseDetailPageProps) {
   const [selectedStatus, setSelectedStatus] = useState<string>('');
   const [savingStatus, setSavingStatus] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [aiChatOpen, setAiChatOpen] = useState(false);
 
   const loadCaseData = async () => {
     try {
@@ -115,7 +117,16 @@ export default function CaseDetailPage({ params }: CaseDetailPageProps) {
           <span>{t('back_to_cases')}</span>
         </Link>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={() => setAiChatOpen(true)}
+            aria-label={language === 'bn' ? 'এআই আইনি পরামর্শক' : 'AI Legal Advisor'}
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-2.5 min-h-[44px] rounded-xl text-xs font-bold bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-500 hover:to-teal-500 text-white transition-all shadow-md active:scale-95 cursor-pointer ring-1 ring-emerald-400/40 hover:shadow-emerald-500/20"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-emerald-200 animate-pulse" />
+            <span>{language === 'bn' ? 'এআই পরামর্শক (Chat)' : 'AI Advisor (Chat)'}</span>
+          </button>
+
           <button
             onClick={handleRunChecks}
             disabled={runningChecks}
@@ -164,18 +175,22 @@ export default function CaseDetailPage({ params }: CaseDetailPageProps) {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 text-xs">
           <div className="p-3 sm:p-3.5 rounded-xl bg-[var(--bg-surface-soft)]/60 border border-[var(--border-color)]">
             <span className="text-[var(--text-secondary)] text-[11px] block">{t('mouza_area_label')}</span>
-            <span className="font-bold text-sm text-[var(--text-primary)] truncate block mt-0.5">{caseItem.mouza || 'সাভার'}</span>
+            <span className="font-bold text-sm text-[var(--text-primary)] truncate block mt-0.5">{caseItem.mouza || '—'}</span>
           </div>
           <div className="p-3 sm:p-3.5 rounded-xl bg-[var(--bg-surface-soft)]/60 border border-[var(--border-color)]">
             <span className="text-[var(--text-secondary)] text-[11px] block">{t('dag_survey_label')}</span>
             <span className="font-bold text-sm text-[var(--text-primary)] truncate block mt-0.5 font-mono">
-              {t('dag_survey_val', { dag: formatNumber(caseItem.dag_number || '৪১২'), survey: caseItem.parcel?.survey_type || 'RS' })}
+              {caseItem.dag_number
+                ? t('dag_survey_val', { dag: formatNumber(caseItem.dag_number), survey: caseItem.parcel?.survey_type || '' })
+                : '—'}
             </span>
           </div>
           <div className="p-3 sm:p-3.5 rounded-xl bg-[var(--bg-surface-soft)]/60 border border-[var(--border-color)]">
             <span className="text-[var(--text-secondary)] text-[11px] block">{t('recorded_area_label')}</span>
             <span className="font-bold text-sm text-[var(--text-primary)] truncate block mt-0.5 font-mono">
-              {t('recorded_area_val', { area: formatNumber(caseItem.recorded_area || 25) })}
+              {caseItem.recorded_area !== undefined && caseItem.recorded_area !== null
+                ? t('recorded_area_val', { area: formatNumber(caseItem.recorded_area) })
+                : '—'}
             </span>
           </div>
           <div className="p-3 sm:p-3.5 rounded-xl bg-[var(--bg-surface-soft)]/60 border border-[var(--border-color)]">
@@ -451,6 +466,31 @@ export default function CaseDetailPage({ params }: CaseDetailPageProps) {
           </div>
         </div>
       )}
+
+      {/* Floating AI Legal Advisor Trigger Button */}
+      <button
+        onClick={() => setAiChatOpen(true)}
+        aria-label={language === 'bn' ? 'এআই আইনি পরামর্শকের সাথে চ্যাট করুন' : 'Chat with AI Legal Advisor'}
+        className="fixed bottom-6 right-6 z-40 flex items-center gap-2.5 px-4 py-3 rounded-full bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white font-bold text-xs shadow-xl shadow-emerald-950/40 hover:from-emerald-500 hover:to-teal-500 hover:scale-105 active:scale-95 transition-all border border-emerald-300/40 cursor-pointer group"
+      >
+        <div className="relative">
+          <Sparkles className="w-4 h-4 text-emerald-200 group-hover:rotate-12 transition-transform" />
+          <span className="absolute -top-1 -right-1 flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-300 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
+          </span>
+        </div>
+        <span className="tracking-wide">
+          {language === 'bn' ? 'এআই পরামর্শক (GraphRAG)' : 'AI Advisor (GraphRAG)'}
+        </span>
+      </button>
+
+      {/* AI Legal Advisor Drawer */}
+      <CaseAIChatDrawer
+        isOpen={aiChatOpen}
+        onClose={() => setAiChatOpen(false)}
+        caseItem={caseItem}
+      />
     </div>
   );
 }
