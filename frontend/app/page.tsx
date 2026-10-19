@@ -1,20 +1,144 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useLanguage } from '@/lib/i18n';
+import { api, ScanPreviewResult } from '@/lib/api';
 import { ImageArea } from '@/components/ImageArea';
 import { RiskBadge } from '@/components/RiskBadge';
 import {
   ShieldCheck, AlertTriangle, Activity, FileText, Check,
-  ChevronRight, Zap, Info, FileCheck, Layers, Search
+  ChevronRight, Zap, Info, FileCheck, Layers, Search,
+  UploadCloud, Scan, Copy, Loader2, Sparkles, Trash2,
+  ArrowRight, FileUp, AlertCircle, ChevronDown
 } from 'lucide-react';
 
 export default function LandingPage() {
-  const { language, t } = useLanguage();
+  const { language, t, formatNumber } = useLanguage();
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Document OCR State (Step 2 capabilities on Hero)
+  const ocrFileInputRef = useRef<HTMLInputElement>(null);
+  const [isOcrOpen, setIsOcrOpen] = useState(false);
+  const [ocrDocType, setOcrDocType] = useState('deed');
+  const [ocrFile, setOcrFile] = useState<File | null>(null);
+  const [ocrFileName, setOcrFileName] = useState('');
+  const [ocrFileSize, setOcrFileSize] = useState(0);
+  const [ocrFileHash, setOcrFileHash] = useState('');
+  const [isOcrScanning, setIsOcrScanning] = useState(false);
+  const [ocrResult, setOcrResult] = useState<ScanPreviewResult | null>(null);
+  const [ocrError, setOcrError] = useState('');
+  const [isOcrCopied, setIsOcrCopied] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
+
+  const processOcrFile = async (file: File) => {
+    setIsOcrOpen(true);
+    setOcrFile(file);
+    setOcrFileName(file.name);
+    setOcrFileSize(file.size);
+    setOcrError('');
+    setIsOcrScanning(true);
+    setOcrResult(null);
+
+    // Compute SHA-256 hash
+    try {
+      const buffer = await file.arrayBuffer();
+      const hashBuf = await crypto.subtle.digest('SHA-256', buffer);
+      const hashArray = Array.from(new Uint8Array(hashBuf));
+      const hashHex = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+      setOcrFileHash(hashHex);
+    } catch {
+      setOcrFileHash(Math.random().toString(16).substring(2, 10));
+    }
+
+    try {
+      const res = await api.scanDocumentPreview(file, ocrDocType);
+      setOcrResult(res);
+    } catch (err: any) {
+      console.error('OCR preview failed:', err);
+      setOcrError(
+        language === 'bn'
+          ? 'নথি পাঠোদ্ধারে সমস্যা হয়েছে। অনুগ্রহ করে পরিষ্কার স্ক্যান কপি আপলোড করুন।'
+          : 'Document OCR processing failed. Please upload a clear scan.'
+      );
+    } finally {
+      setIsOcrScanning(false);
+      if (ocrFileInputRef.current) ocrFileInputRef.current.value = '';
+    }
+  };
+
+  const handleOcrFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    const file = e.target.files[0];
+    await processOcrFile(file);
+  };
+
+  const handleOcrFileDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    if (!e.dataTransfer.files || e.dataTransfer.files.length === 0) return;
+    const file = e.dataTransfer.files[0];
+    await processOcrFile(file);
+  };
+
+  const handleTestSampleOcr = () => {
+    setIsOcrOpen(true);
+    setOcrFileName('সাফ_কবলা_দলিল_কাউন্দিয়া_১২৩৪.pdf');
+    setOcrFileSize(642500);
+    setOcrFileHash('d58c19a4e76a084c7811ef3b55a12093539fb5f8efbb4682024');
+    setOcrError('');
+    setIsOcrScanning(true);
+    setTimeout(() => {
+      setOcrResult({
+        success: true,
+        confidence: 0.94,
+        words_count: 84,
+        engine: 'Tesseract 5.5.0',
+        engine_version: '5.5.0',
+        language: 'ben+eng',
+        bounding_boxes: [],
+        extracted_fields: [],
+        suggested: {
+          mouza: 'কাউন্দিয়া',
+          dag_number: '৪১২',
+          area: '25.0',
+          survey_type: 'RS'
+        },
+        raw_ocr_text:
+          'গণপ্রজাতন্ত্রী বাংলাদেশ সরকার\n' +
+          'সাব-রেজিস্ট্রারের কার্যালয়, সাভার, ঢাকা\n' +
+          'মূল সাফ-কবলা দলিল নং: ১২৩৪/২০২৪\n' +
+          'মৌজা: কাউন্দিয়া, জেএল নং: ৪২\n' +
+          'খতিয়ান নং: আরএস ৫২০৪, সাবেক খতিয়ান: ২৩১০\n' +
+          'দাগ নং: আরএস ৪১২, সাবেক দাগ: ৩৫৮\n' +
+          'জমির শ্রেণি: নাল, হস্তান্তরিত জমির পরিমাণ: ২৫.০ শতক (২৫ শতাংশ)\n' +
+          'বিক্রেতা: মোঃ রফিকুল ইসলাম, পিতা: মরহুম আব্দুল কাদের\n' +
+          'ক্রেতা: এহসানুল হক, পিতা: শামসুল হক\n' +
+          'চৌহদ্দি: উত্তরে দাগ ৪১০, দক্ষিণে রাস্তা, পূর্বে দাগ ৪১৩, পশ্চিমে খাল।\n' +
+          'স্বত্ব ঘোষণা: বিক্রেতা নিরঙ্কুশ ও নির্ভেজাল স্বত্বাধিকারী হিসেবে এই জমি বিক্রয় করিলেন।'
+      });
+      setIsOcrScanning(false);
+    }, 600);
+  };
+
+  const handleCopyOcrText = () => {
+    if (ocrResult?.raw_ocr_text) {
+      navigator.clipboard.writeText(ocrResult.raw_ocr_text);
+      setIsOcrCopied(true);
+      setTimeout(() => setIsOcrCopied(false), 2000);
+    }
+  };
+
+  const handleResetOcr = () => {
+    setOcrFile(null);
+    setOcrFileName('');
+    setOcrFileSize(0);
+    setOcrFileHash('');
+    setOcrResult(null);
+    setOcrError('');
+  };
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -137,36 +261,372 @@ export default function LandingPage() {
               {t('hero_description')}
             </p>
 
-            {/* Search Type UI (Matching Image 1) */}
+            {/* Search & Document OCR Hero Form */}
             <div className="pt-2">
-              <form
-                onSubmit={handleSearchSubmit}
-                className="bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-2xl sm:rounded-3xl p-3.5 sm:p-4.5 shadow-[0_10px_30px_-5px_rgba(21,128,61,0.12),0_4px_12px_-2px_rgba(0,0,0,0.04)] space-y-3"
-              >
-                <div className="relative">
+              <div className="bg-[var(--bg-surface)] border border-[var(--border-color)] rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 shadow-[0_10px_30px_-5px_rgba(21,128,61,0.12),0_4px_12px_-2px_rgba(0,0,0,0.04)] space-y-3.5">
+                {/* 1. Upper Field: Unified Search Bar with Search Record Button */}
+                <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row items-stretch gap-2.5">
+                  <div className="relative flex-1">
+                    <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none" />
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder={
+                        language === 'bn'
+                          ? 'খতিয়ান নম্বর, দাগ নম্বর অথবা মৌজার নাম দিয়ে অনুসন্ধান করুন...'
+                          : 'Search by Khatian No, Plot No, or Mouza Name...'
+                      }
+                      className="w-full pl-10 pr-4 py-3 sm:py-3.5 text-xs sm:text-sm rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface-soft)] text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-accent)]/30 focus:border-[var(--brand-accent)] transition-all font-medium"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    className="flex items-center justify-center gap-2 py-3 sm:py-3.5 px-6 rounded-xl font-bold text-xs sm:text-sm bg-[#15803D] hover:bg-[#126E34] text-white shadow-[0_4px_14px_rgba(21,128,61,0.3)] hover:shadow-[0_6px_20px_rgba(21,128,61,0.4)] active:scale-[0.98] transition-all cursor-pointer shrink-0"
+                  >
+                    <Search className="w-4 h-4 stroke-[2.5]" />
+                    <span>{language === 'bn' ? 'রেকর্ড অনুসন্ধান করুন' : 'Search Records'}</span>
+                  </button>
+                </form>
+
+                {/* 2. Document OCR Feature — Dropdown / Collapsible Type */}
+                <div
+                  onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
+                  onDragLeave={() => setIsDragOver(false)}
+                  onDrop={handleOcrFileDrop}
+                  className={`rounded-2xl border transition-all shadow-xs ${
+                    isOcrOpen
+                      ? 'border-[var(--brand-accent)]/50 bg-[var(--bg-surface-soft)]/75 p-3.5 sm:p-4.5 space-y-3'
+                      : isDragOver
+                        ? 'border-[var(--brand-accent)] bg-[var(--brand-accent)]/10 p-2.5'
+                        : 'border-[var(--border-color)] bg-[var(--bg-surface-soft)]/50 hover:border-[var(--brand-accent)]/40 p-2.5'
+                  }`}
+                >
+                  {/* Dropdown Toggle Header Button */}
+                  <div className="flex items-center justify-between gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsOcrOpen(!isOcrOpen)}
+                      className="flex-1 flex items-center justify-between gap-2.5 text-left cursor-pointer group"
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-950/80 border border-emerald-300 dark:border-emerald-800 flex items-center justify-center text-[var(--brand-accent)] shrink-0 group-hover:scale-105 transition-transform">
+                          <Scan className="w-4 h-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-xs sm:text-sm font-bold text-[var(--text-primary)] group-hover:text-[var(--brand-accent)] transition-colors">
+                              {language === 'bn' ? 'নথি সরাসরি ওসিআর স্ক্যানার' : 'Direct Document OCR Scanner'}
+                            </span>
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[var(--brand-accent)]/15 text-[var(--brand-accent)] border border-[var(--brand-accent)]/30">
+                              {language === 'bn' ? 'বাংলা ও ইংরেজি' : 'BN & EN'}
+                            </span>
+                            {ocrResult && !isOcrOpen && (
+                              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 animate-pulse">
+                                {language === 'bn' ? '✓ টেক্সট প্রস্তুত' : '✓ Extracted'}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[11px] text-[var(--text-secondary)] truncate">
+                            {language === 'bn'
+                              ? 'দলিল বা খতিয়ান আপলোড করে সরাসরি পাঠযোগ্য টেক্সট ও তফসিল বের করুন'
+                              : 'Upload deed or khatian to extract raw text & schedule in seconds'}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 text-xs font-semibold text-[var(--brand-accent)] shrink-0 pl-1">
+                        <span className="text-[11px] font-medium text-[var(--text-secondary)] hidden sm:inline">
+                          {isOcrOpen
+                            ? (language === 'bn' ? 'সংকুচিত করুন' : 'Collapse')
+                            : (language === 'bn' ? 'ওসিআর ড্রপডাউন' : 'Open Dropdown')}
+                        </span>
+                        <div className="w-6 h-6 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-color)] flex items-center justify-center text-[var(--text-secondary)] group-hover:text-[var(--brand-accent)] group-hover:border-[var(--brand-accent)] transition-all">
+                          <ChevronDown
+                            className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                              isOcrOpen ? 'rotate-180 text-[var(--brand-accent)]' : ''
+                            }`}
+                          />
+                        </div>
+                      </div>
+                    </button>
+                  </div>
+
+                  {/* Hidden File Input */}
                   <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder={
-                      language === 'bn'
-                        ? 'খতিয়ান নম্বর, দাগ নম্বর অথবা মৌজার নাম দিয়ে অনুসন্ধান করুন...'
-                        : 'Search by Khatian No, Plot No, or Mouza Name...'
-                    }
-                    className="w-full px-4 py-3 sm:py-3.5 text-sm sm:text-base rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface-soft)] text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-accent)]/30 focus:border-[var(--brand-accent)] transition-all font-medium"
+                    type="file"
+                    ref={ocrFileInputRef}
+                    onChange={handleOcrFileSelect}
+                    accept=".pdf,.png,.jpg,.jpeg"
+                    className="hidden"
                   />
+
+                  {/* Dropdown Expanded Body */}
+                  {isOcrOpen && (
+                    <div className="pt-2 border-t border-[var(--border-color)] space-y-3">
+                      {/* Document Type Selector Bar */}
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[11px] text-[var(--text-secondary)] font-medium">
+                            {language === 'bn' ? 'নথির ধরন:' : 'Document Type:'}
+                          </span>
+                          <select
+                            value={ocrDocType}
+                            onChange={(e) => setOcrDocType(e.target.value)}
+                            className="px-2.5 py-1 text-xs rounded-lg border border-[var(--border-color)] bg-[var(--bg-surface)] text-[var(--text-primary)] font-medium focus:ring-2 focus:ring-[var(--brand-accent)]/20 focus:outline-none cursor-pointer"
+                          >
+                            <option value="deed">{language === 'bn' ? 'মূল সাফ-কবলা দলিল' : 'Title Deed'}</option>
+                            <option value="baya_deed">{language === 'bn' ? 'বায়া দলিল' : 'Baya Deed'}</option>
+                            <option value="khatian">{language === 'bn' ? 'খতিয়ান (RS/CS)' : 'Khatian'}</option>
+                            <option value="mutation">{language === 'bn' ? 'নামজারি খতিয়ান' : 'Mutation'}</option>
+                            <option value="tax_receipt">{language === 'bn' ? 'ভূমি কর দাখিলা' : 'Tax Receipt'}</option>
+                          </select>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => setIsOcrOpen(false)}
+                          className="text-[11px] font-semibold text-[var(--text-secondary)] hover:text-[var(--brand-accent)] hover:underline cursor-pointer"
+                        >
+                          {language === 'bn' ? 'ড্রপডাউন বন্ধ করুন ✕' : 'Close Dropdown ✕'}
+                        </button>
+                      </div>
+
+                      {/* Empty/Ready Dropzone */}
+                      {!ocrResult && !isOcrScanning && (
+                        <div
+                          onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
+                          onDragLeave={() => setIsDragOver(false)}
+                          onDrop={handleOcrFileDrop}
+                          className={`p-4 sm:p-5 border-2 border-dashed rounded-xl transition-all text-center flex flex-col items-center justify-center gap-2 ${
+                            isDragOver
+                              ? 'border-[var(--brand-accent)] bg-[var(--brand-accent)]/10 scale-[1.01]'
+                              : 'border-[var(--border-color)] bg-[var(--bg-surface)] hover:border-[var(--brand-accent)]/60'
+                          }`}
+                        >
+                          <div className="w-9 h-9 rounded-xl bg-[var(--bg-surface-soft)] border border-[var(--border-color)] flex items-center justify-center text-[var(--brand-accent)]">
+                            <UploadCloud className="w-5 h-5" />
+                          </div>
+                          <div className="space-y-0.5">
+                            <p className="text-xs sm:text-sm font-bold text-[var(--text-primary)]">
+                              {language === 'bn'
+                                ? 'দলিল বা রেকর্ডের ফাইল এখানে ড্রপ করুন'
+                                : 'Drop deed or land document scan here'}
+                            </p>
+                            <p className="text-[11px] text-[var(--text-secondary)]">
+                              {language === 'bn'
+                                ? 'সমর্থিত ফরম্যাট: PDF, JPG, PNG (সর্বোচ্চ ২৫ এমবি)'
+                                : 'Supports PDF, JPG, PNG (up to 25MB)'}
+                            </p>
+                          </div>
+
+                          <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
+                            <button
+                              type="button"
+                              onClick={() => ocrFileInputRef.current?.click()}
+                              className="px-4 py-2 rounded-xl text-xs font-bold bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-white shadow-xs transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
+                            >
+                              <FileUp className="w-3.5 h-3.5" />
+                              <span>{language === 'bn' ? 'ফাইল নির্বাচন ও ওসিআর' : 'Select Document & Run OCR'}</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={handleTestSampleOcr}
+                              className="px-3 py-2 rounded-xl text-xs font-semibold border border-[var(--border-color)] bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-soft)] text-[var(--text-primary)] transition-colors flex items-center gap-1.5 cursor-pointer"
+                            >
+                              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                              <span>{language === 'bn' ? 'নমুনা দলিল দিয়ে টেস্ট করুন' : 'Try Sample Deed'}</span>
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Scanning Active State */}
+                      {isOcrScanning && (
+                        <div className="py-7 px-4 rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)] flex flex-col items-center justify-center space-y-2.5 text-center">
+                          <div className="relative">
+                            <div className="w-9 h-9 rounded-full border-2 border-[var(--brand-accent)] border-t-transparent animate-spin" />
+                            <Scan className="w-4 h-4 text-[var(--brand-accent)] absolute inset-0 m-auto animate-pulse" />
+                          </div>
+                          <div className="space-y-0.5">
+                            <p className="text-xs sm:text-sm font-bold text-[var(--text-primary)]">
+                              {language === 'bn' ? 'ট্যাসেরাক্ট ওসিআর পাঠোদ্ধার চলছে...' : 'Running Tesseract 5.5 OCR Extraction...'}
+                            </p>
+                            <p className="text-[11px] text-[var(--text-secondary)]">
+                              {ocrFileName ? `${ocrFileName} • ` : ''}
+                              {language === 'bn'
+                                ? 'বাংলা লিপি, ইংরেজি সংখ্যা ও তফসিল শনাক্তকরণ প্রক্রিয়াধীন'
+                                : 'Processing Bengali script, plot numbers & schedule'}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* OCR Error Display */}
+                      {ocrError && !isOcrScanning && (
+                        <div className="p-3 rounded-xl bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 text-xs font-medium border border-red-200 dark:border-red-900 flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2">
+                            <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
+                            <span>{ocrError}</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setOcrError('')}
+                            className="text-[11px] font-bold underline cursor-pointer"
+                          >
+                            {language === 'bn' ? 'মুছে ফেলুন' : 'Dismiss'}
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Completed OCR Result Display */}
+                      {ocrResult && !isOcrScanning && (
+                        <div className="space-y-3 pt-0.5">
+                          {/* Metrics & Hash Bar */}
+                          <div className="p-2.5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-color)] flex flex-wrap items-center justify-between gap-2 text-xs">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-bold text-[var(--text-primary)] truncate max-w-[180px]">
+                                {ocrFileName || 'দলিল_নথি'}
+                              </span>
+                              <span className="px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-mono text-[10px] font-bold">
+                                কনফিডেন্স: {Math.round(ocrResult.confidence * 100)}%
+                              </span>
+                              <span className="font-mono text-[11px] text-[var(--text-secondary)]">
+                                শব্দ: {formatNumber(ocrResult.words_count)}
+                              </span>
+                              <span className="font-mono text-[10px] text-[var(--text-muted)] hidden sm:inline">
+                                ইঞ্জিন: {ocrResult.engine || 'Tesseract 5.5'}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={handleCopyOcrText}
+                                className="px-2.5 py-1 rounded-lg bg-[var(--bg-surface-soft)] hover:bg-[var(--bg-surface)] border border-[var(--border-color)] text-xs font-bold text-[var(--brand-accent)] hover:underline flex items-center gap-1 cursor-pointer transition-colors"
+                              >
+                                {isOcrCopied ? (
+                                  <>
+                                    <Check className="w-3.5 h-3.5 text-emerald-600" />
+                                    <span>{language === 'bn' ? 'কপি হয়েছে!' : 'Copied!'}</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Copy className="w-3.5 h-3.5" />
+                                    <span>{language === 'bn' ? 'টেক্সট কপি' : 'Copy Text'}</span>
+                                  </>
+                                )}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={handleResetOcr}
+                                className="p-1 rounded-lg text-[var(--text-secondary)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors cursor-pointer"
+                                title={language === 'bn' ? 'রিসেট' : 'Reset'}
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Suggested Schedule Notification */}
+                          {ocrResult.suggested && (ocrResult.suggested.dag_number || ocrResult.suggested.mouza) && (
+                            <div className="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900 text-xs text-blue-950 dark:text-blue-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-xs">
+                              <div className="flex items-center gap-2">
+                                <Sparkles className="w-4 h-4 text-blue-700 dark:text-blue-400 shrink-0" />
+                                <span className="font-medium">
+                                  {language === 'bn' ? 'শনাক্তকৃত তফসিল:' : 'Extracted Schedule:'}{' '}
+                                  {ocrResult.suggested.mouza && (
+                                    <strong className="font-bold text-blue-950 dark:text-blue-50">
+                                      মৌজা: {ocrResult.suggested.mouza},{' '}
+                                    </strong>
+                                  )}
+                                  {ocrResult.suggested.dag_number && (
+                                    <strong className="font-bold text-blue-950 dark:text-blue-50">
+                                      দাগ নং: {ocrResult.suggested.dag_number}{' '}
+                                    </strong>
+                                  )}
+                                  {ocrResult.suggested.area && (
+                                    <span className="text-blue-900 dark:text-blue-200">
+                                      ({ocrResult.suggested.area} শতক)
+                                    </span>
+                                  )}
+                                </span>
+                              </div>
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const params = new URLSearchParams();
+                                  if (ocrResult?.suggested?.mouza) params.set('mouza', ocrResult.suggested.mouza);
+                                  if (ocrResult?.suggested?.dag_number) params.set('dag', String(ocrResult.suggested.dag_number));
+                                  if (ocrResult?.suggested?.area) params.set('area', String(ocrResult.suggested.area));
+                                  router.push(`/documents/new?${params.toString()}`);
+                                }}
+                                className="px-2.5 py-1 rounded-lg bg-blue-700 hover:bg-blue-800 text-white font-bold text-[11px] transition-colors shrink-0 cursor-pointer text-center"
+                              >
+                                {language === 'bn' ? 'এই তফসিলে কেস শুরু' : 'Apply to Case'}
+                              </button>
+                            </div>
+                          )}
+
+                          {/* Raw OCR Text Box - Compact scrollable */}
+                          <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)] p-3 space-y-1.5 shadow-xs">
+                            <div className="flex items-center justify-between text-[11px] font-bold text-[var(--text-primary)]">
+                              <span>{language === 'bn' ? 'সরাসরি পাঠোদ্ধারকৃত লেখা (Raw OCR Text Stream):' : 'Raw OCR Extracted Text Stream:'}</span>
+                              <span className="font-mono text-[10px] text-emerald-800 dark:text-emerald-400 bg-emerald-100/80 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded">
+                                Tesseract 5.5
+                              </span>
+                            </div>
+                            <div className="max-h-36 overflow-y-auto p-3 rounded-lg bg-[var(--bg-surface-soft)] font-sans text-xs text-stone-900 dark:text-stone-100 font-medium leading-relaxed whitespace-pre-wrap select-text border border-[var(--border-color)]">
+                              {ocrResult.raw_ocr_text || (
+                                <span className="text-[var(--text-secondary)] italic">
+                                  {language === 'bn' ? 'কোনো পাঠযোগ্য লেখা পাওয়া যায়নি।' : 'No readable text extracted.'}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Bottom Direct CTA */}
+                          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 pt-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const params = new URLSearchParams();
+                                  if (ocrResult?.suggested?.mouza) params.set('mouza', ocrResult.suggested.mouza);
+                                  if (ocrResult?.suggested?.dag_number) params.set('dag', String(ocrResult.suggested.dag_number));
+                                  if (ocrResult?.suggested?.area) params.set('area', String(ocrResult.suggested.area));
+                                  router.push(`/documents/new?${params.toString()}`);
+                                }}
+                                className="px-4 py-2 rounded-xl text-xs font-bold bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-white shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                              >
+                                <span>{language === 'bn' ? '🚀 পূর্ণাঙ্গ কেস যাচাইয়ে ব্যবহার করুন' : 'Verify in Full Case Pipeline'}</span>
+                                <ArrowRight className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => ocrFileInputRef.current?.click()}
+                                className="px-3 py-1.5 rounded-xl text-xs font-semibold border border-[var(--border-color)] hover:bg-[var(--bg-surface-soft)] text-[var(--text-secondary)] transition-colors text-center cursor-pointer"
+                              >
+                                {language === 'bn' ? '🔄 অন্য নথি স্ক্যান' : 'Scan Another'}
+                              </button>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setIsOcrOpen(false)}
+                              className="px-3 py-1.5 rounded-xl text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-soft)] transition-colors text-center cursor-pointer"
+                            >
+                              {language === 'bn' ? 'সংকুচিত করুন' : 'Collapse'}
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
-                <button
-                  type="submit"
-                  className="w-full flex items-center justify-center gap-2.5 py-3.5 px-6 rounded-xl font-bold text-sm sm:text-base bg-[#15803D] hover:bg-[#126E34] text-white shadow-[0_4px_14px_rgba(21,128,61,0.35)] hover:shadow-[0_6px_20px_rgba(21,128,61,0.45)] active:scale-[0.99] transition-all cursor-pointer"
-                >
-                  <Search className="w-5 h-5 stroke-[2.5]" />
-                  <span>{language === 'bn' ? 'রেকর্ড অনুসন্ধান করুন' : 'Search Records'}</span>
-                </button>
-
-                {/* Sub-actions & Quick Pills preserving full workflow functionality */}
-                <div className="flex flex-wrap items-center justify-between gap-2 pt-1 px-1 text-xs">
+                {/* 3. Sub-actions & Quick Pills preserving full workflow functionality */}
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-0.5 px-1 text-xs">
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <span className="text-[var(--text-muted)] font-medium">
                       {language === 'bn' ? 'উদাহরণ:' : 'Quick tags:'}
@@ -204,7 +664,7 @@ export default function LandingPage() {
                     </Link>
                   </div>
                 </div>
-              </form>
+              </div>
             </div>
 
             {/* Responsive Trust Points */}

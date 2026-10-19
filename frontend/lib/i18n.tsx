@@ -15,7 +15,7 @@ export const DICTIONARY: Translations = {
   // Common & Branding
   brand_title: { bn: 'আনভূমি', en: 'UNBhumi' },
   brand_subtitle: { bn: 'আনভূমি ডিটেক্টর', en: 'UNBhumi Detector' },
-  brand_badge: { bn: 'বাংলাদেশ ভূমি সেবা ও দ্বৈত বিক্রি শনাক্তকরণ প্ল্যাটফর্ম (P3 / P2)', en: 'Bangladesh Multimodal Land-Fraud & Double-Selling Detection (P3 / P2)' },
+  brand_badge: { bn: 'বাংলাদেশ ভূমি সেবা ও দ্বৈত বিক্রি শনাক্তকরণ প্ল্যাটফর্ম', en: 'Bangladesh Multimodal Land-Fraud & Double-Selling Detection' },
   hero_headline: { bn: 'একটি দাগ। একাধিক দলিল। একটি প্রমাণ পথ।', en: 'One plot. Multiple deeds. One evidence trail.' },
   hero_title: { bn: 'একটি দাগ। একাধিক দলিল। একটি প্রমাণ পথ।', en: 'One plot. Multiple deeds. One evidence trail.' },
   hero_supporting: {
@@ -322,11 +322,11 @@ export const DICTIONARY: Translations = {
   doctype_tax_receipt: { bn: 'ভূমি উন্নয়ন কর দাখিলা (Dakhila)', en: 'Land Tax Receipt (Dakhila)' },
 
   // Additional Landing Page Keys
-  hero_badge: { bn: 'বাংলাদেশ ভূমি সেবা ও দ্বৈত বিক্রি শনাক্তকরণ প্ল্যাটফর্ম (P3 / P2)', en: 'Bangladesh Multimodal Land-Fraud & Double-Selling Detection (P3 / P2)' },
+  hero_badge: { bn: 'বাংলাদেশ ভূমি সেবা ও দ্বৈত বিক্রি শনাক্তকরণ প্ল্যাটফর্ম', en: 'Bangladesh Multimodal Land-Fraud & Double-Selling Detection' },
   trust_p1_label: { bn: 'প্রাথমিক ট্র্যাক', en: 'Primary Focus' },
-  trust_p1_val: { bn: 'P3 দ্বৈত বিক্রি রোধ', en: 'P3 Double-Selling Prevention' },
+  trust_p1_val: { bn: 'দ্বৈত বিক্রি রোধ', en: 'Double-Selling Prevention' },
   trust_p2_label: { bn: 'সহায়ক যাচাই', en: 'Supporting Verification' },
-  trust_p2_val: { bn: 'P2 দলিল ও বায়া চেইন', en: 'P2 Deed & Baya Chain' },
+  trust_p2_val: { bn: 'ওসিআর, দলিল ও বায়া চেইন', en: 'OCR and Deed & Baya Chain' },
   trust_p3_label: { bn: 'আইনি নিশ্চয়তা', en: 'Legal Integrity' },
   trust_p3_val: { bn: 'পর্যালোচক সিদ্ধান্ত', en: 'Reviewer Adjudication' },
   hero_img_alt: { bn: 'বাংলাদেশের গ্রামীণ কৃষি জমি ও ক্যাডাস্ট্রাল মৌজা জরিপ', en: 'Cadastral mouza survey in Bangladesh' },

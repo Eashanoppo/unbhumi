@@ -4,11 +4,12 @@ Verifies GraphRAG context compilation, statute retrieval, deterministic fallback
 Groq model API integration, and security controls.
 """
 
+from typing import Any
 from unittest.mock import patch, MagicMock
 import json
-from django.test import TestCase, override_settings
+from django.test import override_settings
 from django.contrib.auth.models import User
-from rest_framework.test import APIClient
+from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
 
 from apps.cases.models import Case
@@ -19,9 +20,11 @@ from apps.accounts.models import UserProfile
 from services.land_knowledge_service import LandKnowledgeService, BANGLADESH_LAND_STATUTES
 
 
-class AIAdvisorTests(TestCase):
+class AIAdvisorTests(APITestCase):
+    api_client: Any
+
     def setUp(self):
-        self.client = APIClient()
+        self.api_client = APIClient()
 
         # Parcel & Case
         self.parcel = Parcel.objects.create(
@@ -112,25 +115,29 @@ class AIAdvisorTests(TestCase):
 
     def test_case_ai_advisor_endpoint_get_context(self):
         """Verify GET returns GraphRAG context and available Groq models."""
-        self.client.force_authenticate(user=self.user_owner)
+        self.api_client.force_authenticate(user=self.user_owner)
         url = f'/api/v1/cases/{self.case.case_number}/ai-advisor/'
-        response = self.client.get(url, HTTP_ACCEPT='application/json')
+        response = self.api_client.get(url, HTTP_ACCEPT='application/json')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['case_number'], self.case.case_number)
         self.assertIn('context_summary', response.data)
         self.assertIn('available_models', response.data)
         self.assertIn('llama-3.3-70b-versatile', response.data['available_models'])
+        self.assertIn('openai/gpt-oss-120b', response.data['available_models'])
+        self.assertIn('openai/gpt-oss-20b', response.data['available_models'])
+        self.assertIn('meta-llama/llama-prompt-guard-2-22m', response.data['available_models'])
+        self.assertIn('meta-llama/llama-prompt-guard-2-86m', response.data['available_models'])
 
     def test_case_ai_advisor_endpoint_post_deterministic_fallback(self):
         """Verify POST without Groq key returns rich deterministic legal advisory."""
-        self.client.force_authenticate(user=self.user_owner)
+        self.api_client.force_authenticate(user=self.user_owner)
         url = f'/api/v1/cases/{self.case.case_number}/ai-advisor/'
         payload = {
             'message': 'এই ডাবল সেলিং কেসে আমার কি করা উচিত?',
             'history': []
         }
-        response = self.client.post(url, data=payload, format='json', HTTP_ACCEPT='application/json')
+        response = self.api_client.post(url, data=payload, format='json', HTTP_ACCEPT='application/json')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('reply', response.data)
@@ -154,14 +161,14 @@ class AIAdvisorTests(TestCase):
         mock_response.__enter__.return_value = mock_response
         mock_urlopen.return_value = mock_response
 
-        self.client.force_authenticate(user=self.user_owner)
+        self.api_client.force_authenticate(user=self.user_owner)
         url = f'/api/v1/cases/{self.case.case_number}/ai-advisor/'
         payload = {
             'message': 'আমাকে কী আইনি পদক্ষেপ নিতে হবে?',
             'groq_api_key': 'gsk_mock_valid_key_for_testing',
             'model': 'llama-3.3-70b-versatile'
         }
-        response = self.client.post(url, data=payload, format='json', HTTP_ACCEPT='application/json')
+        response = self.api_client.post(url, data=payload, format='json', HTTP_ACCEPT='application/json')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('সহকারী কমিশনার', response.data['reply'])
@@ -171,7 +178,7 @@ class AIAdvisorTests(TestCase):
     @override_settings(DEMO_MODE=False)
     def test_case_ai_advisor_unauthorized_access(self):
         """Verify unauthorized user cannot access another user's case AI advisor."""
-        self.client.force_authenticate(user=self.user_intruder)
+        self.api_client.force_authenticate(user=self.user_intruder)
         url = f'/api/v1/cases/{self.case.case_number}/ai-advisor/'
-        response = self.client.get(url, HTTP_ACCEPT='application/json')
+        response = self.api_client.get(url, HTTP_ACCEPT='application/json')
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)

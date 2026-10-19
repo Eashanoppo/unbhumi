@@ -45,6 +45,10 @@ interface CaseAIChatDrawerProps {
 const GROQ_FREE_MODELS = [
   { id: 'llama-3.3-70b-versatile', name: 'Llama 3.3 70B Versatile (প্রস্তাবিত • সেরা বিশ্লেষণ)' },
   { id: 'llama-3.1-8b-instant', name: 'Llama 3.1 8B Instant (অতি দ্রুত • ফ্রি)' },
+  { id: 'openai/gpt-oss-120b', name: 'OpenAI GPT-OSS 120B (উচ্চ ক্ষমতাসম্পন্ন রিজনিং • ওপেন ওয়েটস)' },
+  { id: 'openai/gpt-oss-20b', name: 'OpenAI GPT-OSS 20B (দ্রুত ও কার্যকর রিজনিং • ওপেন ওয়েটস)' },
+  { id: 'meta-llama/llama-prompt-guard-2-22m', name: 'Meta Llama Prompt Guard 2 22M (নিরাপত্তা ও গার্ডরেইল)' },
+  { id: 'meta-llama/llama-prompt-guard-2-86m', name: 'Meta Llama Prompt Guard 2 86M (উন্নত অডিট ও প্রম্পট গার্ড)' },
   { id: 'mixtral-8x7b-32768', name: 'Mixtral 8x7B (৩২কে কনটেক্সট • ফ্রি)' },
   { id: 'gemma2-9b-it', name: 'Gemma 2 9B IT (গুগল মডেল • ফ্রি)' },
 ];
