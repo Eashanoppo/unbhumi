@@ -16,7 +16,7 @@ export { DEMO_SCENARIOS };
 export type { DemoScenario, DemoDocumentFixture };
 import {
   Sparkles, ShieldCheck, FileText, CheckCircle2, AlertTriangle, AlertOctagon,
-  ArrowRight, RotateCcw, Play, Download, Printer, Eye, Layers, Lock,
+  ArrowRight, ArrowLeft, RotateCcw, Play, Download, Printer, Eye, Layers, Lock,
   UploadCloud, Trash2, Plus, Search, Maximize2, X, GitFork, Cpu,
   Clock, Check, ChevronRight, Hash, Database, BookOpen, AlertCircle,
   Folder, FolderOpen, Grid, List as ListIcon, ChevronLeft, ArrowUp,
@@ -116,6 +116,19 @@ export default function InteractiveDemoPage() {
     [selectedCaseId]
   );
 
+  // Workflow Step Progression (1: Case & Parcel Details, 2: Document Workspace, 3: Pre-Verification Review, 4: 6-Stage Pipeline, 5: Results & Report)
+  type DemoWorkflowStep = 1 | 2 | 3 | 4 | 5;
+  const [currentStep, setCurrentStep] = useState<DemoWorkflowStep>(1);
+
+  // Editable & Displayed Case & Parcel Details (Step 1 Setup)
+  const [demoTitle, setDemoTitle] = useState(activeScenario.titleBn);
+  const [demoMouza, setDemoMouza] = useState(activeScenario.mouza);
+  const [demoDagNumber, setDemoDagNumber] = useState(activeScenario.dagNumber);
+  const [demoSurveyType, setDemoSurveyType] = useState('RS');
+  const [demoArea, setDemoArea] = useState(String(activeScenario.area));
+  const [demoNotes, setDemoNotes] = useState(activeScenario.descBn);
+  const [stepError, setStepError] = useState<string | null>(null);
+
   // File Manager & Workspace State
   const [fileManagerDocs, setFileManagerDocs] = useState<DemoDocumentFixture[]>([]);
   const [selectedDocIds, setSelectedDocIds] = useState<string[]>([]);
@@ -191,11 +204,25 @@ export default function InteractiveDemoPage() {
     setCurrentFolder('root');
     setFileFilter('');
     setPipelineFinished(false);
+    setIsPipelineRunning(false);
     setActiveInspectorStageId(1);
     setExpandedStageIds([1]);
     setActiveSubOpId(null);
     setExecutionEvents([]);
+    setLiveCase(null);
+    setLiveFindings([]);
+    setLiveGraph(null);
+    setLiveReport(null);
     initStages(scenario.documents.length);
+
+    setDemoTitle(language === 'bn' ? scenario.titleBn : scenario.titleEn);
+    setDemoMouza(scenario.mouza);
+    setDemoDagNumber(scenario.dagNumber);
+    setDemoSurveyType('RS');
+    setDemoArea(String(scenario.area));
+    setDemoNotes(language === 'bn' ? scenario.descBn : scenario.descEn);
+    setStepError(null);
+    setCurrentStep(1);
 
     try {
       // Fetch current backend case data
@@ -210,6 +237,57 @@ export default function InteractiveDemoPage() {
       setLiveReport(rep);
     } catch (e) {
       console.warn('Backend fetch for case failed, using fallback scenario state:', e);
+    }
+  };
+
+  // Step Navigation Handlers
+  const handleNextFromStep1 = () => {
+    if (!demoTitle.trim()) {
+      setStepError(language === 'bn' ? 'কেসের শিরোনাম প্রদান আবশ্যক।' : 'Case title is required.');
+      return;
+    }
+    if (!demoMouza.trim()) {
+      setStepError(language === 'bn' ? 'মৌজার নাম প্রদান আবশ্যক।' : 'Mouza name is required.');
+      return;
+    }
+    if (!demoDagNumber.trim()) {
+      setStepError(language === 'bn' ? 'দাগ নম্বর প্রদান আবশ্যক।' : 'Dag number is required.');
+      return;
+    }
+    setStepError(null);
+    setCurrentStep(2);
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 150, behavior: 'smooth' });
+    }
+  };
+
+  const handleNextFromStep2 = () => {
+    if (workspaceDocs.length === 0) {
+      handleAddAllToWorkspace();
+    }
+    setStepError(null);
+    setCurrentStep(3);
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 150, behavior: 'smooth' });
+    }
+  };
+
+  const handleStartPipelineFromReview = async () => {
+    if (isPipelineRunning) return;
+    setStepError(null);
+    setCurrentStep(4);
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 150, behavior: 'smooth' });
+    }
+    await handleRunPipeline();
+  };
+
+  const handleGoToStep = (step: DemoWorkflowStep) => {
+    if (isPipelineRunning) return;
+    setStepError(null);
+    setCurrentStep(step);
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 150, behavior: 'smooth' });
     }
   };
 
@@ -1013,8 +1091,9 @@ export default function InteractiveDemoPage() {
     ];
   };
 
-  // --- RUN INTERACTIVE 6-STAGE PIPELINE  // --- RUN INTERACTIVE 6-STAGE PIPELINE WITH OBSERVABLE SUB-OPERATIONS ---
+  // --- RUN INTERACTIVE 6-STAGE PIPELINE WITH OBSERVABLE SUB-OPERATIONS ---
   const handleRunPipeline = async () => {
+    if (isPipelineRunning) return;
     if (workspaceDocs.length === 0) {
       handleAddAllToWorkspace();
     }
@@ -2038,6 +2117,73 @@ export default function InteractiveDemoPage() {
         </div>
       </div>
 
+      {/* WORKFLOW STEP PROGRESSION BAR */}
+      <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-surface)] p-3 sm:p-4 shadow-xs">
+        <div className="flex items-center justify-between gap-1 sm:gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+          {[
+            { num: 1 as const, labelBn: '১. কেস ও দাগ বিবরণ', labelEn: '1. Case & Parcel', icon: FileText },
+            { num: 2 as const, labelBn: '২. নথি সংকলন ও ওয়ার্কস্পেস', labelEn: '2. Documents', icon: Layers },
+            { num: 3 as const, labelBn: '৩. যাচাই-পূর্ব পর্যালোচনা', labelEn: '3. Pre-Review', icon: CheckSquare },
+            { num: 4 as const, labelBn: '৪. ৬-ধাপ পাইপলাইন', labelEn: '4. 6-Stage Pipeline', icon: Activity },
+            { num: 5 as const, labelBn: '৫. ফলাফল ও রিপোর্ট', labelEn: '5. Findings & Report', icon: ShieldCheck },
+          ].map((st, idx, arr) => {
+            const isCurrent = currentStep === st.num;
+            const isCompleted =
+              currentStep > st.num ||
+              (st.num === 4 && pipelineFinished) ||
+              (st.num === 5 && pipelineFinished);
+            const canClick =
+              !isPipelineRunning &&
+              (st.num <= 3 ||
+                (st.num === 4 && (pipelineFinished || isPipelineRunning)) ||
+                (st.num === 5 && pipelineFinished));
+            const Icon = st.icon;
+
+            return (
+              <React.Fragment key={st.num}>
+                <button
+                  type="button"
+                  onClick={() => canClick && handleGoToStep(st.num)}
+                  disabled={!canClick}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer disabled:cursor-not-allowed ${
+                    isCurrent
+                      ? 'bg-[var(--brand-accent)] text-[var(--cta-text)] shadow-xs ring-2 ring-[var(--brand-accent)]/20'
+                      : isCompleted
+                      ? 'bg-[var(--bg-surface-soft)] text-emerald-600 dark:text-emerald-400 hover:bg-[var(--bg-surface-soft)]/80'
+                      : canClick
+                      ? 'bg-[var(--bg-surface-soft)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                      : 'opacity-40 text-[var(--text-secondary)]'
+                  }`}
+                >
+                  <div
+                    className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                      isCurrent
+                        ? 'bg-white/20 text-white'
+                        : isCompleted
+                        ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400'
+                        : 'bg-[var(--border-color)] text-[var(--text-secondary)]'
+                    }`}
+                  >
+                    {isCompleted && !isCurrent ? <Check className="w-3 h-3 stroke-[3]" /> : st.num}
+                  </div>
+                  <span className="whitespace-nowrap">
+                    {language === 'bn' ? st.labelBn : st.labelEn}
+                  </span>
+                </button>
+                {idx < arr.length - 1 && (
+                  <ChevronRight className="w-3.5 h-3.5 text-[var(--border-color)] shrink-0 hidden sm:block" />
+                )}
+              </React.Fragment>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ======================================================== */}
+      {/* STEP 1: SCENARIO SELECTION & CASE/PARCEL DETAILS         */}
+      {/* ======================================================== */}
+      {currentStep === 1 && (
+        <div className="space-y-6 animate-in fade-in-50 duration-200">
       {/* 2. SCENARIO SELECTOR (4 DISTINCT SYNTHETIC CASES) */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
@@ -2118,6 +2264,161 @@ export default function InteractiveDemoPage() {
         </div>
       </div>
 
+          {/* STEP 1 FORM: CASE & PARCEL SPECIFICATION CARD */}
+          <div className="p-6 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-surface)] shadow-xs space-y-6">
+            <div className="border-b border-[var(--border-color)] pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[var(--bg-surface-soft)] text-[var(--brand-accent)] border border-[var(--border-color)] mb-1">
+                  <FileText className="w-3 h-3" />
+                  <span>{language === 'bn' ? 'ধাপ ১: কেস ও দাগ বিবরণ' : 'Step 1: Case & Parcel Details'}</span>
+                </div>
+                <h3 className="text-base sm:text-lg font-bold text-[var(--text-primary)]">
+                  {language === 'bn' ? 'অনুসন্ধান কেস ও ভূমির তফসিল সেটআপ' : 'Investigation Case & Land Schedule Setup'}
+                </h3>
+                <p className="text-xs text-[var(--text-secondary)]">
+                  {language === 'bn'
+                    ? 'নির্বাচিত সিন্থেটিক দৃশ্যকল্প থেকে কেস ও ভূমির দাগ সংক্রান্ত তথ্য স্বয়ংক্রিয়ভাবে প্রস্তুত করা হয়েছে।'
+                    : 'Case metadata and parcel details pre-populated from the selected synthetic scenario.'}
+                </p>
+              </div>
+
+              <div className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-[var(--bg-surface-soft)] text-[var(--text-secondary)] border border-[var(--border-color)] shrink-0">
+                <Database className="w-3.5 h-3.5 text-[var(--brand-accent)]" />
+                <span className="font-mono">{activeScenario.id}</span>
+                <span>•</span>
+                <span>{activeScenario.caseBadge}</span>
+              </div>
+            </div>
+
+            {/* Error Message if any */}
+            {stepError && (
+              <div className="p-3.5 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-600 dark:text-rose-400 text-xs flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{stepError}</span>
+              </div>
+            )}
+
+            {/* Form Fields Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="sm:col-span-2 lg:col-span-3 space-y-1.5">
+                <label className="text-xs font-bold text-[var(--text-primary)]">
+                  {language === 'bn' ? 'কেসের শিরোনাম (Case Title) *' : 'Case Title *'}
+                </label>
+                <input
+                  type="text"
+                  value={demoTitle}
+                  onChange={(e) => setDemoTitle(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface-soft)] text-[var(--text-primary)] text-xs focus:outline-none focus:border-[var(--brand-accent)] font-medium"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-[var(--text-primary)]">
+                  {language === 'bn' ? 'মৌজা (Mouza) *' : 'Mouza *'}
+                </label>
+                <input
+                  type="text"
+                  value={demoMouza}
+                  onChange={(e) => setDemoMouza(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface-soft)] text-[var(--text-primary)] text-xs focus:outline-none focus:border-[var(--brand-accent)] font-medium"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-[var(--text-primary)]">
+                  {language === 'bn' ? 'দাগ নম্বর (Dag Number) *' : 'Dag Number *'}
+                </label>
+                <input
+                  type="text"
+                  value={demoDagNumber}
+                  onChange={(e) => setDemoDagNumber(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface-soft)] text-[var(--text-primary)] text-xs focus:outline-none focus:border-[var(--brand-accent)] font-medium font-mono"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-[var(--text-primary)]">
+                  {language === 'bn' ? 'জরিপের ধরন (Survey Type)' : 'Survey Type'}
+                </label>
+                <select
+                  value={demoSurveyType}
+                  onChange={(e) => setDemoSurveyType(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface-soft)] text-[var(--text-primary)] text-xs focus:outline-none focus:border-[var(--brand-accent)] font-medium"
+                >
+                  <option value="RS">RS (রিভিশনাল সার্ভে - রেকর্ড)</option>
+                  <option value="BS">BS (বাংলাদেশ সার্ভে)</option>
+                  <option value="SA">SA (স্টেট একুইজিশন সার্ভে)</option>
+                  <option value="CS">CS (ক্যাডাস্ট্রাল সার্ভে)</option>
+                  <option value="City">City Survey (সিটি জরিপ)</option>
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-[var(--text-primary)]">
+                  {language === 'bn' ? 'রেকর্ডকৃত জমির পরিমাণ (শতক) *' : 'Recorded Area (Decimals) *'}
+                </label>
+                <input
+                  type="text"
+                  value={demoArea}
+                  onChange={(e) => setDemoArea(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface-soft)] text-[var(--text-primary)] text-xs focus:outline-none focus:border-[var(--brand-accent)] font-medium font-mono"
+                />
+              </div>
+
+              <div className="sm:col-span-2 space-y-1.5">
+                <label className="text-xs font-bold text-[var(--text-primary)]">
+                  {language === 'bn' ? 'অনুসন্ধানের উদ্দেশ্য ও সংক্ষিপ্ত বিবরণ (Investigation Notes)' : 'Investigation Notes'}
+                </label>
+                <textarea
+                  rows={2}
+                  value={demoNotes}
+                  onChange={(e) => setDemoNotes(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface-soft)] text-[var(--text-primary)] text-xs focus:outline-none focus:border-[var(--brand-accent)] font-medium resize-none"
+                />
+              </div>
+            </div>
+
+            {/* Step 1 Actions Bar */}
+            <div className="pt-4 border-t border-[var(--border-color)] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <span className="text-xs text-[var(--text-secondary)]">
+                {language === 'bn'
+                  ? `দৃশ্যকল্পের ${fileManagerDocs.length}টি দলিল ও খতিয়ান ফিক্সচার পরবর্তী ধাপে নির্বাচিত হবে`
+                  : `${fileManagerDocs.length} document fixtures ready in the workspace manager`}
+              </span>
+
+              <button
+                type="button"
+                onClick={handleNextFromStep1}
+                className="flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl text-xs font-bold bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-[var(--cta-text)] transition-all shadow-xs active:scale-95 cursor-pointer"
+              >
+                <span>{language === 'bn' ? 'পরবর্তী: নথি সংকলন ও ওয়ার্কস্পেস' : 'Next: Document Workspace'}</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* STEP 2: DOCUMENT SELECTION & WORKSPACE                   */}
+      {/* ======================================================== */}
+      {currentStep === 2 && (
+        <div className="space-y-6 animate-in fade-in-50 duration-200">
+          {/* Active Case Context Pill */}
+          <div className="p-3.5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-surface)] flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs shadow-xs">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-mono font-bold text-[var(--brand-accent)]">{activeScenario.id}</span>
+              <span className="text-[var(--text-secondary)]">•</span>
+              <span className="font-semibold text-[var(--text-primary)]">{demoTitle}</span>
+              <span className="text-[var(--text-secondary)]">•</span>
+              <span className="text-[var(--text-secondary)]">মৌজা {demoMouza}, দাগ {demoDagNumber} ({demoSurveyType})</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-[var(--bg-surface-soft)] text-[var(--text-secondary)] border border-[var(--border-color)]">
+                {language === 'bn' ? `ওয়ার্কস্পেস: ${workspaceDocs.length}টি নথি` : `Workspace: ${workspaceDocs.length} files`}
+              </span>
+            </div>
+          </div>
       {/* 3. WORKSPACE      {/* 3. WORKSPACE & BUILT-IN FILE MANAGER GRID */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* LEFT COLUMN: AUTHENTIC BUILT-IN DEMO FILE MANAGER (6 COLS) */}
@@ -2746,24 +3047,270 @@ export default function InteractiveDemoPage() {
             )}
           </div>
 
-          {/* Run Pipeline CTA */}
+          {/* Review & Run Pipeline CTA */}
           <div className="pt-2 border-t border-[var(--border-color)] flex items-center justify-between">
             <span className="text-xs text-[var(--text-secondary)]">
-              {language === 'bn' ? '৬-ধাপ বিশিষ্ট সমন্বিত মূল্যায়ন' : '6-Stage Integrated Execution'}
+              {language === 'bn' ? 'নথি নির্বাচন সম্পন্ন হলে পর্যালোচনায় যান' : 'Review Manifest Before Pipeline Execution'}
             </span>
 
             <button
-              onClick={handleRunPipeline}
+              type="button"
+              onClick={handleNextFromStep2}
               disabled={isPipelineRunning}
               className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-[var(--cta-text)] transition-all shadow-sm active:scale-95 disabled:opacity-50 cursor-pointer"
             >
-              <Play className={`w-3.5 h-3.5 fill-current ${isPipelineRunning ? 'animate-pulse' : ''}`} />
-              <span>{isPipelineRunning ? t('demo_pipeline_running') : t('demo_run_pipeline')}</span>
+              <span>{language === 'bn' ? 'যাচাই-পূর্ব পর্যালোচনা (Review Setup)' : 'Review Manifest'}</span>
+              <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
       </div>
+          {/* Step 2 Actions Bar */}
+          <div className="p-4 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-surface)] flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+            <button
+              type="button"
+              onClick={() => handleGoToStep(1)}
+              className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-semibold border border-[var(--border-color)] bg-[var(--bg-surface-soft)] text-[var(--text-primary)] hover:border-[var(--brand-accent)] transition-all cursor-pointer"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>{language === 'bn' ? 'পূর্ববর্তী: কেস বিবরণ' : 'Back: Case Setup'}</span>
+            </button>
 
+            <button
+              type="button"
+              onClick={handleNextFromStep2}
+              className="flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl text-xs font-bold bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-[var(--cta-text)] transition-all shadow-xs active:scale-95 cursor-pointer"
+            >
+              <span>{language === 'bn' ? 'পরবর্তী: যাচাই-পূর্ব পর্যালোচনা' : 'Next: Review Before Verification'}</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* STEP 3: REVIEW BEFORE VERIFICATION                       */}
+      {/* ======================================================== */}
+      {currentStep === 3 && (
+        <div className="space-y-6 animate-in fade-in-50 duration-200">
+          {/* Review Header Banner */}
+          <div className="p-6 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-surface)] shadow-xs space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[var(--border-color)] pb-4">
+              <div>
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[var(--bg-surface-soft)] text-[var(--brand-accent)] border border-[var(--border-color)] mb-1">
+                  <CheckSquare className="w-3 h-3" />
+                  <span>{language === 'bn' ? 'ধাপ ৩: যাচাই-পূর্ব পর্যালোচনা' : 'Step 3: Review Before Verification'}</span>
+                </div>
+                <h3 className="text-base sm:text-lg font-bold text-[var(--text-primary)]">
+                  {language === 'bn' ? 'দাখিলকৃত নথিপত্র ও কেসের সারসংক্ষেপ' : 'Case & Documents Verification Manifest'}
+                </h3>
+                <p className="text-xs text-[var(--text-secondary)]">
+                  {language === 'bn'
+                    ? '৬-ধাপ বিশিষ্ট বিশ্লেষণ পাইপলাইন শুরু করার পূর্বে কেস ও নথিপত্রের মেটাডাটা পর্যালোচনা করুন।'
+                    : 'Review selected case metadata and documents manifest before initiating the 6-stage pipeline.'}
+                </p>
+              </div>
+
+              <span className="text-xs font-bold px-3 py-1.5 rounded-xl border border-[var(--brand-accent)]/30 bg-[var(--brand-accent)]/10 text-[var(--brand-accent)] shrink-0 self-start sm:self-auto font-mono">
+                {activeScenario.caseBadge}
+              </span>
+            </div>
+
+            {/* Truthful Transparency & Provenance Notice (Required by Master Prompt) */}
+            <div className="p-3.5 rounded-xl border border-amber-500/30 bg-amber-500/5 dark:bg-amber-950/20 text-xs space-y-1.5">
+              <div className="flex items-center gap-2 font-bold text-amber-700 dark:text-amber-400">
+                <Info className="w-4 h-4 shrink-0" />
+                <span>{language === 'bn' ? 'সিন্থেটিক ডেমো ডেটা ও প্রাক-গণনাকৃত ফিক্সচার সংক্রান্ত স্বচ্ছতা বিজ্ঞপ্তি:' : 'Synthetic Demo Data & Fixture Provenance Notice:'}</span>
+              </div>
+              <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed">
+                {language === 'bn'
+                  ? 'এই পর্যালোচনা ধাপে প্রদর্শিত ক্ষেত্রগুলো প্রাক-নির্ধারিত সিন্থেটিক ফিক্সচার থেকে সংকলিত, সরাসরি কোনো বাস্তব ওসিআর স্ক্যানার থেকে নয়। "৬-ধাপ যাচাই পাইপলাইন শুরু করুন" বাটনে ক্লিক করলে ব্রাউজারে ক্রিপ্টোগ্রাফিক SHA-256 ফিঙ্গারপ্রিন্টিং এবং ব্যাকএন্ডে ১২-রুল জালিয়াতি ইঞ্জিন ও মালিকানা গ্রাফ লাইভ নির্বাহ হবে।'
+                  : 'The fields displayed below represent precomputed synthetic fixtures, not live OCR scans. Clicking "Start 6-Stage Verification Pipeline" will live-calculate SHA-256 byte hashes in your browser and execute the 12-rule fraud engine and NetworkX ownership graph on the backend.'}
+              </p>
+            </div>
+
+            {/* Overview Grid: Case Specs & Summary */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
+              <div className="p-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface-soft)] space-y-1">
+                <span className="text-[10px] uppercase font-bold text-[var(--text-secondary)]">
+                  {language === 'bn' ? 'কেস নম্বর ও রেফারেন্স' : 'Case ID & Reference'}
+                </span>
+                <p className="text-xs font-mono font-bold text-[var(--brand-accent)] truncate">{activeScenario.id}</p>
+                <p className="text-[11px] text-[var(--text-primary)] font-medium truncate">{demoTitle}</p>
+              </div>
+
+              <div className="p-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface-soft)] space-y-1">
+                <span className="text-[10px] uppercase font-bold text-[var(--text-secondary)]">
+                  {language === 'bn' ? 'মৌজা ও দাগের তফসিল' : 'Mouza & Dag Schedule'}
+                </span>
+                <p className="text-xs font-bold text-[var(--text-primary)]">মৌজা {demoMouza}</p>
+                <p className="text-[11px] text-[var(--text-secondary)] font-mono">দাগ নং {demoDagNumber} ({demoSurveyType})</p>
+              </div>
+
+              <div className="p-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface-soft)] space-y-1">
+                <span className="text-[10px] uppercase font-bold text-[var(--text-secondary)]">
+                  {language === 'bn' ? 'জমির পরিমাণ ও জরিপ' : 'Recorded Area'}
+                </span>
+                <p className="text-xs font-bold text-[var(--text-primary)]">{demoArea} শতক</p>
+                <p className="text-[11px] text-[var(--text-secondary)]">{demoSurveyType} রেকর্ড জরিপ</p>
+              </div>
+
+              <div className="p-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface-soft)] space-y-1">
+                <span className="text-[10px] uppercase font-bold text-[var(--text-secondary)]">
+                  {language === 'bn' ? 'প্রত্যাশিত অডিট লক্ষ্য' : 'Investigation Objective'}
+                </span>
+                <p className="text-xs font-bold text-[var(--text-primary)] truncate">{activeScenario.personaBn}</p>
+                <p className="text-[11px] text-[var(--text-secondary)] truncate">{activeScenario.conflictType}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Queued Documents Manifest Card */}
+          <div className="p-6 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-surface)] shadow-xs space-y-4">
+            <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-3">
+              <h4 className="text-sm font-bold text-[var(--text-primary)] flex items-center gap-2">
+                <Layers className="w-4 h-4 text-[var(--brand-accent)]" />
+                <span>
+                  {language === 'bn'
+                    ? `যাচাইয়ের জন্য প্রস্তুত নথিসমূহ (${workspaceDocs.length}টি)`
+                    : `Queued Documents Manifest (${workspaceDocs.length})`}
+                </span>
+              </h4>
+              <button
+                type="button"
+                onClick={() => handleGoToStep(2)}
+                className="text-xs font-bold text-[var(--brand-accent)] hover:underline flex items-center gap-1 cursor-pointer"
+              >
+                <span>{language === 'bn' ? '+ নথি যোগ বা পরিবর্তন করুন' : '+ Modify Documents'}</span>
+              </button>
+            </div>
+
+            {workspaceDocs.length === 0 ? (
+              <div className="p-6 rounded-xl border border-dashed border-[var(--border-color)] text-center space-y-3">
+                <p className="text-xs text-[var(--text-secondary)]">
+                  {language === 'bn' ? 'ওয়ার্কস্পেসে কোনো নথি সংকলিত হয়নি।' : 'No documents currently in workspace.'}
+                </p>
+                <button
+                  type="button"
+                  onClick={handleAddAllToWorkspace}
+                  className="px-4 py-2 rounded-xl text-xs font-bold bg-[var(--brand-accent)] text-[var(--cta-text)] cursor-pointer"
+                >
+                  {language === 'bn' ? 'দৃশ্যকল্পের সকল নথি যোগ করুন' : 'Add All Scenario Documents'}
+                </button>
+              </div>
+            ) : (
+              <div className="divide-y divide-[var(--border-color)]">
+                {workspaceDocs.map((doc) => (
+                  <div key={doc.id} className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                    <div className="flex items-start gap-3 truncate">
+                      <div className="w-9 h-9 rounded-xl bg-[var(--bg-surface-soft)] border border-[var(--border-color)] flex items-center justify-center shrink-0 mt-0.5">
+                        <FileText className="w-4 h-4 text-[var(--brand-accent)]" />
+                      </div>
+                      <div className="space-y-1 truncate">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-bold text-[var(--text-primary)] truncate">{doc.name}</span>
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[var(--bg-surface-soft)] text-[var(--text-secondary)] border border-[var(--border-color)]">
+                            {doc.type}
+                          </span>
+                          <span className="text-[9px] font-semibold px-1.5 py-0.2 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                            {language === 'bn' ? 'প্রাক-নির্ধারিত ফিক্সচার' : 'Precomputed Fixture'}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-[var(--text-secondary)] truncate">{doc.summaryBn}</p>
+                        <div className="flex items-center gap-2 text-[10px] text-[var(--text-secondary)] font-mono flex-wrap">
+                          <span>SHA-256: {doc.hash.slice(0, 16)}...</span>
+                          <span>•</span>
+                          <span>{Math.round(doc.sizeBytes / 1024)} KB</span>
+                          <span>•</span>
+                          <span>{doc.pageCount} পৃষ্ঠা</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                      <button
+                        type="button"
+                        onClick={() => setPreviewDoc(doc)}
+                        className="px-3 py-1.5 rounded-lg border border-[var(--border-color)] hover:border-[var(--brand-accent)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] flex items-center gap-1.5 text-xs cursor-pointer font-medium"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                        <span>{language === 'bn' ? 'প্রিভিউ' : 'Preview'}</span>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Step 3 Actions Bar */}
+            <div className="pt-4 border-t border-[var(--border-color)] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <button
+                type="button"
+                onClick={() => handleGoToStep(2)}
+                className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-semibold border border-[var(--border-color)] bg-[var(--bg-surface-soft)] text-[var(--text-primary)] hover:border-[var(--brand-accent)] transition-all cursor-pointer"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>{language === 'bn' ? 'পূর্ববর্তী: নথি পরিবর্তন' : 'Back: Change Documents'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleStartPipelineFromReview}
+                disabled={isPipelineRunning || workspaceDocs.length === 0}
+                className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-xs font-bold bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-[var(--cta-text)] transition-all shadow-md active:scale-95 disabled:opacity-50 cursor-pointer"
+              >
+                <Play className="w-4 h-4 fill-current" />
+                <span>{language === 'bn' ? '🚀 ৬-ধাপ বিশিষ্ট যাচাই পাইপলাইন শুরু করুন' : '🚀 Start 6-Stage Verification Pipeline'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* STEP 4: LIVE 6-STAGE PIPELINE VISUALIZATION              */}
+      {/* ======================================================== */}
+      {currentStep === 4 && (
+        <div className="space-y-6 animate-in fade-in-50 duration-200">
+          {/* Pipeline Header with Stage & Running Status */}
+          <div className="p-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-surface)] shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="space-y-1">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[var(--bg-surface-soft)] text-[var(--brand-accent)] border border-[var(--border-color)]">
+                <Activity className="w-3 h-3" />
+                <span>{language === 'bn' ? 'ধাপ ৪: প্রযুক্তিগত বিশ্লেষণ পাইপলাইন' : 'Step 4: Technical Analysis Pipeline'}</span>
+              </div>
+              <h3 className="text-base sm:text-lg font-bold text-[var(--text-primary)]">
+                {language === 'bn' ? 'স্বয়ংক্রিয় ৬-ধাপ যাচাই ও অবজারভেবিলিটি মনিটর' : 'Automated 6-Stage Verification & Observability Monitor'}
+              </h3>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              {pipelineFinished ? (
+                <button
+                  type="button"
+                  onClick={() => handleGoToStep(5)}
+                  className="flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white transition-all shadow-md active:scale-95 cursor-pointer"
+                >
+                  <span>{language === 'bn' ? '📊 ফলাফল ও অডিট রিপোর্ট দেখুন' : 'View Findings & Report'}</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              ) : isPipelineRunning ? (
+                <span className="flex items-center gap-2 text-xs font-bold text-[var(--brand-accent)] px-3 py-1.5 rounded-xl bg-[var(--brand-accent)]/10 border border-[var(--brand-accent)]/20">
+                  <span className="w-2 h-2 rounded-full bg-[var(--brand-accent)] animate-ping" />
+                  <span>{language === 'bn' ? 'বিশ্লেষণ চলছে...' : 'Pipeline Running...'}</span>
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleRunPipeline}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-[var(--brand-accent)] text-[var(--cta-text)] cursor-pointer"
+                >
+                  <Play className="w-3.5 h-3.5 fill-current" />
+                  <span>{language === 'bn' ? 'পাইপলাইন শুরু করুন' : 'Start Pipeline'}</span>
+                </button>
+              )}
+            </div>
+          </div>
       {/* 4. LIVE 6-STAGE PIPELINE VISUALIZATION & OBSERVABILITY MONITOR */}
       <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-surface)] p-6 space-y-6 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[var(--border-color)] pb-3">
@@ -3499,7 +4046,70 @@ export default function InteractiveDemoPage() {
           )}
         </div>
       </div>
+          {/* Step 4 Navigation Actions Footer */}
+          <div className="p-4 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-surface)] flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+            <button
+              type="button"
+              onClick={() => handleGoToStep(3)}
+              disabled={isPipelineRunning}
+              className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-semibold border border-[var(--border-color)] bg-[var(--bg-surface-soft)] text-[var(--text-primary)] hover:border-[var(--brand-accent)] transition-all cursor-pointer disabled:opacity-50"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>{language === 'bn' ? 'পূর্ববর্তী: পর্যালোচনায় ফিরুন' : 'Back: Review Setup'}</span>
+            </button>
 
+            {pipelineFinished && (
+              <button
+                type="button"
+                onClick={() => handleGoToStep(5)}
+                className="flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white transition-all shadow-md active:scale-95 cursor-pointer"
+              >
+                <span>{language === 'bn' ? 'পরবর্তী: ফলাফল, গ্রাফ ও অডিট রিপোর্ট' : 'Next: Findings, Graph & Report'}</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* STEP 5: FINDINGS, EVIDENCE, REPORT & AI CHATBOT          */}
+      {/* ======================================================== */}
+      {currentStep === 5 && (
+        <div className="space-y-6 animate-in fade-in-50 duration-200">
+          {/* STEP 6 FEATURE: CASE-LEVEL AI CHATBOT ENTRY POINT CALLOUT */}
+          <div className="p-5 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 dark:bg-emerald-950/20 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-600 to-teal-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+                <Sparkles className="w-5 h-5 text-emerald-200" />
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h4 className="text-sm font-bold text-[var(--text-primary)]">
+                    {language === 'bn' ? 'এআই আইনি ও তদন্ত পরামর্শক (GraphRAG + Groq)' : 'AI Land Legal & Investigative Advisor (GraphRAG + Groq)'}
+                  </h4>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 font-mono">
+                    Llama 3.3 70B & Free Groq Models
+                  </span>
+                </div>
+                <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                  {language === 'bn'
+                    ? `এই কেসের (${activeScenario.id}) চিহ্নিত অসঙ্গতি, মালিকানা গ্রাফ ও বাংলাদেশ ভূমি আইনের ভিত্তিতে পরবর্তী করণীয় সম্পর্কে লাইভ এআই চ্যাট করতে কেস পেজে যান।`
+                    : `Chat with the AI Legal Advisor grounded in this case's (${activeScenario.id}) findings, ownership graph, and Bangladesh statutory land laws on the live case page.`}
+                </p>
+              </div>
+            </div>
+
+            <Link
+              href={`/cases/${liveCase?.case_number || activeScenario.id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white transition-all shadow-sm active:scale-95 shrink-0 w-full sm:w-auto cursor-pointer"
+            >
+              <span>{language === 'bn' ? 'কেস পেজে এআই পরামর্শক ওপেন করুন' : 'Open AI Advisor on Case Page'}</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </Link>
+          </div>
       {/* 5. EVIDENCE & INVESTIGATION RESULTS SECTION */}
       <div className="space-y-4">
         {/* Section Header with Risk Meter */}
@@ -3827,6 +4437,28 @@ export default function InteractiveDemoPage() {
           </div>
         )}
       </div>
+          {/* Step 5 Navigation Actions Footer */}
+          <div className="p-4 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-surface)] flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+            <button
+              type="button"
+              onClick={() => handleGoToStep(4)}
+              className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-semibold border border-[var(--border-color)] bg-[var(--bg-surface-soft)] text-[var(--text-primary)] hover:border-[var(--brand-accent)] transition-all cursor-pointer"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>{language === 'bn' ? 'পূর্ববর্তী: ৬-ধাপ পাইপলাইন বিশ্লেষণ' : 'Back: 6-Stage Pipeline'}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleGoToStep(1)}
+              className="flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl text-xs font-bold bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] text-[var(--cta-text)] transition-all shadow-xs active:scale-95 cursor-pointer"
+            >
+              <span>{language === 'bn' ? '🔄 অন্য দৃশ্যকল্প নির্বাচন করুন' : 'Test Another Scenario (Step 1)'}</span>
+              <RotateCcw className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* 6. DOCUMENT PREVIEW MODAL */}
       {previewDoc && (
