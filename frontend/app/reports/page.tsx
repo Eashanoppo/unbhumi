@@ -131,7 +131,7 @@ function ReportContent() {
                 <ShieldCheck className="w-4 h-4" />
               </div>
               <span className="font-extrabold text-lg tracking-tight text-[#286B35]">
-                {reportLang === 'bn' ? 'UNLEFT LandGuard — আনলেফট ল্যান্ডগার্ড' : 'UNLEFT LandGuard — Evidence Report'}
+                {reportLang === 'bn' ? 'UNBhumi — আনভূমি' : 'UNBhumi — Evidence Report'}
               </span>
             </div>
             <p className="text-xs text-gray-600 font-medium">

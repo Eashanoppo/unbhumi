@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   /* Base & Canvas Layers (60%) — Luxurious Warm Cream & Ivory Canvas */
   --bg-primary: #FAF8F5;          /* Velvety Warm Cream Canvas */

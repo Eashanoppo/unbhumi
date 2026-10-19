@@ -396,9 +396,12 @@ class GraphService:
             if e['source'] in retrieved_nodes_set and e['target'] in retrieved_nodes_set
         ]
 
-        # 3. Retrieve semantically matching document passages via VectorService
+        # 3. Retrieve semantically matching document passages via VectorService & Reranker
         from .vector_service import VectorService
-        vector_chunks = VectorService.retrieve_similar_chunks(self.case, query_clean, top_k=3)
+        from .pipeline.reranker import HeuristicRerankerProvider
+        raw_chunks = VectorService.retrieve_similar_chunks(self.case, query_clean, top_k=6)
+        reranker = HeuristicRerankerProvider()
+        vector_chunks = reranker.rerank(query_clean, raw_chunks, top_k=3)
 
         # 4. Extract documentary evidence citations
         grounded_evidence = []

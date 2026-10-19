@@ -17,9 +17,9 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: 'আনভূমি ডিটেক্টর — UNBUmi Detector | AI Land Fraud & Double-Selling Prevention Platform',
+  title: 'আনভূমি — UNBhumi | AI Land Fraud & Double-Selling Prevention Platform',
   description: 'AI-assisted land document and title verification platform for Bangladesh. Detects double-selling, broken ownership chains, and deed-khatian inconsistencies with traceable evidence.',
-  keywords: ['LandTech', 'Bangladesh Land Verification', 'Deed Verification', 'দলিল যাচাই', 'খতিয়ান', 'Double Selling Detection', 'UNLEFT LandGuard'],
+  keywords: ['LandTech', 'Bangladesh Land Verification', 'Deed Verification', 'দলিল যাচাই', 'খতিয়ান', 'Double Selling Detection', 'UNBhumi'],
   icons: {
     icon: [
       { url: '/favicon.ico' },

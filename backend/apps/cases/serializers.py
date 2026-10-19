@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import Case, AnalysisRun
-from apps.documents.models import Document, ExtractedField
+from apps.documents.models import Document, ExtractedField, DocumentPage
 from apps.rules.models import AnomalyFinding
 from apps.ownership.models import OwnershipEdge
 from apps.audit.models import AuditEvent, ReviewerDecision
@@ -14,18 +14,38 @@ class ExtractedFieldSerializer(serializers.ModelSerializer):
             'status', 'corrected_value', 'effective_value', 'updated_at'
         ]
 
+class DocumentPageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DocumentPage
+        fields = ['id', 'page_number', 'image', 'ocr_text', 'ocr_confidence']
+
 class DocumentSerializer(serializers.ModelSerializer):
     extracted_fields = ExtractedFieldSerializer(many=True, read_only=True)
+    pages = DocumentPageSerializer(many=True, read_only=True)
     document_type_display = serializers.CharField(source='get_document_type_display', read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
+    raw_ocr_text = serializers.SerializerMethodField()
+    file_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Document
         fields = [
             'id', 'case', 'document_type', 'document_type_display', 'title',
-            'file', 'file_hash', 'file_size_bytes', 'page_count', 'status',
-            'status_display', 'created_at', 'extracted_fields'
+            'file', 'file_url', 'file_hash', 'file_size_bytes', 'page_count', 'status',
+            'status_display', 'created_at', 'extracted_fields', 'pages', 'raw_ocr_text'
         ]
+
+    def get_raw_ocr_text(self, obj):
+        texts = [p.ocr_text for p in obj.pages.all() if p.ocr_text]
+        return "\n\n".join(texts) if texts else ""
+
+    def get_file_url(self, obj):
+        if obj.file:
+            try:
+                return obj.file.url
+            except Exception:
+                return None
+        return None
 
 class AnomalyFindingSerializer(serializers.ModelSerializer):
     severity_display = serializers.CharField(source='get_severity_display', read_only=True)

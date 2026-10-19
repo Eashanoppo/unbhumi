@@ -4,11 +4,13 @@ from .views import (
     DocumentDetailView,
     DocumentFieldsView,
     CaseDocumentUploadView,
-    DocumentFileDownloadView
+    DocumentFileDownloadView,
+    DocumentScanPreviewView
 )
 
 urlpatterns = [
     path('documents/', DocumentListView.as_view(), name='document-list'),
+    path('documents/scan-preview/', DocumentScanPreviewView.as_view(), name='document-scan-preview'),
     path('documents/<int:pk>/', DocumentDetailView.as_view(), name='document-detail'),
     path('documents/<int:pk>/file/', DocumentFileDownloadView.as_view(), name='document-file-download'),
     path('documents/<int:pk>/fields/', DocumentFieldsView.as_view(), name='document-fields'),

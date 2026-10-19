@@ -13,8 +13,8 @@ interface Translations {
 
 export const DICTIONARY: Translations = {
   // Common & Branding
-  brand_title: { bn: 'আনলেফট ল্যান্ডগার্ড', en: 'UNLEFT LandGuard' },
-  brand_subtitle: { bn: 'আনভূমি ডিটেক্টর', en: 'UNBUmi Detector' },
+  brand_title: { bn: 'আনভূমি', en: 'UNBhumi' },
+  brand_subtitle: { bn: 'আনভূমি ডিটেক্টর', en: 'UNBhumi Detector' },
   brand_badge: { bn: 'বাংলাদেশ ভূমি সেবা ও দ্বৈত বিক্রি শনাক্তকরণ প্ল্যাটফর্ম (P3 / P2)', en: 'Bangladesh Multimodal Land-Fraud & Double-Selling Detection (P3 / P2)' },
   hero_headline: { bn: 'একটি দাগ। একাধিক দলিল। একটি প্রমাণ পথ।', en: 'One plot. Multiple deeds. One evidence trail.' },
   hero_title: { bn: 'একটি দাগ। একাধিক দলিল। একটি প্রমাণ পথ।', en: 'One plot. Multiple deeds. One evidence trail.' },
@@ -246,7 +246,7 @@ export const DICTIONARY: Translations = {
   // Reports Page (/reports)
   reports_page_title: { bn: 'ভূমি দলিল ও স্বত্ব তদন্ত প্রতিবেদন', en: 'Investigation Report' },
   reports_select_case: { bn: 'কেস পরিবর্তন:', en: 'Select Case:' },
-  report_header_platform: { bn: 'UNLEFT LandGuard — আনলেফট ল্যান্ডগার্ড', en: 'UNLEFT LandGuard' },
+  report_header_platform: { bn: 'UNBhumi — আনভূমি', en: 'UNBhumi' },
   report_header_sub: { bn: 'এআই-সহায়তাকৃত ভূমি দলিল ও স্বত্ব যাচাইকরণ প্রযুক্তি প্রতিবেদন (P3 Track)', en: 'AI-Assisted Land Fraud & Double-Selling Detection Report (P3 Track)' },
   report_header_dev: { bn: 'ডেভেলপমেন্ট: UNLEFT • LandTech Innovation Hackathon 2026', en: 'Developed by UNLEFT • LandTech Innovation Hackathon 2026' },
   report_id_label: { bn: 'রিপোর্ট নং:', en: 'Report ID:' },
@@ -273,7 +273,7 @@ export const DICTIONARY: Translations = {
   // Methodology Page (/methodology)
   methodology_badge: { bn: 'প্রযুক্তিগত কার্যপ্রণালী ও রুল ইঞ্জিন', en: 'Technical Architecture & Rule Engine' },
   methodology_title: { bn: 'যাচাই পদ্ধতি ও সীমাবদ্ধতা', en: 'Methodology & Limitations' },
-  methodology_subtitle: { bn: 'আনলেফট ল্যান্ডগার্ডের ওসিআর, ফিল্ড নরমালাইজেশন, ডিটারমিনিস্টিক রুল ইঞ্জিন ও গ্রাফ বিশ্লেষণের বৈজ্ঞানিক ব্যাখ্যা।', en: 'Scientific architecture of UNLEFT LandGuard: OCR, field normalization, 12 deterministic rules, and graph reasoning.' },
+  methodology_subtitle: { bn: 'আনভূমির ওসিআর, ফিল্ড নরমালাইজেশন, ডিটারমিনিস্টিক রুল ইঞ্জিন ও গ্রাফ বিশ্লেষণের বৈজ্ঞানিক ব্যাখ্যা।', en: 'Scientific architecture of UNBhumi: OCR, field normalization, 12 deterministic rules, and graph reasoning.' },
   distinction_header: { bn: 'প্রযুক্তিগত দাবির সুনির্দিষ্ট পার্থক্য (Critical Distinctions)', en: 'Critical Technical Distinctions' },
   dist_hash_title: { bn: 'ক্রিপ্টোগ্রাফিক হ্যাশ (SHA-256)', en: 'Cryptographic Hash (SHA-256)' },
   dist_hash_desc: { bn: 'ডিজিটাল ফাইলটি হুবহু একই বাইটের কিনা তা প্রমাণ করে। এটি দলিলের অন্তর্নিহিত আইনি বৈধতা বা স্বত্ব প্রমাণ করে না।', en: 'Proves byte-level digital identity of an uploaded file. It does NOT prove legal validity or authentic land title.' },
@@ -486,8 +486,8 @@ export const DICTIONARY: Translations = {
 
   // Disclaimer
   disclaimer_short: {
-    bn: 'আনলেফট ল্যান্ডগার্ড একটি এআই-সহায়তাকৃত পর্যালোচনামূলক টুল; এটি কোনো সরকারি সংস্থা বা আদালতের চূড়ান্ত স্বত্ব নির্ধারণী সিদ্ধান্ত নয়।',
-    en: 'UNLEFT LandGuard is an AI-assisted decision-support platform; it does not replace authorized land officials, courts, or title legal clearance.'
+    bn: 'আনভূমি একটি এআই-সহায়তাকৃত পর্যালোচনামূলক টুল; এটি কোনো সরকারি সংস্থা বা আদালতের চূড়ান্ত স্বত্ব নির্ধারণী সিদ্ধান্ত নয়।',
+    en: 'UNBhumi is an AI-assisted decision-support platform; it does not replace authorized land officials, courts, or title legal clearance.'
   },
 
   // Interactive Demo Mode

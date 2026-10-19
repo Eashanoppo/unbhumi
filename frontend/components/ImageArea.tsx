@@ -33,8 +33,8 @@ export const ImageArea: React.FC<ImageAreaProps> = ({
   }[aspectRatio];
 
   return (
-    <figure className={`overflow-hidden rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface-soft)] ${className}`}>
-      <div className={`relative w-full ${aspectClasses} flex items-center justify-center overflow-hidden`}>
+    <figure suppressHydrationWarning className={`overflow-hidden rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface-soft)] ${className}`}>
+      <div suppressHydrationWarning className={`relative w-full ${aspectClasses} flex items-center justify-center overflow-hidden`}>
         {!hasError ? (
           <Image
             src={src}

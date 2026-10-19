@@ -2,6 +2,7 @@
 Vector Storage & Semantic Retrieval Pipeline Service for UNBUmi Detector.
 Manages page-aware document chunking, PII scrubbing, dense embedding generation,
 and case-isolated cosine similarity retrieval for evidence-grounded RAG.
+Integrates with EmbeddingRouter for modular embedding provider support.
 """
 
 import math
@@ -10,10 +11,19 @@ import hashlib
 from typing import List, Dict, Any
 from apps.documents.models import Document, DocumentChunk
 from apps.cases.models import Case
+from .pipeline.embeddings import (
+    EmbeddingRouter,
+    BaseEmbeddingProvider,
+    DenseFeatureHashingProvider,
+    DEFAULT_EMBEDDING_DIM,
+    DEFAULT_MODEL_NAME,
+    DEFAULT_MODEL_VERSION
+)
 
-EMBEDDING_DIM = 128
-EMBEDDING_MODEL_NAME = "dense-projection-v1"
-EMBEDDING_MODEL_VERSION = "1.0.0"
+EMBEDDING_DIM = DEFAULT_EMBEDDING_DIM
+EMBEDDING_MODEL_NAME = DEFAULT_MODEL_NAME
+EMBEDDING_MODEL_VERSION = DEFAULT_MODEL_VERSION
+
 
 def scrub_pii(text: str) -> str:
     """Masks citizen national identity numbers and mobile phone numbers."""
@@ -25,43 +35,19 @@ def scrub_pii(text: str) -> str:
     scrubbed = re.sub(r'\b[0-9০-৯]{10,17}\b', '[জাতীয় পরিচয়পত্র গোপনকৃত / NID-PROTECTED]', scrubbed)
     return scrubbed
 
+
 def generate_dense_embedding(text: str, dim: int = EMBEDDING_DIM) -> List[float]:
     """
     Generates a deterministic, L2-normalized dense embedding vector from text.
-    Utilizes character n-gram and token feature hashing with cosine normalization.
+    Delegates to active EmbeddingRouter provider.
     """
-    if not text:
-        return [0.0] * dim
+    provider = EmbeddingRouter.get_provider()
+    return provider.embed_text(text)
 
-    vec = [0.0] * dim
-    tokens = re.findall(r'[\w\u0980-\u09FF]+', text.lower())
-
-    for token in tokens:
-        # Token hash feature
-        h_token = int(hashlib.md5(token.encode('utf-8')).hexdigest(), 16)
-        slot = h_token % dim
-        sign = 1.0 if (h_token // dim) % 2 == 0 else -1.0
-        vec[slot] += sign
-
-        # Bigram character sliding window for Bengali morpho-semantic representation
-        for i in range(len(token) - 1):
-            bg = token[i:i+2]
-            h_bg = int(hashlib.sha256(bg.encode('utf-8')).hexdigest(), 16)
-            slot_bg = h_bg % dim
-            sign_bg = 1.0 if (h_bg // dim) % 2 == 0 else -1.0
-            vec[slot_bg] += 0.5 * sign_bg
-
-    # L2 Normalization
-    magnitude = math.sqrt(sum(x * x for x in vec))
-    if magnitude > 1e-9:
-        return [round(x / magnitude, 6) for x in vec]
-    return [0.0] * dim
 
 def cosine_similarity(v1: List[float], v2: List[float]) -> float:
-    """Calculates cosine similarity between two unit vectors."""
-    if not v1 or not v2 or len(v1) != len(v2):
-        return 0.0
-    return sum(a * b for a, b in zip(v1, v2))
+    """Calculates cosine similarity between two unit vectors, enforcing dimension integrity."""
+    return EmbeddingRouter.cosine_similarity(v1, v2)
 
 
 class VectorService:
@@ -76,6 +62,8 @@ class VectorService:
 
         chunks_created = 0
         pages = list(document.pages.all().order_by('page_number'))
+        provider = EmbeddingRouter.get_provider()
+        model_name = provider.get_model_name()
 
         if not pages:
             # Fallback single chunk from document title
@@ -88,8 +76,8 @@ class VectorService:
                 chunk_index=0,
                 text_content=text,
                 embedding_json=emb,
-                embedding_model=EMBEDDING_MODEL_NAME,
-                model_version=EMBEDDING_MODEL_VERSION
+                embedding_model=model_name,
+                model_version=DEFAULT_MODEL_VERSION
             )
             return 1
 
@@ -113,8 +101,8 @@ class VectorService:
                     chunk_index=chunk_idx,
                     text_content=para,
                     embedding_json=emb,
-                    embedding_model=EMBEDDING_MODEL_NAME,
-                    model_version=EMBEDDING_MODEL_VERSION
+                    embedding_model=model_name,
+                    model_version=DEFAULT_MODEL_VERSION
                 )
                 chunks_created += 1
 

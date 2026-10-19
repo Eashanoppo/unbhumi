@@ -167,7 +167,7 @@ export const Navbar: React.FC = () => {
                   {safeT('brand_title')}
                 </span>
                 <span suppressHydrationWarning className="text-[10px] font-semibold text-[var(--text-secondary)] tracking-wider uppercase block mt-1">
-                  UNBUmi Detector • AI LandGuard
+                  UNBhumi Detector • AI LandTech
                 </span>
               </div>
             </Link>

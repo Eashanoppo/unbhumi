@@ -1,8 +1,11 @@
 """
-OCR & Document Extraction Pipeline Service for UNBUmi Detector.
-Provider-independent extraction interface: parses real PDF pages via pdfplumber,
-processes images via PIL, computes SHA-256 byte fingerprints, calculates genuine confidence,
-and extracts versioned structured fields for Bangladeshi land records.
+OCR & Document Extraction Pipeline Service for UNBhumi LandGuard.
+Provider-independent extraction interface:
+- Parses digital PDF pages via pdfplumber
+- Renders scanned PDF pages via pypdfium2 at 300 DPI and executes genuine Bengali+English OCR via Tesseract
+- Preprocesses and executes real OCR on image documents (PNG, JPEG)
+- Computes SHA-256 byte fingerprints
+- Calculates genuine confidence and extracts versioned structured fields for Bangladeshi land records
 """
 
 import io
@@ -19,151 +22,49 @@ from .normalization_service import (
     normalize_area_to_decimals,
     clean_name
 )
+from .pipeline.ocr import (
+    OCRRouter,
+    TesseractOCRProvider,
+    DigitalPDFExtractor as PipelineDigitalExtractor,
+    PDFPageRenderer
+)
+from .pipeline.extraction import StructuredFieldExtractor
+
 
 class BaseExtractor:
     """Abstract base class for document extraction providers."""
     def extract(self, file_path_or_bytes):
         raise NotImplementedError
 
+
 class DigitalPDFExtractor(BaseExtractor):
-    """Extracts text, page layout, and word positions from digital or hybrid PDFs."""
+    """
+    Extracts text, page layout, and word positions from digital or hybrid PDFs.
+    Falls back to high-resolution (300 DPI) rendering + Tesseract OCR when digital text layer is absent.
+    """
+    def __init__(self):
+        self.router = OCRRouter()
+
     def extract(self, file_path_or_bytes):
-        pages_data = []
-        try:
-            if isinstance(file_path_or_bytes, (bytes, bytearray)):
-                f_stream = io.BytesIO(file_path_or_bytes)
-                pdf = pdfplumber.open(f_stream)
-            else:
-                pdf = pdfplumber.open(str(file_path_or_bytes))
+        return self.router.process(file_path_or_bytes, is_pdf=True)
 
-            with pdf:
-                for idx, page in enumerate(pdf.pages, start=1):
-                    raw_text = page.extract_text() or ''
-                    words = page.extract_words() or []
-                    
-                    # Calibrate genuine confidence based on text length and character density
-                    char_count = len(raw_text.strip())
-                    if char_count > 100:
-                        confidence = 0.94
-                    elif char_count > 20:
-                        confidence = 0.85
-                    elif char_count > 0:
-                        confidence = 0.70
-                    else:
-                        confidence = 0.45  # Scanned image embedded without OCR layer
-
-                    pages_data.append({
-                        'page_number': idx,
-                        'text': raw_text,
-                        'words_count': len(words),
-                        'confidence': confidence,
-                        'width': float(page.width),
-                        'height': float(page.height)
-                    })
-        except Exception as e:
-            # Safe handling if corrupted
-            pages_data.append({
-                'page_number': 1,
-                'text': f"[PDF পাঠোদ্ধারে ত্রুটি / Parser Error: {str(e)}]",
-                'words_count': 0,
-                'confidence': 0.30,
-                'width': 612.0,
-                'height': 792.0
-            })
-        return pages_data
 
 class ImageScanExtractor(BaseExtractor):
-    """Processes image-based land records, inspects dimensions, and calculates confidence."""
-    def extract(self, file_path_or_bytes):
-        try:
-            if isinstance(file_path_or_bytes, (bytes, bytearray)):
-                img = Image.open(io.BytesIO(file_path_or_bytes))
-            else:
-                img = Image.open(str(file_path_or_bytes))
+    """
+    Processes image-based land records: applies contrast and orientation preprocessing,
+    executes real Tesseract OCR (script/Bengali + English), and calculates genuine confidence.
+    """
+    def __init__(self):
+        self.router = OCRRouter()
 
-            w, h = img.size
-            text = f"[স্ক্যানকৃত চিত্র নথি: রেজোলিউশন {w}x{h} পিক্সেল। হস্তলিপি/সিল নিরীক্ষা ও ফিল্ড রিভিউ আবশ্যক।]"
-            return [{
-                'page_number': 1,
-                'text': text,
-                'words_count': 0,
-                'confidence': 0.60,
-                'width': float(w),
-                'height': float(h)
-            }]
-        except Exception as e:
-            return [{
-                'page_number': 1,
-                'text': f"[চিত্র লোড করতে ব্যর্থ: {str(e)}]",
-                'words_count': 0,
-                'confidence': 0.20,
-                'width': 0.0,
-                'height': 0.0
-            }]
+    def extract(self, file_path_or_bytes):
+        return self.router.process(file_path_or_bytes, is_pdf=False)
 
 
 class DomainFieldMatcher:
     """Extracts structured Bangladeshi land document fields using pattern recognition."""
-    
-    PATTERNS = {
-        'deed_number': [
-            r'দলিল\s*(?:নম্বর|নং)?\s*[:ঃ]?\s*([০-৯0-9]+)',
-            r'Deed\s*(?:No|Number)?\s*[:.]?\s*([0-9]+)'
-        ],
-        'deed_date': [
-            r'(?:তারিখ|রেজিস্ট্রেশনের তারিখ)\s*[:ঃ]?\s*([০-৯0-9\/\-\.]+)',
-            r'Date\s*[:.]?\s*([0-9\/\-\.]+)'
-        ],
-        'seller_name': [
-            r'(?:১ম পক্ষ|১ম\s*পক্ষ|বিক্রেতা|দাতা|হস্তান্তরকারী)\s*[:ঃ]?\s*([^\n,;\.০-৯0-9]{3,40})',
-            r'Seller\s*[:.]?\s*([^\n,;]+)'
-        ],
-        'buyer_name': [
-            r'(?:২য় পক্ষ|২য়\s*পক্ষ|ক্রেতা|গ্রহীতা)\s*[:ঃ]?\s*([^\n,;\.০-৯0-9]{3,40})',
-            r'Buyer\s*[:.]?\s*([^\n,;]+)'
-        ],
-        'mouza': [
-            r'মৌজা\s*[:ঃ]?\s*([^\n,;\.০-৯0-9]{2,30})',
-            r'Mouza\s*[:.]?\s*([^\n,;]+)'
-        ],
-        'dag_number': [
-            r'(?:দাগ|দাগ\s*নম্বর|দাগ\s*নং)\s*[:ঃ]?\s*([০-৯0-9]+)',
-            r'Plot\s*(?:No)?\s*[:.]?\s*([0-9]+)'
-        ],
-        'khatian_number': [
-            r'(?:খতিয়ান|খতিয়ান\s*নম্বর|খতিয়ান\s*নং)\s*[:ঃ]?\s*([০-৯0-9]+)',
-            r'Khatian\s*(?:No)?\s*[:.]?\s*([0-9]+)'
-        ],
-        'survey_type': [
-            r'(সিএস|এসএ|আরএস|বিএস|সিটি\s*জরিপ|CS|SA|RS|BS)',
-        ],
-        'land_area': [
-            r'([০-৯0-9\.]+\s*(?:শতাংশ|শতক|একর|কাঠা|decimals?))',
-            r'জমির\s*পরিমাণ\s*[:ঃ]?\s*([^\n,;]+)'
-        ],
-        'baya_deed_ref': [
-            r'(?:বায়া|বায়া|পূর্ববর্তী)\s*দলিল\s*(?:নং|নম্বর)?\s*[:ঃ]?\s*([০-৯0-9]+)',
-            r'Prior\s*Deed\s*[:.]?\s*([0-9]+)'
-        ],
-        'mutation_case_no': [
-            r'(?:নামজারি\s*কেস\s*নং|মিউটেশন\s*কেস)\s*[:ঃ]?\s*([০-৯0-9\/\-]+)',
-            r'Mutation\s*Case\s*[:.]?\s*([0-9\/\-]+)'
-        ]
-    }
-
-    LABELS_BN = {
-        'deed_number': 'দলিল নম্বর',
-        'deed_date': 'রেজিস্ট্রেশনের তারিখ',
-        'seller_name': 'বিক্রেতার নাম',
-        'buyer_name': 'ক্রেতার নাম',
-        'mouza': 'মৌজা',
-        'dag_number': 'দাগ নম্বর',
-        'khatian_number': 'খতিয়ান নম্বর',
-        'survey_type': 'জরিপের ধরন',
-        'land_area': 'জমির পরিমাণ',
-        'baya_deed_ref': 'বায়া দলিল সূত্র',
-        'mutation_case_no': 'নামজারি কেস নম্বর',
-    }
+    PATTERNS = StructuredFieldExtractor.PATTERNS
+    LABELS_BN = StructuredFieldExtractor.LABELS_BN
 
     @classmethod
     def match_fields(cls, full_text: str):
@@ -187,7 +88,7 @@ class OCRService:
         1. Computes canonical SHA-256 cryptographic fingerprint
         2. Enrolls fingerprint in DocumentFingerprint
         3. Parses real pages using DigitalPDFExtractor or ImageScanExtractor
-        4. Extracts domain-specific land fields with genuine confidence
+        4. Extracts domain-specific land fields with genuine confidence and bounding boxes
         5. Saves DocumentPage and ExtractedField records with provenance
         """
         raw_bytes = None
@@ -211,7 +112,7 @@ class OCRService:
         document.status = 'processing'
         document.save()
 
-        # Enroll fingerprint
+        # 1. Enroll fingerprint
         if document.file_hash:
             case_no = document.case.case_number if document.case else 'UNASSIGNED'
             DocumentFingerprint.objects.get_or_create(
@@ -223,7 +124,7 @@ class OCRService:
                 }
             )
 
-        # Detect extractor by extension or magic signature
+        # 2. Detect extractor by extension or magic signature
         file_path = document.file.path if document.file and hasattr(document.file, 'path') and os.path.exists(document.file.path) else None
         target = raw_bytes if raw_bytes else file_path
 
@@ -240,7 +141,7 @@ class OCRService:
 
         pages_extracted = extractor.extract(target) if target else []
 
-        # Remove stale pages and fields
+        # 3. Remove stale pages and fields
         document.pages.all().delete()
         document.extracted_fields.filter(status='auto').delete()
 
@@ -259,12 +160,12 @@ class OCRService:
 
         document.page_count = max(len(pages_extracted), 1)
 
-        # Domain field matching on recognized text
-        matched_fields = DomainFieldMatcher.match_fields(combined_text)
-
-        # If digital extraction found specific fields, record them with provenance
+        # 4. Domain field matching with bounding box provenance
+        matched_provenance = StructuredFieldExtractor.extract_fields(pages_extracted)
         created_field_count = 0
-        for f_key, raw_val in matched_fields.items():
+
+        for f_key, f_meta in matched_provenance.items():
+            raw_val = f_meta['raw_value']
             norm_val = raw_val
             if f_key in ('deed_number', 'dag_number', 'khatian_number', 'baya_deed_ref'):
                 norm_val = bangla_to_arabic_digits(raw_val)
@@ -273,26 +174,23 @@ class OCRService:
             elif f_key in ('seller_name', 'buyer_name'):
                 norm_val = clean_name(raw_val)
 
-            avg_conf = (
-                sum(float(p.get('confidence', 0.85)) for p in pages_extracted) / len(pages_extracted)
-                if pages_extracted else 0.85
-            )
+            conf = f_meta.get('confidence', 0.85)
+            bbox = f_meta.get('bounding_box') or {'x': 100, 'y': 100 + (created_field_count * 40), 'w': 240, 'h': 35}
 
             ExtractedField.objects.create(
                 document=document,
-                page_number=1,
+                page_number=f_meta.get('page_number', 1),
                 field_key=f_key,
-                field_label_bn=DomainFieldMatcher.LABELS_BN.get(f_key, f_key),
+                field_label_bn=f_meta.get('field_label_bn', f_key),
                 raw_value=raw_val,
                 normalized_value=norm_val,
-                confidence=round(avg_conf, 2),
-                bounding_box={'x': 100, 'y': 100 + (created_field_count * 40), 'w': 240, 'h': 35},
+                confidence=round(conf, 2),
+                bounding_box=bbox,
                 status='auto'
             )
             created_field_count += 1
 
-        # If zero fields were extractable (e.g. low-quality image or scanned PDF),
-        # flag unreadable critical field so human reviewer is prompted to correct it
+        # Fallback if StructuredFieldExtractor found no structured matches in combined text
         if created_field_count == 0:
             doc_type = document.document_type
             if doc_type in ('deed', 'baya_deed'):

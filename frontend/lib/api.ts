@@ -29,6 +29,14 @@ export interface ExtractedField {
   effective_value: string;
 }
 
+export interface DocumentPageItem {
+  id: number;
+  page_number: number;
+  image?: string;
+  ocr_text: string;
+  ocr_confidence: number;
+}
+
 export interface DocumentItem {
   id: number;
   case: number;
@@ -36,6 +44,7 @@ export interface DocumentItem {
   document_type_display: string;
   title: string;
   file?: string;
+  file_url?: string;
   file_hash: string;
   file_size_bytes: number;
   page_count: number;
@@ -43,6 +52,32 @@ export interface DocumentItem {
   status_display: string;
   created_at: string;
   extracted_fields?: ExtractedField[];
+  pages?: DocumentPageItem[];
+  raw_ocr_text?: string;
+}
+
+export interface ScanPreviewResult {
+  success: boolean;
+  raw_ocr_text: string;
+  confidence: number;
+  words_count: number;
+  engine: string;
+  engine_version: string;
+  language: string;
+  bounding_boxes: Array<{ word: string; confidence: number; x: number; y: number; w: number; h: number }>;
+  extracted_fields: Array<{
+    field_key: string;
+    field_label_bn: string;
+    raw_value: string;
+    normalized_value: string;
+    confidence: number;
+  }>;
+  suggested?: {
+    mouza?: string;
+    dag_number?: string;
+    area?: string | number;
+    survey_type?: string;
+  };
 }
 
 export interface AnomalyFinding {
@@ -454,6 +489,16 @@ export const api = {
 
   async getDocumentDetail(docId: number): Promise<DocumentItem> {
     return await fetchApi<DocumentItem>(`/documents/${docId}/`);
+  },
+
+  async scanDocumentPreview(file: File, documentType: string): Promise<ScanPreviewResult> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('document_type', documentType);
+    return await fetchApi<ScanPreviewResult>('/documents/scan-preview/', {
+      method: 'POST',
+      body: formData
+    });
   },
 
   async uploadCaseDocument(caseId: string, data: { title: string; document_type: string; file?: File; file_hash?: string; file_size_bytes?: number }): Promise<DocumentItem> {

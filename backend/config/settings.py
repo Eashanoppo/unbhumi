@@ -155,3 +155,14 @@ if csrf_env:
 
 DEMO_MODE = os.environ.get('DEMO_MODE', 'True') == 'True'
 
+# UNBhumi Production AI Pipeline Settings
+TESSDATA_DIR = BASE_DIR / 'tessdata'
+if TESSDATA_DIR.exists():
+    os.environ['TESSDATA_PREFIX'] = str(TESSDATA_DIR)
+
+TESSERACT_CMD = os.environ.get('TESSERACT_CMD', r'C:\Program Files\Tesseract-OCR\tesseract.exe')
+OCR_LANGUAGES = os.environ.get('OCR_LANGUAGES', 'ben+eng')
+PDF_RENDER_DPI = int(os.environ.get('PDF_RENDER_DPI', '300'))
+EMBEDDING_PROVIDER = os.environ.get('EMBEDDING_PROVIDER', 'dense-projection-v1')
+ENABLE_LOCAL_LLM = os.environ.get('ENABLE_LOCAL_LLM', 'False') == 'True'
+

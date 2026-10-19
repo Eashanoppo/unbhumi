@@ -4,7 +4,7 @@ Searched for "^##\s+"
 Viewed documentation.md:265-375
 Viewed documentation.md:376-475
 
-# UNLEFT LandGuard (UNBHUMI Detector)
+# UNBhumi (UNBhumi Detector)
 ## System Architecture, Technology Stack & Core Feature Guide
 *Derived from and aligned with [`documentation.md`](file:///d:/UnBhumi/Doc/documentation.md)*
 
@@ -12,7 +12,7 @@ Viewed documentation.md:376-475
 
 ### Executive Overview
 
-**UNLEFT LandGuard** is a multimodal, evidence-first decision-support platform engineered for Bangladesh's **LandTech Track P3: Catch Fraud & Double-Selling** (supported by **P2: Deed & Ownership Verification**). It cross-checks registered deeds, historical baya deeds, survey khatians, mutation records, cadastral mouza maps, and land tax receipts to detect fraudulent transfers, duplicate plot sales, and forged documents before registration or mortgage approval.
+**UNBhumi** is a multimodal, evidence-first decision-support platform engineered for Bangladesh's **LandTech Track P3: Catch Fraud & Double-Selling** (supported by **P2: Deed & Ownership Verification**). It cross-checks registered deeds, historical baya deeds, survey khatians, mutation records, cadastral mouza maps, and land tax receipts to detect fraudulent transfers, duplicate plot sales, and forged documents before registration or mortgage approval.
 
 ---
 
