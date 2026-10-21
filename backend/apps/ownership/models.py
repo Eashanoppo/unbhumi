@@ -1,6 +1,8 @@
+from typing import Optional
 from django.db import models
 
 class PersonOrParty(models.Model):
+    id: int
     name = models.CharField(max_length=255)
     name_bn = models.CharField(max_length=255, blank=True, default='')
     father_or_husband_name = models.CharField(max_length=255, blank=True, default='')
@@ -13,6 +15,12 @@ class PersonOrParty(models.Model):
 
 
 class DeedTransaction(models.Model):
+    id: int
+    seller_id: int
+    buyer_id: int
+    parcel_id: int
+    source_document_id: Optional[int]
+
     deed_number = models.CharField(max_length=64, db_index=True)
     deed_date = models.DateField(null=True, blank=True)
     sub_registry_office = models.CharField(max_length=128, blank=True, default='')

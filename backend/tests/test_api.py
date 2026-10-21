@@ -1,13 +1,16 @@
-from django.test import TestCase
-from rest_framework.test import APIClient
+from typing import Any
+from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
 from services.seed_service import seed_demo_data
 from apps.cases.models import Case
 from apps.rules.models import AnomalyFinding, RuleDefinition
 from apps.documents.models import Document, ExtractedField
 
-class UNBUmiAPITests(TestCase):
+class UNBUmiAPITests(APITestCase):
+    client: Any
+
     def setUp(self):
+        super().setUp()
         self.client = APIClient()
         seed_demo_data()
 
@@ -78,10 +81,15 @@ class UNBUmiAPITests(TestCase):
 
     def test_field_correction_patch(self):
         doc = Document.objects.first()
-        field = doc.extracted_fields.first()
+        self.assertIsNotNone(doc)
+        if not doc:
+            return
+        field = ExtractedField.objects.filter(document=doc).first()
         self.assertIsNotNone(field)
+        if not field:
+            return
 
-        response = self.client.patch(f'/api/v1/documents/{doc.id}/fields/', {
+        response = self.client.patch(f'/api/v1/documents/{doc.pk}/fields/', {
             'field_key': field.field_key,
             'corrected_value': 'পরিক্ষীত মান'
         })
@@ -93,7 +101,9 @@ class UNBUmiAPITests(TestCase):
     def test_alert_disposition(self):
         finding = AnomalyFinding.objects.first()
         self.assertIsNotNone(finding)
-        response = self.client.post(f'/api/v1/alerts/{finding.id}/disposition/', {
+        if not finding:
+            return
+        response = self.client.post(f'/api/v1/alerts/{finding.pk}/disposition/', {
             'decision': 'confirmed_inconsistency',
             'reason_bn': 'সাব-রেজিস্ট্রি ইনডেক্স যাচাইপূর্বক অসঙ্গতি নিশ্চিত করা হলো।'
         })

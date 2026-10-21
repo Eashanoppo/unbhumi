@@ -1,8 +1,17 @@
+from typing import Optional, Any
 from django.db import models
 from django.contrib.auth.models import User
 import hashlib
 
 class Document(models.Model):
+    id: int
+    case_id: Optional[int]
+    uploaded_by_id: Optional[int]
+    extracted_fields: Any
+    pages: Any
+
+    def get_document_type_display(self) -> str: ...
+
     DOCUMENT_TYPES = [
         ('deed', 'Registered Deed (মূল দলিল)'),
         ('baya_deed', 'Baya Deed / Prior Deed (বায়া দলিল)'),
@@ -82,6 +91,9 @@ class DocumentFingerprint(models.Model):
 
 
 class ExtractedField(models.Model):
+    id: int
+    document_id: int
+
     STATUS_CHOICES = [
         ('auto', 'Auto-Extracted (স্বয়ংক্রিয়)'),
         ('corrected', 'Human Corrected (সংশোধিত)'),

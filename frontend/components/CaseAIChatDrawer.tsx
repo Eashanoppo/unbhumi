@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import {
   Sparkles,
   X,
@@ -20,7 +22,9 @@ import {
   SlidersHorizontal,
   Bot,
   User as UserIcon,
-  BookOpen
+  BookOpen,
+  Maximize2,
+  Minimize2,
 } from 'lucide-react';
 import { api, CaseItem, AIAdvisorResponse } from '@/lib/api';
 import { useLanguage } from '@/lib/i18n';
@@ -41,6 +45,82 @@ interface CaseAIChatDrawerProps {
   onClose: () => void;
   caseItem: CaseItem;
 }
+
+const MarkdownMessageRenderer: React.FC<{ content: string; role: 'user' | 'assistant' }> = ({
+  content,
+  role,
+}) => {
+  if (role === 'user') {
+    return <div className="whitespace-pre-wrap font-sans text-xs sm:text-[13px] leading-relaxed">{content}</div>;
+  }
+
+  return (
+    <div className="font-sans text-xs sm:text-[13px] leading-relaxed text-[var(--text-primary)] space-y-1">
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={{
+          table: ({ ...props }) => (
+            <div className="my-3 overflow-x-auto rounded-xl border border-[var(--border-color)] bg-[var(--bg-surface)] shadow-xs">
+              <table className="w-full text-left text-xs border-collapse min-w-[500px]" {...props} />
+            </div>
+          ),
+          thead: ({ ...props }) => (
+            <thead className="bg-[var(--bg-surface-soft)] text-[var(--text-primary)] border-b border-[var(--border-color)] font-bold text-[11px]" {...props} />
+          ),
+          th: ({ ...props }) => (
+            <th className="px-3 py-2 border-r border-[var(--border-color)] last:border-r-0 font-bold whitespace-nowrap text-[var(--text-primary)] bg-[var(--bg-surface-soft)]" {...props} />
+          ),
+          td: ({ ...props }) => (
+            <td className="px-3 py-2 text-[11.5px] border-b border-[var(--border-color)] border-r border-[var(--border-color)] last:border-r-0 text-[var(--text-secondary)] leading-relaxed align-top" {...props} />
+          ),
+          tr: ({ ...props }) => (
+            <tr className="hover:bg-[var(--bg-surface-soft)]/50 transition-colors" {...props} />
+          ),
+          h1: ({ ...props }) => (
+            <h1 className="text-sm sm:text-base font-bold text-[var(--text-primary)] mt-3.5 mb-1.5 pb-1 border-b border-[var(--border-color)] flex items-center gap-1.5" {...props} />
+          ),
+          h2: ({ ...props }) => (
+            <h2 className="text-xs sm:text-sm font-bold text-[var(--text-primary)] mt-3 mb-1.5 flex items-center gap-1.5" {...props} />
+          ),
+          h3: ({ ...props }) => (
+            <h3 className="text-xs sm:text-[13px] font-bold text-emerald-800 dark:text-emerald-300 mt-2.5 mb-1" {...props} />
+          ),
+          h4: ({ ...props }) => (
+            <h4 className="text-xs font-semibold text-[var(--text-primary)] mt-2 mb-1" {...props} />
+          ),
+          p: ({ ...props }) => (
+            <p className="my-1.5 leading-relaxed text-[var(--text-primary)]" {...props} />
+          ),
+          ul: ({ ...props }) => (
+            <ul className="my-2 ml-4 list-disc space-y-1.5 text-[var(--text-primary)]" {...props} />
+          ),
+          ol: ({ ...props }) => (
+            <ol className="my-2 ml-4 list-decimal space-y-1.5 text-[var(--text-primary)]" {...props} />
+          ),
+          li: ({ ...props }) => (
+            <li className="leading-relaxed pl-0.5" {...props} />
+          ),
+          blockquote: ({ ...props }) => (
+            <blockquote className="my-2.5 pl-3 border-l-3 border-emerald-500 bg-emerald-50/70 dark:bg-emerald-950/30 py-2 pr-3 rounded-r-xl text-[12px] italic text-[var(--text-secondary)] leading-relaxed" {...props} />
+          ),
+          strong: ({ ...props }) => (
+            <strong className="font-bold text-[var(--text-primary)]" {...props} />
+          ),
+          hr: ({ ...props }) => (
+            <hr className="my-3 border-[var(--border-color)]" {...props} />
+          ),
+          code: ({ children, ...props }: any) => (
+            <code className="px-1.5 py-0.5 rounded-md bg-[var(--bg-surface-soft)] border border-[var(--border-color)] text-[11px] font-mono font-medium text-emerald-700 dark:text-emerald-300" {...props}>
+              {children}
+            </code>
+          ),
+        }}
+      >
+        {content}
+      </ReactMarkdown>
+    </div>
+  );
+};
 
 const GROQ_FREE_MODELS = [
   { id: 'llama-3.3-70b-versatile', name: 'Llama 3.3 70B Versatile (প্রস্তাবিত • সেরা বিশ্লেষণ)' },
@@ -71,6 +151,7 @@ export const CaseAIChatDrawer: React.FC<CaseAIChatDrawerProps> = ({
   const [selectedModel, setSelectedModel] = useState('llama-3.3-70b-versatile');
   const [showSettings, setShowSettings] = useState(false);
   const [keySaved, setKeySaved] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -87,30 +168,37 @@ export const CaseAIChatDrawer: React.FC<CaseAIChatDrawerProps> = ({
     }
   }, []);
 
-  // Initialize initial greeting when opened
+  // Initialize initial greeting when opened (and dynamically update if language changes before user chat)
   useEffect(() => {
-    if (isOpen && messages.length === 0) {
+    if (isOpen && (messages.length === 0 || (messages.length === 1 && messages[0].id === 'init-msg'))) {
       const initialGreeting: Message = {
         id: 'init-msg',
         role: 'assistant',
         content: isBn
-          ? `নমস্কার! আমি **আনভূমি এআই আইনি ও তদন্ত পরামর্শক**।\n\nকেস **${caseItem.case_number}**-এর সকল নথিপত্র, দাগ-খতিয়ান রেকর্ড এবং ওনারশিপ গ্রাফ পরীক্ষা করা হয়েছে।\n\nআপনি এই কেসের ঝুঁকি বিশ্লেষণ, প্রযোজ্য **বাংলাদেশ ভূমি আইন (ভূমি অপরাধ আইন ২০২৩, প্রজাস্বত্ব আইন, হস্তান্তর আইন)** এবং **এসি ল্যান্ড বা সাব-রেজিস্ট্রিতে পরবর্তী করণীয় পদক্ষেপ** সম্পর্কে যেকোনো প্রশ্ন করতে পারেন। নিচের প্রস্তাবিত অপশনগুলো থেকে বেছে নিন অথবা আপনার প্রশ্ন লিখুন:`
-          : `Hello! I am the **UNBhumi AI Land Legal & Investigative Advisor**.\n\nAll submitted documents, plot schedules, khatian records, and ownership graph topology for Case **${caseItem.case_number}** have been synthesized.\n\nAsk me about risk explanations, applicable **Bangladesh Land Statutes (Land Crime Act 2023, SAT Act, TPA)**, or step-by-step procedures to file with the **AC Land or Sub-Registry office**.`,
+          ? `### Greetings I am Groot, your advisor here!\n\nকেস **${caseItem.case_number}**-এর সকল নথিপত্র, দাগ-খতিয়ান রেকর্ড এবং ওনারশিপ গ্রাফ পরীক্ষা করা হয়েছে।\n\nআপনি এই কেসের ঝুঁকি বিশ্লেষণ, প্রযোজ্য **বাংলাদেশ ভূমি আইন (ভূমি অপরাধ প্রতিরোধ ও প্রতিকার আইন ২০২৩, প্রজাস্বত্ব আইন, হস্তান্তর আইন)** এবং **এসি ল্যান্ড বা সাব-রেজিস্ট্রিতে পরবর্তী করণীয় পদক্ষেপ** সম্পর্কে যেকোনো প্রশ্ন করতে পারেন। নিচের প্রস্তাবিত অপশনগুলো থেকে বেছে নিন অথবা আপনার প্রশ্ন লিখুন:`
+          : `### Greetings I am Groot, your advisor here!\n\nAll submitted documents, plot schedules, khatian records, and ownership graph topology for Case **${caseItem.case_number}** have been synthesized.\n\nAsk me about risk explanations, applicable **Bangladesh Land Statutes (Land Crime Act 2023, SAT Act, TPA)**, or step-by-step procedures to file with the **AC Land or Sub-Registry office**.`,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        suggestedActions: [
+        suggestedActions: isBn ? [
           '১. সাব-রেজিস্ট্রি অফিসে বালাম বহি ও সূচি তল্লাশি',
           '২. সহকারী কমিশনার (ভূমি) বরাবর নামজারি আপত্তি দাখিল',
           '৩. ভূমি উন্নয়ন কর রেজিস্টার-২ ও দাখিলা হালনাগাদ যাচাই',
           '৪. ভূমি অপরাধ প্রতিরোধ ও প্রতিকার আইন ২০২৩-এর প্রতিকার'
+        ] : [
+          '1. Search Balam volume & Index-II at Sub-Registry Office',
+          '2. File mutation objection with Assistant Commissioner (Land)',
+          '3. Audit Land Development Tax Register-II & dakhila',
+          '4. Seek remedies under Land Crime Prevention & Redress Act 2023'
         ]
       };
       setMessages([initialGreeting]);
     }
-  }, [isOpen, caseItem, isBn, messages.length]);
+  }, [isOpen, caseItem, isBn]);
 
-  // Auto-scroll to bottom
+  // Auto-scroll to bottom only when new user/assistant messages arrive (keep initial greeting visible at top)
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messages.length > 1) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
   }, [messages, loading]);
 
   const handleSaveKey = () => {
@@ -192,7 +280,7 @@ export const CaseAIChatDrawer: React.FC<CaseAIChatDrawerProps> = ({
       <div className="flex-1 cursor-pointer" onClick={onClose} />
 
       {/* Drawer Container */}
-      <div className="w-full max-w-2xl bg-[var(--bg-surface)] text-[var(--text-primary)] border-l border-[var(--border-color)] flex flex-col h-full shadow-2xl animate-in slide-in-from-right duration-300">
+      <div className={`w-full ${isExpanded ? 'max-w-4xl lg:max-w-5xl' : 'max-w-2xl'} transition-all duration-300 bg-[var(--bg-surface)] text-[var(--text-primary)] border-l border-[var(--border-color)] flex flex-col h-full shadow-2xl animate-in slide-in-from-right duration-300`}>
         
         {/* Header */}
         <div className="p-4 sm:p-5 border-b border-[var(--border-color)] bg-[var(--bg-surface-soft)] flex items-center justify-between gap-3">
@@ -216,6 +304,17 @@ export const CaseAIChatDrawer: React.FC<CaseAIChatDrawerProps> = ({
           </div>
 
           <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              title={isExpanded ? (isBn ? 'স্বাভাবিক আকার' : 'Collapse view') : (isBn ? 'বড় স্ক্রিন ভিউ (সহজে পড়ার জন্য)' : 'Expand view')}
+              className={`p-2 rounded-xl border transition-colors cursor-pointer hidden sm:flex items-center ${
+                isExpanded
+                  ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300'
+                  : 'border-[var(--border-color)] hover:bg-[var(--bg-surface)] text-[var(--text-secondary)]'
+              }`}
+            >
+              {isExpanded ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+            </button>
             <button
               onClick={() => setShowSettings(!showSettings)}
               title={isBn ? 'Groq এপিআই সেটিংস' : 'Groq API Settings'}
@@ -334,16 +433,16 @@ export const CaseAIChatDrawer: React.FC<CaseAIChatDrawerProps> = ({
 
               {/* Message Bubble */}
               <div
-                className={`max-w-[85%] rounded-2xl p-3.5 sm:p-4 text-xs leading-relaxed space-y-2.5 ${
+                className={`${
+                  m.role === 'user' ? 'max-w-[85%]' : 'max-w-[95%]'
+                } rounded-2xl p-3.5 sm:p-4 text-xs leading-relaxed space-y-2.5 ${
                   m.role === 'user'
                     ? 'bg-[var(--brand-accent)] text-white rounded-tr-xs shadow-xs'
                     : 'bg-[var(--bg-surface-soft)] border border-[var(--border-color)] rounded-tl-xs shadow-xs'
                 }`}
               >
-                {/* Text Content */}
-                <div className="prose prose-xs dark:prose-invert max-w-none whitespace-pre-wrap font-sans">
-                  {m.content}
-                </div>
+                {/* Formatted Markdown Content */}
+                <MarkdownMessageRenderer content={m.content} role={m.role} />
 
                 {/* Suggested Action Chips (if present) */}
                 {m.suggestedActions && m.suggestedActions.length > 0 && (

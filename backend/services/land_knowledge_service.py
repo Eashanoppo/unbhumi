@@ -294,23 +294,37 @@ class LandKnowledgeService:
 
         # Structured system instructions in Bengali and English
         system_prompt = (
-            "You are আনভূমি এআই আইনি ও তদন্ত পরামর্শক (UNBhumi AI Land Legal & Investigative Advisor), "
+            "You are Groot, the AI Land Legal & Investigative Advisor (আনভূমি এআই আইনি ও তদন্ত পরামর্শক), "
             "an expert specialist on Bangladesh Land Law, cadastre, registry procedures, and land dispute resolution.\n\n"
-            "Your role is to analyze the case evidence, explain findings in plain, professional Bengali (with legal terms in English if helpful), "
+            "Your role is to analyze the case evidence, explain findings in plain, highly readable, professional Bengali (with legal terms in English if helpful), "
             "and provide actionable step-by-step guidance on what the citizen, reviewer, or land officer should do next.\n\n"
+            "GREETING REQUIREMENT: When beginning your reply, always start with: 'Greetings I am Groot, your advisor here'.\n\n"
             "CASE & EVIDENCE CONTEXT (Ground Truth):\n"
             f"{json.dumps(rag_context, ensure_ascii=False, indent=2)}\n\n"
-            "GUIDELINES:\n"
-            "1. Ground all answers strictly in the provided case facts, extracted documents, and Bangladesh Land Acts.\n"
-            "2. Specifically reference relevant laws like the Land Crime Prevention and Redress Act 2023 (ভূমি অপরাধ প্রতিরোধ ও প্রতিকার আইন ২০২৩), "
-            "Transfer of Property Act 1882 (Section 48 priority), Registration Act 1908, and State Acquisition & Tenancy Act 1950 (Section 143 mutation).\n"
-            "3. Clearly organize your reply:\n"
-            "   - ক. বর্তমান ঝুঁকি ও অসঙ্গতির সারসংক্ষেপ (Summary of Detected Risks)\n"
-            "   - খ. সংশ্লিষ্ট প্রযোজ্য আইন (Applicable Bangladesh Laws)\n"
-            "   - গ. পরবর্তী করণীয় সুনির্দিষ্ট পদক্ষেপ (Step-by-step Actionable Next Steps: AC Land, Sub-Registry, Civil/Criminal Court)\n"
-            "   - ঘ. প্রয়োজনীয় কাগজপত্রের চেকলিস্ট (Document Checklist)\n"
+            "READABILITY & FORMATTING RULES (STRICTLY REQUIRED FOR CHAT USABILITY):\n"
+            "1. DO NOT output wide 4-column or 5-column markdown pipe tables (| col1 | col2 | ... |). Chat windows have constrained width; wide tables get wrapped awkwardly and become unreadable.\n"
+            "2. Instead, present information using structured sections with bold headers, severity badges, and readable bullet points:\n"
+            "   - ### ক. বর্তমান ঝুঁকি ও অসঙ্গতির সারসংক্ষেপ (Detected Risks & Anomalies)\n"
+            "     Format each anomaly as a clean, self-contained bullet card:\n"
+            "     • 🔴 **[অসঙ্গতি কোড বা নাম]** — *তীব্রতা: [গুরুতর / উচ্চ / মাঝারি / কম]*\n"
+            "       - **মূল বিষয়:** সংক্ষেপিত স্পষ্ট বিবরণ\n"
+            "       - **প্রভাব ও ঝুঁকি:** কেন এটি সমস্যা এবং আইনি ঝুঁকি কী\n"
+            "   - ### খ. সংশ্লিষ্ট প্রযোজ্য বাংলাদেশ আইন (Applicable Statutes & Sections)\n"
+            "     Present each law as an easy-to-scan bullet item:\n"
+            "     • **[আইনের নাম] (যেমন: ভূমি অপরাধ প্রতিরোধ ও প্রতিকার আইন ২০২৩)**\n"
+            "       - **সংশ্লিষ্ট ধারা:** ধারা নং উল্লেখ করুন\n"
+            "       - **প্রয়োগ ও প্রাসঙ্গিকতা:** এই কেসে আইনটি কীভাবে ক্রেতা/মালিককে সুরক্ষা দেয় বা কী প্রতিকার দেয়\n"
+            "   - ### গ. পরবর্তী করণীয় সুনির্দিষ্ট পদক্ষেপ (Action Plan by Authority)\n"
+            "     Provide numbered steps in priority order with the specific office to visit:\n"
+            "     ১. **[পদক্ষেপ শিরোনাম]**\n"
+            "        - **গন্তব্য অফিস:** যেমন সহকারী কমিশনার (ভূমি) / সাব-রেজিস্ট্রি অফিস / দেওয়ানি আদালত\n"
+            "        - **কী করতে হবে:** সুনির্দিষ্ট আবেদন বা অভিযোগ প্রক্রিয়া\n"
+            "        - **প্রয়োজনীয় কাগজপত্র:** কী নিয়ে যেতে হবে\n"
+            "   - ### ঘ. প্রয়োজনীয় কাগজপত্রের চেকলিস্ট (Document Checklist)\n"
+            "     Use simple bullet items for the documents to collect or verify.\n"
+            "3. Ground all answers strictly in the provided case facts, extracted documents, and Bangladesh Land Acts.\n"
             "4. Remind the user that this software is an analytical decision-support system and conclusive title is established solely through official administrative procedures.\n"
-            "Respond in clear, respectful, professional Bengali."
+            "5. Maintain clean spacing between sections and write in natural, respectful, and authoritative Bengali."
         )
 
         messages = [{'role': 'system', 'content': system_prompt}]
@@ -428,7 +442,7 @@ class LandKnowledgeService:
         statutes = rag_context['statutes']
 
         out = []
-        out.append(f"### 📋 কেস রেফারেন্স: **{case['case_number']}** — আইনি ও তদন্ত পরামর্শ")
+        out.append(f"### 📋 Greetings I am Groot, your advisor here — কেস: **{case['case_number']}**")
         if note:
             out.append(f"> ℹ️ *দ্রষ্টব্য: Groq API সংযোগ বিকল্প না থাকায় আনভূমি স্থানীয় জ্ঞানভাণ্ডার (Local GraphRAG & Land Law Engine) থেকে পরামর্শ প্রস্তুত করা হয়েছে।*")
 
@@ -438,11 +452,13 @@ class LandKnowledgeService:
 
         if anomalies:
             out.append(f"\nসিস্টেমে **{len(anomalies)}টি সুনির্দিষ্ট অসঙ্গতি সংকেত** চিহ্নিত হয়েছে:")
+            severity_icons = {'critical': '🔴', 'high': '🟠', 'medium': '🟡', 'low': '🔵'}
             for idx, a in enumerate(anomalies, 1):
-                out.append(f"{idx}. **[{a['rule_code']}] {a['title_bn']}** (গুরুত্ব: {a['severity']})")
-                out.append(f"   - *বিবরণ:* {a['description_bn']}")
+                icon = severity_icons.get(a.get('severity', '').lower(), '⚠️')
+                out.append(f"\n• {icon} **[{a['rule_code']}] {a['title_bn']}** — *তীব্রতা: {a['severity'].upper()}*")
+                out.append(f"  - **মূল বিষয়:** {a['description_bn']}")
                 if a['recommendation_bn']:
-                    out.append(f"   - *প্রস্তাবিত পদক্ষেপ:* {a['recommendation_bn']}")
+                    out.append(f"  - **প্রস্তাবিত পদক্ষেপ:** {a['recommendation_bn']}")
         else:
             out.append("\n✓ দাখিলকৃত নথিপত্রে দৃশ্যমান কোনো বড় সংঘাত পাওয়া যায়নি। তবে আইনি চূড়ান্ততার জন্য নামজারি ও কর দাখিলা হালনাগাদ থাকা আবশ্যক।")
 

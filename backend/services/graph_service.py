@@ -201,7 +201,7 @@ class GraphService:
             deed_label = f"দলিল নং {tx.deed_number}"
             seller_id = f"person_{tx.seller.id}"
             buyer_id = f"person_{tx.buyer.id}"
-            tx_doc_id = tx.source_document_id or get_doc_id(str(tx.deed_number)) or get_doc_id("দলিল") or get_doc_id("deed")
+            tx_doc_id = getattr(tx, 'source_document_id', None) or (tx.source_document.pk if getattr(tx, 'source_document', None) else None) or get_doc_id(str(tx.deed_number)) or get_doc_id("দলিল") or get_doc_id("deed")
 
             # Seller Node
             if not any(n['id'] == seller_id for n in nodes):
